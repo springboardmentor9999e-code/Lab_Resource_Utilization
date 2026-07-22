@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  /* ---- Design tokens: "instrument panel" identity ------------------- */
+  /* Ink navy: primary text, nav, headers - reads as precise, trustworthy */
+  --color-ink-950: #121E24;
+  --color-ink-900: #1C2B33;
+  --color-ink-800: #253945;
+  --color-ink-700: #33505F;
+  --color-ink-600: #4A6B7A;
+
+  /* Paper: warm background, not sterile white, not cliché cream */
+  --color-paper-50: #FAF7F2;
+  --color-paper-100: #F3EEE5;
+  --color-paper-200: #E8E0D2;
+
+  /* Brass: accent - nameplate / calibration-dial metal, used sparingly */
+  --color-brass-400: #C7A46B;
+  --color-brass-500: #B08D57;
+  --color-brass-600: #8F7143;
+
+  /* Status colors - the "status dial" signature element */
+  --color-status-available: #7A9188;
+  --color-status-available-bg: #E7EDE9;
+  --color-status-booked: #B08D57;
+  --color-status-booked-bg: #F3EBDB;
+  --color-status-maintenance: #B0503D;
+  --color-status-maintenance-bg: #F5E5E0;
+  --color-status-retired: #7A8890;
+  --color-status-retired-bg: #EAEBEC;
+
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-paper-50);
+  color: var(--color-ink-900);
+}
+
+/* Visible keyboard focus, always */
+:focus-visible {
+  outline: 2px solid var(--color-brass-500);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
