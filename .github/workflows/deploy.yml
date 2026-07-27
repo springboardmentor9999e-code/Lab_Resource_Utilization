@@ -7,8 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/lab-resource-platform
-
+  IMAGE_PREFIX: badalsingh25/lab-resource-platform
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
