@@ -1,0 +1,67 @@
+package com.lrplatform.controller;
+
+import com.lrplatform.dto.response.ApiResponse;
+import com.lrplatform.dto.response.NotificationResponse;
+import com.lrplatform.security.CurrentUserUtil;
+import com.lrplatform.service.NotificationService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/notifications")
+@RequiredArgsConstructor
+class NotificationController {
+
+    private final NotificationService notificationService;
+    private final CurrentUserUtil currentUserUtil;
+
+    @GetMapping
+    public ResponseEntity<List<NotificationResponse>> getAll(HttpServletRequest request) {
+        Long userId = currentUserUtil.getCurrentUserId(request);
+        return ResponseEntity.ok(notificationService.getUserNotifications(userId).stream().map(this::toDto).toList());
+    }
+
+    @GetMapping("/unread-count")
+    public ResponseEntity<Map<String, Long>> getUnreadCount(HttpServletRequest request) {
+        Long userId = currentUserUtil.getCurrentUserId(request);
+        return ResponseEntity.ok(Map.of("count", notificationService.getUnreadCount(userId)));
+    }
+
+    @PutMapping("/{id}/read")
+    public ResponseEntity<ApiResponse> markAsRead(@PathVariable Long id) {
+        notificationService.markAsRead(id);
+        return ResponseEntity.ok(ApiResponse.success("Notification marked as read"));
+    }
+
+    @PutMapping("/read-all")
+    public ResponseEntity<ApiResponse> markAllAsRead(HttpServletRequest request) {
+        Long userId = currentUserUtil.getCurrentUserId(request);
+        notificationService.markAllAsRead(userId);
+        return ResponseEntity.ok(ApiResponse.success("All notifications marked as read"));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse> delete(@PathVariable Long id) {
+        notificationService.deleteNotification(id);
+        return ResponseEntity.ok(ApiResponse.success("Notification deleted"));
+    }
+
+    private NotificationResponse toDto(com.lrplatform.model.entity.Notification n) {
+        return NotificationResponse.builder()
+                .id(n.getId())
+                .userId(n.getUser() != null ? n.getUser().getId() : null)
+                .title(n.getTitle())
+                .message(n.getMessage())
+                .notificationType(n.getNotificationType() != null ? n.getNotificationType().name() : null)
+                .priority(n.getPriority() != null ? n.getPriority().name() : null)
+                .status(n.getStatus())
+                .readAt(n.getReadAt())
+                .createdAt(n.getCreatedAt())
+                .build();
+    }
+}

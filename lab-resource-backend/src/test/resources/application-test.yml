@@ -1,0 +1,33 @@
+server:
+  port: 0
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+      - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
+
+jwt:
+  secret: dGVzdC1zZWNyZXQta2V5LWZvci1qd3QtdG9rZW4tZ2VuZXJhdGlvbi1wdXJwb3Nlcw==
+  access-token-expiration: 3600000
+  refresh-token-expiration: 604800000
+  token-prefix: "Bearer "
+  header: Authorization
+
+app:
+  oauth2:
+    frontend-url: http://localhost:3000
+  mail:
+    from-address: test@lrplatform.com
+  sms:
+    enabled: false
+    provider: stub
+  frontend:
+    url: http://localhost:3000

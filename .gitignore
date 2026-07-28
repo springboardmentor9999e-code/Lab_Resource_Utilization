@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+target/
+build/
+*.class
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+client_secret_*.json
+
+# Logs
+*.log
+hs_err_pid*.log
+backend.log
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven
+*.jar.original
+dependency-reduced-pom.xml
+
+# Vite
+*.local
