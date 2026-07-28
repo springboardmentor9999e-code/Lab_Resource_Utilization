@@ -37,3 +37,15 @@ dependency-reduced-pom.xml
 
 # Vite
 *.local
+
+# PRD / docs (local only)
+*.pdf
+PRD_*.md
+SESSION_PROGRESS.md
+images/
+*.png
+*.webp
+start.ps1
+
+# Uploads
+lab-resource-backend/uploads/
