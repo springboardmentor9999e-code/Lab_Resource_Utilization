@@ -3,15 +3,40 @@ package com.lrplatform.service;
 import com.lrplatform.dto.request.ReportGenerationRequest;
 import com.lrplatform.dto.response.ReportResponse;
 import com.lrplatform.exception.BadRequestException;
+import com.lrplatform.model.entity.Booking;
+import com.lrplatform.model.entity.DepartmentBudget;
 import com.lrplatform.model.entity.Equipment;
 import com.lrplatform.model.entity.MaintenanceWorkOrder;
+import com.lrplatform.model.entity.Payment;
+import com.lrplatform.model.entity.ReportHistory;
 import com.lrplatform.repository.BookingRepository;
+import com.lrplatform.repository.DepartmentBudgetRepository;
 import com.lrplatform.repository.DepartmentRepository;
 import com.lrplatform.repository.EquipmentRepository;
 import com.lrplatform.repository.MaintenanceWorkOrderRepository;
+import com.lrplatform.repository.PaymentRepository;
+import com.lrplatform.repository.ReportHistoryRepository;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.UnitValue;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
+import com.itextpdf.layout.element.LineSeparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,9 +46,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @RequiredArgsConstructor
@@ -34,12 +56,12 @@ public class ReportService {
     private final BookingRepository bookingRepository;
     private final MaintenanceWorkOrderRepository maintenanceWorkOrderRepository;
     private final DepartmentRepository departmentRepository;
+    private final ReportHistoryRepository reportHistoryRepository;
+    private final PaymentRepository paymentRepository;
+    private final DepartmentBudgetRepository departmentBudgetRepository;
 
     @Value("${storage.local.upload-dir:./uploads}")
     private String uploadDir;
-
-    private final Map<Long, ReportResponse> reportStore = new ConcurrentHashMap<>();
-    private final AtomicLong reportIdGenerator = new AtomicLong(1);
 
     public ReportResponse generateReport(ReportGenerationRequest request, Long userId, String userName) {
         String reportType = request.getReportType();
@@ -57,8 +79,6 @@ public class ReportService {
         String extension = getExtensionForFormat(format);
         String fileName = reportType.toLowerCase().replace(" ", "_") + "_report_" + timestamp + extension;
 
-        Long reportId = reportIdGenerator.getAndIncrement();
-
         String filePath;
         switch (format) {
             case "PDF" -> filePath = generatePdfFile(reportType, fileName, request);
@@ -66,8 +86,7 @@ public class ReportService {
             default -> filePath = generateExcelFile(reportType, fileName, request);
         }
 
-        ReportResponse report = ReportResponse.builder()
-                .id(reportId)
+        ReportHistory history = ReportHistory.builder()
                 .reportType(reportType)
                 .fileName(fileName)
                 .filePath(filePath)
@@ -77,22 +96,54 @@ public class ReportService {
                 .generatedBy(userId)
                 .generatedByName(userName)
                 .build();
+        ReportHistory saved = reportHistoryRepository.save(history);
 
-        reportStore.put(reportId, report);
+        ReportResponse report = ReportResponse.builder()
+                .id(saved.getId())
+                .reportType(reportType)
+                .fileName(fileName)
+                .filePath(filePath)
+                .format(format)
+                .status("COMPLETED")
+                .generatedAt(saved.getGeneratedAt())
+                .generatedBy(userId)
+                .generatedByName(userName)
+                .build();
+
         log.info("Report generated: {} (format: {}) by user: {}", fileName, format, userName);
         return report;
     }
 
     public List<ReportResponse> getAllReports() {
-        return new ArrayList<>(reportStore.values());
+        return reportHistoryRepository.findAllByOrderByGeneratedAtDesc().stream()
+                .map(h -> ReportResponse.builder()
+                        .id(h.getId())
+                        .reportType(h.getReportType())
+                        .fileName(h.getFileName())
+                        .filePath(h.getFilePath())
+                        .format(h.getFormat())
+                        .status(h.getStatus())
+                        .generatedAt(h.getGeneratedAt())
+                        .generatedBy(h.getGeneratedBy())
+                        .generatedByName(h.getGeneratedByName())
+                        .build())
+                .toList();
     }
 
     public ReportResponse getReportById(Long id) {
-        ReportResponse report = reportStore.get(id);
-        if (report == null) {
-            throw new BadRequestException("Report not found with id: " + id);
-        }
-        return report;
+        ReportHistory h = reportHistoryRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Report not found with id: " + id));
+        return ReportResponse.builder()
+                .id(h.getId())
+                .reportType(h.getReportType())
+                .fileName(h.getFileName())
+                .filePath(h.getFilePath())
+                .format(h.getFormat())
+                .status(h.getStatus())
+                .generatedAt(h.getGeneratedAt())
+                .generatedBy(h.getGeneratedBy())
+                .generatedByName(h.getGeneratedByName())
+                .build();
     }
 
     private String getExtensionForFormat(String format) {
@@ -111,26 +162,37 @@ public class ReportService {
 
         File file = new File(reportsDir, fileName);
 
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            // Create a simple PDF-like content using plain text formatting
-            // For a production system, use iText or Apache PDFBox
-            StringBuilder pdfContent = new StringBuilder();
-            pdfContent.append("LAB RESOURCE UTILIZATION PLATFORM - REPORT\n");
-            pdfContent.append("Report Type: ").append(reportType).append("\n");
-            pdfContent.append("Generated: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("\n");
-            pdfContent.append("=" .repeat(80)).append("\n\n");
+        try (PdfWriter writer = new PdfWriter(file);
+             PdfDocument pdfDoc = new PdfDocument(writer);
+             Document document = new Document(pdfDoc)) {
+
+            PdfFont boldFont = PdfFontFactory.createFont();
+            PdfFont regularFont = PdfFontFactory.createFont();
+
+            document.add(new Paragraph("LAB RESOURCE UTILIZATION PLATFORM")
+                    .setFont(boldFont).setFontSize(18)
+                    .setTextAlignment(TextAlignment.CENTER));
+            document.add(new Paragraph(reportType.replace("_", " ") + " Report")
+                    .setFont(regularFont).setFontSize(14)
+                    .setTextAlignment(TextAlignment.CENTER));
+            document.add(new Paragraph("Generated: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                    .setFont(regularFont).setFontSize(10));
+            document.add(new LineSeparator(new SolidLine()));
+            document.add(new Paragraph(" "));
 
             switch (reportType) {
-                case "EQUIPMENT_UTILIZATION" -> writeEquipmentUtilizationPdf(pdfContent);
-                case "DEPARTMENT_REPORT" -> writeDepartmentReportPdf(pdfContent);
-                case "MAINTENANCE_REPORT" -> writeMaintenanceReportPdf(pdfContent);
-                case "COST_ANALYSIS" -> writeCostAnalysisPdf(pdfContent);
-                default -> pdfContent.append("Report data for: ").append(reportType).append("\n");
+                case "EQUIPMENT_UTILIZATION" -> writeEquipmentUtilizationPdfDoc(document);
+                case "DEPARTMENT_REPORT" -> writeDepartmentReportPdfDoc(document);
+                case "MAINTENANCE_REPORT" -> writeMaintenanceReportPdfDoc(document);
+                case "COST_ANALYSIS" -> writeCostAnalysisPdfDoc(document);
+                case "BOOKING_HISTORY" -> writeBookingHistoryPdfDoc(document);
+                case "PAYMENT_SUMMARY" -> writePaymentSummaryPdfDoc(document);
+                case "BUDGET_SUMMARY" -> writeBudgetSummaryPdfDoc(document);
+                default -> document.add(new Paragraph("Report data for: " + reportType));
             }
 
-            fos.write(pdfContent.toString().getBytes());
             log.info("PDF file created: {}", file.getAbsolutePath());
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Failed to generate PDF report", e);
             throw new BadRequestException("Failed to generate PDF report: " + e.getMessage());
         }
@@ -152,6 +214,9 @@ public class ReportService {
                 case "DEPARTMENT_REPORT" -> writeDepartmentReportCsv(writer);
                 case "MAINTENANCE_REPORT" -> writeMaintenanceReportCsv(writer);
                 case "COST_ANALYSIS" -> writeCostAnalysisCsv(writer);
+                case "BOOKING_HISTORY" -> writeBookingHistoryCsv(writer);
+                case "PAYMENT_SUMMARY" -> writePaymentSummaryCsv(writer);
+                case "BUDGET_SUMMARY" -> writeBudgetSummaryCsv(writer);
                 default -> writer.println("Report Type: " + reportType);
             }
             log.info("CSV file created: {}", file.getAbsolutePath());
@@ -163,57 +228,73 @@ public class ReportService {
         return file.getAbsolutePath();
     }
 
-    private void writeEquipmentUtilizationPdf(StringBuilder sb) {
-        sb.append("Equipment Code,Equipment Name,Manufacturer,Status,Laboratory,Category\n");
+    private void writeEquipmentUtilizationPdfDoc(Document document) {
+        String[] headers = {"Code", "Name", "Manufacturer", "Status", "Laboratory", "Category"};
+        Table table = new Table(UnitValue.createPercentArray(headers.length)).useAllAvailableWidth();
+        for (String h : headers) {
+            table.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(h)).setBold());
+        }
         List<Equipment> equipmentList = equipmentRepository.findAll();
         for (Equipment eq : equipmentList) {
-            sb.append(eq.getEquipmentCode()).append(",")
-              .append(eq.getEquipmentName()).append(",")
-              .append(eq.getManufacturer() != null ? eq.getManufacturer() : "").append(",")
-              .append(eq.getStatus().name()).append(",")
-              .append(eq.getLaboratory() != null ? eq.getLaboratory().getLaboratoryName() : "").append(",")
-              .append(eq.getCategory() != null ? eq.getCategory().getCategoryName() : "").append("\n");
+            table.addCell(eq.getEquipmentCode());
+            table.addCell(eq.getEquipmentName());
+            table.addCell(eq.getManufacturer() != null ? eq.getManufacturer() : "");
+            table.addCell(eq.getStatus().name());
+            table.addCell(eq.getLaboratory() != null ? eq.getLaboratory().getLaboratoryName() : "");
+            table.addCell(eq.getCategory() != null ? eq.getCategory().getCategoryName() : "");
         }
+        document.add(table);
     }
 
-    private void writeDepartmentReportPdf(StringBuilder sb) {
-        sb.append("Department,Institution,Equipment Count,Booking Count\n");
+    private void writeDepartmentReportPdfDoc(Document document) {
+        String[] headers = {"Department", "Institution", "Equipment Count", "Booking Count"};
+        Table table = new Table(UnitValue.createPercentArray(headers.length)).useAllAvailableWidth();
+        for (String h : headers) {
+            table.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(h)).setBold());
+        }
         var departments = departmentRepository.findAll();
         for (var dept : departments) {
             long eqCount = equipmentRepository.countByLaboratoryDepartmentId(dept.getId());
             long bkCount = bookingRepository.countByEquipmentLaboratoryDepartmentId(dept.getId());
-            sb.append(dept.getDepartmentName()).append(",")
-              .append(dept.getInstitution() != null ? dept.getInstitution().getInstitutionName() : "").append(",")
-              .append(eqCount).append(",")
-              .append(bkCount).append("\n");
+            table.addCell(dept.getDepartmentName());
+            table.addCell(dept.getInstitution() != null ? dept.getInstitution().getInstitutionName() : "");
+            table.addCell(String.valueOf(eqCount));
+            table.addCell(String.valueOf(bkCount));
         }
+        document.add(table);
     }
 
-    private void writeMaintenanceReportPdf(StringBuilder sb) {
-        sb.append("Work Order ID,Equipment Code,Equipment Name,Status,Created At\n");
+    private void writeMaintenanceReportPdfDoc(Document document) {
+        String[] headers = {"Work Order ID", "Equipment Code", "Equipment Name", "Status", "Created At"};
+        Table table = new Table(UnitValue.createPercentArray(headers.length)).useAllAvailableWidth();
+        for (String h : headers) {
+            table.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(h)).setBold());
+        }
         List<MaintenanceWorkOrder> workOrders = maintenanceWorkOrderRepository.findAll();
         for (MaintenanceWorkOrder wo : workOrders) {
-            sb.append(wo.getId()).append(",");
-            if (wo.getEquipment() != null) {
-                sb.append(wo.getEquipment().getEquipmentCode()).append(",")
-                  .append(wo.getEquipment().getEquipmentName()).append(",");
-            } else {
-                sb.append(",,");
-            }
-            sb.append(wo.getStatus() != null ? wo.getStatus().name() : "").append(",")
-              .append(wo.getCreatedAt() != null ? wo.getCreatedAt().toString() : "").append("\n");
+            table.addCell(String.valueOf(wo.getId()));
+            table.addCell(wo.getEquipment() != null ? wo.getEquipment().getEquipmentCode() : "");
+            table.addCell(wo.getEquipment() != null ? wo.getEquipment().getEquipmentName() : "");
+            table.addCell(wo.getStatus() != null ? wo.getStatus().name() : "");
+            table.addCell(wo.getCreatedAt() != null ? wo.getCreatedAt().toString() : "");
         }
+        document.add(table);
     }
 
-    private void writeCostAnalysisPdf(StringBuilder sb) {
-        sb.append("Equipment Code,Equipment Name,Purchase Cost,Status\n");
+    private void writeCostAnalysisPdfDoc(Document document) {
+        String[] headers = {"Equipment Code", "Equipment Name", "Purchase Cost", "Status"};
+        Table table = new Table(UnitValue.createPercentArray(headers.length)).useAllAvailableWidth();
+        for (String h : headers) {
+            table.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(h)).setBold());
+        }
         List<Equipment> equipmentList = equipmentRepository.findAll();
         for (Equipment eq : equipmentList) {
-            sb.append(eq.getEquipmentCode()).append(",")
-              .append(eq.getEquipmentName()).append(",")
-              .append(eq.getPurchaseCost() != null ? eq.getPurchaseCost().doubleValue() : 0).append(",")
-              .append(eq.getStatus().name()).append("\n");
+            table.addCell(eq.getEquipmentCode());
+            table.addCell(eq.getEquipmentName());
+            table.addCell(eq.getPurchaseCost() != null ? "₹" + eq.getPurchaseCost().doubleValue() : "₹0");
+            table.addCell(eq.getStatus().name());
         }
+        document.add(table);
     }
 
     private void writeEquipmentUtilizationCsv(PrintWriter writer) {
@@ -296,6 +377,9 @@ public class ReportService {
                 case "DEPARTMENT_REPORT" -> rowNum = writeDepartmentReport(sheet, headerStyle);
                 case "MAINTENANCE_REPORT" -> rowNum = writeMaintenanceReport(sheet, headerStyle);
                 case "COST_ANALYSIS" -> rowNum = writeCostAnalysis(sheet, headerStyle);
+                case "BOOKING_HISTORY" -> rowNum = writeBookingHistory(sheet, headerStyle);
+                case "PAYMENT_SUMMARY" -> rowNum = writePaymentSummary(sheet, headerStyle);
+                case "BUDGET_SUMMARY" -> rowNum = writeBudgetSummary(sheet, headerStyle);
                 default -> {
                     Row headerRow = sheet.createRow(rowNum++);
                     headerRow.createCell(0).setCellValue("Report Type: " + reportType);
@@ -413,6 +497,185 @@ public class ReportService {
             row.createCell(3).setCellValue(eq.getStatus().name());
         }
 
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+        return rowNum;
+    }
+
+    // ===================== BOOKING HISTORY =====================
+
+    private void writeBookingHistoryPdfDoc(Document document) {
+        String[] headers = {"ID", "Equipment", "User", "Date", "Time", "Status", "Purpose"};
+        Table table = new Table(UnitValue.createPercentArray(headers.length)).useAllAvailableWidth();
+        for (String h : headers) {
+            table.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(h)).setBold());
+        }
+        List<Booking> bookings = bookingRepository.findAll();
+        for (Booking b : bookings) {
+            table.addCell(String.valueOf(b.getId()));
+            table.addCell(b.getEquipment() != null ? b.getEquipment().getEquipmentName() : "");
+            table.addCell(b.getUser() != null ? b.getUser().getFirstName() + " " + b.getUser().getLastName() : "");
+            table.addCell(b.getBookingDate() != null ? b.getBookingDate().toString() : "");
+            table.addCell((b.getStartTime() != null ? b.getStartTime() : "") + " - " + (b.getEndTime() != null ? b.getEndTime() : ""));
+            table.addCell(b.getStatus() != null ? b.getStatus().name() : "");
+            table.addCell(b.getPurpose() != null ? b.getPurpose() : "");
+        }
+        document.add(table);
+    }
+
+    private void writeBookingHistoryCsv(PrintWriter writer) {
+        writer.println("ID,Equipment,User,Date,Start Time,End Time,Status,Purpose");
+        List<Booking> bookings = bookingRepository.findAll();
+        for (Booking b : bookings) {
+            String eqName = b.getEquipment() != null ? b.getEquipment().getEquipmentName() : "";
+            String userName = b.getUser() != null ? b.getUser().getFirstName() + " " + b.getUser().getLastName() : "";
+            writer.println(String.format("%d,%s,%s,%s,%s,%s,%s,\"%s\"",
+                b.getId(), eqName, userName,
+                b.getBookingDate() != null ? b.getBookingDate() : "",
+                b.getStartTime() != null ? b.getStartTime() : "",
+                b.getEndTime() != null ? b.getEndTime() : "",
+                b.getStatus() != null ? b.getStatus().name() : "",
+                b.getPurpose() != null ? b.getPurpose() : ""));
+        }
+    }
+
+    private int writeBookingHistory(Sheet sheet, CellStyle headerStyle) {
+        String[] headers = {"ID", "Equipment", "User", "Date", "Start Time", "End Time", "Status", "Purpose"};
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+        List<Booking> bookings = bookingRepository.findAll();
+        int rowNum = 1;
+        for (Booking b : bookings) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(b.getId());
+            row.createCell(1).setCellValue(b.getEquipment() != null ? b.getEquipment().getEquipmentName() : "");
+            row.createCell(2).setCellValue(b.getUser() != null ? b.getUser().getFirstName() + " " + b.getUser().getLastName() : "");
+            row.createCell(3).setCellValue(b.getBookingDate() != null ? b.getBookingDate().toString() : "");
+            row.createCell(4).setCellValue(b.getStartTime() != null ? b.getStartTime().toString() : "");
+            row.createCell(5).setCellValue(b.getEndTime() != null ? b.getEndTime().toString() : "");
+            row.createCell(6).setCellValue(b.getStatus() != null ? b.getStatus().name() : "");
+            row.createCell(7).setCellValue(b.getPurpose() != null ? b.getPurpose() : "");
+        }
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+        return rowNum;
+    }
+
+    // ===================== PAYMENT SUMMARY =====================
+
+    private void writePaymentSummaryPdfDoc(Document document) {
+        String[] headers = {"ID", "Invoice #", "Amount Paid", "Method", "Reference", "Date", "Status"};
+        Table table = new Table(UnitValue.createPercentArray(headers.length)).useAllAvailableWidth();
+        for (String h : headers) {
+            table.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(h)).setBold());
+        }
+        List<Payment> payments = paymentRepository.findAll();
+        for (Payment p : payments) {
+            table.addCell(String.valueOf(p.getId()));
+            table.addCell(p.getInvoice() != null ? String.valueOf(p.getInvoice().getId()) : "");
+            table.addCell(p.getAmountPaid() != null ? "₹" + p.getAmountPaid().doubleValue() : "₹0");
+            table.addCell(p.getPaymentMethod() != null ? p.getPaymentMethod() : "");
+            table.addCell(p.getPaymentReference() != null ? p.getPaymentReference() : "");
+            table.addCell(p.getPaymentDate() != null ? p.getPaymentDate().toLocalDate().toString() : "");
+            table.addCell(p.getPaymentStatus() != null ? p.getPaymentStatus().name() : "");
+        }
+        document.add(table);
+    }
+
+    private void writePaymentSummaryCsv(PrintWriter writer) {
+        writer.println("ID,Invoice ID,Amount Paid,Method,Reference,Date,Status");
+        List<Payment> payments = paymentRepository.findAll();
+        for (Payment p : payments) {
+            writer.println(String.format("%d,%d,%.2f,%s,%s,%s,%s",
+                p.getId(),
+                p.getInvoice() != null ? p.getInvoice().getId() : 0,
+                p.getAmountPaid() != null ? p.getAmountPaid().doubleValue() : 0,
+                p.getPaymentMethod() != null ? p.getPaymentMethod() : "",
+                p.getPaymentReference() != null ? p.getPaymentReference() : "",
+                p.getPaymentDate() != null ? p.getPaymentDate().toLocalDate() : "",
+                p.getPaymentStatus() != null ? p.getPaymentStatus().name() : ""));
+        }
+    }
+
+    private int writePaymentSummary(Sheet sheet, CellStyle headerStyle) {
+        String[] headers = {"ID", "Invoice ID", "Amount Paid", "Method", "Reference", "Date", "Status"};
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+        List<Payment> payments = paymentRepository.findAll();
+        int rowNum = 1;
+        for (Payment p : payments) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(p.getId());
+            row.createCell(1).setCellValue(p.getInvoice() != null ? p.getInvoice().getId() : 0);
+            row.createCell(2).setCellValue(p.getAmountPaid() != null ? p.getAmountPaid().doubleValue() : 0);
+            row.createCell(3).setCellValue(p.getPaymentMethod() != null ? p.getPaymentMethod() : "");
+            row.createCell(4).setCellValue(p.getPaymentReference() != null ? p.getPaymentReference() : "");
+            row.createCell(5).setCellValue(p.getPaymentDate() != null ? p.getPaymentDate().toLocalDate().toString() : "");
+            row.createCell(6).setCellValue(p.getPaymentStatus() != null ? p.getPaymentStatus().name() : "");
+        }
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+        return rowNum;
+    }
+
+    // ===================== BUDGET SUMMARY =====================
+
+    private void writeBudgetSummaryPdfDoc(Document document) {
+        String[] headers = {"Department", "Fiscal Year", "Budget Amount", "Description"};
+        Table table = new Table(UnitValue.createPercentArray(headers.length)).useAllAvailableWidth();
+        for (String h : headers) {
+            table.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(h)).setBold());
+        }
+        List<DepartmentBudget> budgets = departmentBudgetRepository.findAll();
+        for (DepartmentBudget db : budgets) {
+            table.addCell(db.getDepartment() != null ? db.getDepartment().getDepartmentName() : "");
+            table.addCell(String.valueOf(db.getFiscalYear()));
+            table.addCell(db.getBudgetAmount() != null ? "₹" + db.getBudgetAmount().doubleValue() : "₹0");
+            table.addCell(db.getDescription() != null ? db.getDescription() : "");
+        }
+        document.add(table);
+    }
+
+    private void writeBudgetSummaryCsv(PrintWriter writer) {
+        writer.println("Department,Fiscal Year,Budget Amount,Description");
+        List<DepartmentBudget> budgets = departmentBudgetRepository.findAll();
+        for (DepartmentBudget db : budgets) {
+            writer.println(String.format("%s,%d,%.2f,\"%s\"",
+                db.getDepartment() != null ? db.getDepartment().getDepartmentName() : "",
+                db.getFiscalYear(),
+                db.getBudgetAmount() != null ? db.getBudgetAmount().doubleValue() : 0,
+                db.getDescription() != null ? db.getDescription() : ""));
+        }
+    }
+
+    private int writeBudgetSummary(Sheet sheet, CellStyle headerStyle) {
+        String[] headers = {"Department", "Fiscal Year", "Budget Amount", "Description"};
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+        List<DepartmentBudget> budgets = departmentBudgetRepository.findAll();
+        int rowNum = 1;
+        for (DepartmentBudget db : budgets) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(db.getDepartment() != null ? db.getDepartment().getDepartmentName() : "");
+            row.createCell(1).setCellValue(db.getFiscalYear());
+            row.createCell(2).setCellValue(db.getBudgetAmount() != null ? db.getBudgetAmount().doubleValue() : 0);
+            row.createCell(3).setCellValue(db.getDescription() != null ? db.getDescription() : "");
+        }
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
         }

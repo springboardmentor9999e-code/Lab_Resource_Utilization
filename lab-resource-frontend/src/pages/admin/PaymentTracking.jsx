@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CreditCard, Plus, Trash2, Search, ChevronLeft, ChevronRight, X, DollarSign, Clock, AlertTriangle } from 'lucide-react';
+import { CreditCard, Plus, Trash2, Search, ChevronLeft, ChevronRight, X, DollarSign, Clock, AlertTriangle, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { paymentApi } from '../../api/api';
+import { paymentApi, reportApi } from '../../api/api';
 
 const PAYMENT_METHODS = [
   { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
@@ -13,10 +13,12 @@ const PAYMENT_METHODS = [
 ];
 
 const PAYMENT_STATUS = [
-  { value: 'COMPLETED', label: 'Completed', color: 'bg-green-100 text-green-700' },
   { value: 'PENDING', label: 'Pending', color: 'bg-yellow-100 text-yellow-700' },
+  { value: 'PAID', label: 'Paid', color: 'bg-green-100 text-green-700' },
+  { value: 'PARTIALLY_PAID', label: 'Partially Paid', color: 'bg-blue-100 text-blue-700' },
   { value: 'FAILED', label: 'Failed', color: 'bg-red-100 text-red-700' },
   { value: 'REFUNDED', label: 'Refunded', color: 'bg-purple-100 text-purple-700' },
+  { value: 'CANCELLED', label: 'Cancelled', color: 'bg-gray-100 text-gray-700' },
 ];
 
 const getStatusColor = (status) => {
@@ -98,6 +100,27 @@ export default function PaymentTracking() {
   const payments = paymentData?.content || paymentData?.payments || [];
   const totalPages = paymentData?.totalPages || 0;
 
+  const handleExportExcel = async () => {
+    try {
+      const res = await reportApi.generate({ reportType: 'PAYMENT_SUMMARY', format: 'EXCEL' });
+      const reportId = res.data?.id;
+      if (reportId) {
+        const downloadRes = await reportApi.download(reportId);
+        const url = URL.createObjectURL(new Blob([downloadRes.data]));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = res.data.fileName || 'payment_summary.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success('Payment summary exported');
+      }
+    } catch (err) {
+      toast.error('Failed to export payments');
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -105,9 +128,14 @@ export default function PaymentTracking() {
           <h1 className="text-2xl font-bold text-gray-800">Payment Tracking</h1>
           <p className="text-gray-600 mt-1">Record and track all payments</p>
         </div>
-        <button onClick={() => { resetForm(); setShowRecordModal(true); }} className="btn-primary flex items-center gap-2">
-          <Plus size={16} /> Record Payment
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={handleExportExcel} className="btn-secondary flex items-center gap-2">
+            <Download size={16} /> Export Excel
+          </button>
+          <button onClick={() => { resetForm(); setShowRecordModal(true); }} className="btn-primary flex items-center gap-2">
+            <Plus size={16} /> Record Payment
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -199,8 +227,8 @@ export default function PaymentTracking() {
                         {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : 'N/A'}
                       </td>
                       <td className="py-3 px-4">
-                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(payment.status)}`}>
-                          {payment.status}
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(payment.paymentStatus)}`}>
+                          {payment.paymentStatus?.replace(/_/g, ' ')}
                         </span>
                       </td>
                       <td className="py-3 px-4">

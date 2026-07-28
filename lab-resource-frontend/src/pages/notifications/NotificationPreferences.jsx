@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Settings, Mail, Bell, Smartphone, Save, Radio } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { notificationApi } from '../../api/api';
+import MockSmsModal from './MockSmsModal';
+import MockPushNotificationModal from './MockPushNotificationModal';
 
 const NOTIFICATION_TYPES = [
   { value: 'BOOKING_CREATED', label: 'Booking Created', description: 'When a new booking is created' },
@@ -24,6 +26,8 @@ const NOTIFICATION_TYPES = [
 export default function NotificationPreferences() {
   const queryClient = useQueryClient();
   const [preferences, setPreferences] = useState({});
+  const [showSmsModal, setShowSmsModal] = useState(false);
+  const [showPushModal, setShowPushModal] = useState(false);
 
   const { data: savedPreferences = [], isLoading } = useQuery({
     queryKey: ['notification-preferences'],
@@ -87,14 +91,28 @@ export default function NotificationPreferences() {
           <h1 className="text-2xl font-bold text-gray-800">Notification Preferences</h1>
           <p className="text-gray-600 mt-1">Manage how you receive notifications</p>
         </div>
-        <button
-          onClick={handleSave}
-          className="btn-primary flex items-center gap-2"
-          disabled={updateMutation.isPending}
-        >
-          <Save size={16} />
-          {updateMutation.isPending ? 'Saving...' : 'Save Preferences'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowSmsModal(true)}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <Smartphone size={16} /> Test SMS
+          </button>
+          <button
+            onClick={() => setShowPushModal(true)}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <Radio size={16} /> Test Push
+          </button>
+          <button
+            onClick={handleSave}
+            className="btn-primary flex items-center gap-2"
+            disabled={updateMutation.isPending}
+          >
+            <Save size={16} />
+            {updateMutation.isPending ? 'Saving...' : 'Save Preferences'}
+          </button>
+        </div>
       </div>
 
       <div className="card">
@@ -205,6 +223,9 @@ export default function NotificationPreferences() {
           </table>
         </div>
       </div>
+
+      {showSmsModal && <MockSmsModal onClose={() => setShowSmsModal(false)} />}
+      {showPushModal && <MockPushNotificationModal onClose={() => setShowPushModal(false)} />}
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Calendar, Wrench, FileText, Edit, Trash2, Cpu, QrCode, Upload, ImageIcon } from 'lucide-react';
+import { ArrowLeft, Calendar, Wrench, FileText, Edit, Trash2, Cpu, QrCode, Upload, ImageIcon, Tag, X, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { equipmentApi } from '../../api/api';
+import DocumentManagementModal from './DocumentManagementModal';
 
 const statusColors = {
   'AVAILABLE': 'badge-success',
@@ -31,6 +32,9 @@ export default function EquipmentDetailPage() {
   const navigate = useNavigate();
   const { isManager, isSystemAdmin } = useAuth();
   const queryClient = useQueryClient();
+  const [showDocModal, setShowDocModal] = useState(false);
+  const [newTag, setNewTag] = useState('');
+  const [tags, setTags] = useState([]);
 
   const { data: eq, isLoading, error } = useQuery({
     queryKey: ['equipment', id],
@@ -82,6 +86,30 @@ export default function EquipmentDetailPage() {
     },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed to upload image'),
   });
+
+  const addTagMutation = useMutation({
+    mutationFn: (tagsArray) => equipmentApi.update(id, { tags: tagsArray }),
+    onSuccess: () => { toast.success('Tags updated'); queryClient.invalidateQueries(['equipment', id]); },
+    onError: () => toast.error('Failed to update tags'),
+  });
+
+  const handleAddTag = () => {
+    const tag = newTag.trim();
+    if (!tag) return;
+    const currentTags = tags.length > 0 ? tags : (eq?.tags || []);
+    if (currentTags.includes(tag)) { toast.error('Tag already exists'); return; }
+    const updated = [...currentTags, tag];
+    setTags(updated);
+    setNewTag('');
+    addTagMutation.mutate(updated);
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    const currentTags = tags.length > 0 ? tags : (eq?.tags || []);
+    const updated = currentTags.filter(t => t !== tagToRemove);
+    setTags(updated);
+    addTagMutation.mutate(updated);
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -180,6 +208,7 @@ export default function EquipmentDetailPage() {
             <div className="grid grid-cols-2 gap-4">
               <div><p className="text-sm text-gray-500">Purchase Date</p><p className="font-medium">{eq.purchaseDate || 'N/A'}</p></div>
               <div><p className="text-sm text-gray-500">Purchase Cost</p><p className="font-medium">{formatCurrency(eq.purchaseCost)}</p></div>
+              <div><p className="text-sm text-gray-500">Hourly Rate</p><p className="font-medium">{formatCurrency(eq.hourlyRate)}</p></div>
               <div><p className="text-sm text-gray-500">Warranty Expiry</p><p className="font-medium">{eq.warrantyExpiry || 'N/A'}</p></div>
               <div><p className="text-sm text-gray-500">Calibration Due</p><p className="font-medium">{eq.calibrationDueDate || 'N/A'}</p></div>
             </div>
@@ -191,6 +220,71 @@ export default function EquipmentDetailPage() {
               <p className="text-gray-600">{eq.description}</p>
             </div>
           )}
+
+          {eq.specifications && Object.keys(eq.specifications).length > 0 && (
+            <div className="card">
+              <h3 className="text-lg font-semibold mb-4">Technical Specifications</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(eq.specifications).map(([key, value]) => (
+                  <div key={key} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
+                    <span className="text-sm text-gray-500">{key}</span>
+                    <span className="text-sm font-medium text-gray-900">{String(value)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(eq.tags && eq.tags.length > 0) || (tags.length > 0) ? (
+            <div className="card">
+              <h3 className="text-lg font-semibold mb-3">Tags</h3>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {(tags.length > 0 ? tags : eq.tags || []).map((tag, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-100 text-primary-700 rounded-full text-sm font-medium">
+                    <Tag size={12} /> {tag}
+                    {isManager && !isSystemAdmin && (
+                      <button onClick={() => handleRemoveTag(tag)} className="ml-1 hover:text-red-600">
+                        <X size={12} />
+                      </button>
+                    )}
+                  </span>
+                ))}
+              </div>
+              {isManager && !isSystemAdmin && (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+                    className="input-field flex-1 text-sm"
+                    placeholder="Add a tag..."
+                  />
+                  <button onClick={handleAddTag} className="btn-primary px-3 py-1.5 text-sm flex items-center gap-1">
+                    <Plus size={14} /> Add
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : isManager && !isSystemAdmin ? (
+            <div className="card">
+              <h3 className="text-lg font-semibold mb-3">Tags</h3>
+              <p className="text-sm text-gray-400 mb-3">No tags yet</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+                  className="input-field flex-1 text-sm"
+                  placeholder="Add a tag..."
+                />
+                <button onClick={handleAddTag} className="btn-primary px-3 py-1.5 text-sm flex items-center gap-1">
+                  <Plus size={14} /> Add
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="space-y-6">
@@ -210,7 +304,7 @@ export default function EquipmentDetailPage() {
               <button onClick={handleDownloadQrCode} className="w-full btn-secondary flex items-center justify-center gap-2">
                 <QrCode size={16} /> Download QR Code
               </button>
-              <button onClick={() => toast('Document management coming soon', { icon: '🚧' })} className="w-full btn-secondary flex items-center justify-center gap-2">
+              <button onClick={() => setShowDocModal(true)} className="w-full btn-secondary flex items-center justify-center gap-2">
                 <FileText size={16} /> View Documents
               </button>
             </div>
@@ -261,6 +355,8 @@ export default function EquipmentDetailPage() {
           </div>
         </div>
       </div>
+
+      {showDocModal && <DocumentManagementModal equipment={eq} onClose={() => setShowDocModal(false)} />}
     </div>
   );
 }

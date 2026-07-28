@@ -1,8 +1,10 @@
 package com.lrplatform.service;
 
+import com.lrplatform.model.entity.NotificationRetryQueue;
 import com.lrplatform.model.entity.User;
 import com.lrplatform.model.enums.NotificationPriority;
 import com.lrplatform.model.enums.NotificationType;
+import com.lrplatform.repository.NotificationRetryQueueRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -10,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +27,7 @@ public class NotificationScheduler {
     private final NotificationPreferenceService preferenceService;
     private final EmailService emailService;
     private final SmsService smsService;
+    private final NotificationRetryQueueRepository retryQueueRepository;
 
     @Scheduled(cron = "0 0 8 * * *")
     public void sendBookingReminders() {
@@ -116,6 +120,61 @@ public class NotificationScheduler {
             log.info("Calibration check completed for {} equipment items", dueEquipment.size());
         } catch (Exception e) {
             log.error("Error checking calibration due: {}", e.getMessage());
+        }
+    }
+
+    @Scheduled(cron = "0 */30 * * * *")
+    public void processNotificationRetries() {
+        log.info("Processing notification retry queue");
+
+        List<NotificationRetryQueue> pendingRetries = retryQueueRepository.findPendingRetries(LocalDateTime.now());
+        for (NotificationRetryQueue retry : pendingRetries) {
+            notificationService.retryFailedNotification(retry);
+        }
+
+        retryQueueRepository.markExpiredRetries();
+        log.info("Processed {} pending retries", pendingRetries.size());
+    }
+
+    @Scheduled(cron = "0 0 10 * * MON")
+    public void checkIdleEquipment() {
+        log.info("Running idle equipment check (14+ days without bookings)");
+        LocalDate cutoffDate = LocalDate.now().minusDays(14);
+
+        try {
+            String sql = """
+                SELECT e.id, e.equipment_name, e.equipment_code,
+                       l.id as lab_id, l.lab_manager_id,
+                       u.email as manager_email, u.first_name, u.phone as manager_phone
+                FROM equipment e
+                INNER JOIN laboratories l ON e.laboratory_id = l.id
+                INNER JOIN users u ON l.lab_manager_id = u.id
+                WHERE e.status = 'ACTIVE'
+                AND e.id NOT IN (
+                    SELECT DISTINCT b.equipment_id FROM bookings b
+                    WHERE b.booking_date >= ? AND b.booking_status IN ('CONFIRMED', 'APPROVED', 'COMPLETED')
+                )
+                """;
+
+            List<Map<String, Object>> idleEquipment = jdbcTemplate.queryForList(sql, cutoffDate);
+
+            for (Map<String, Object> row : idleEquipment) {
+                Long managerUserId = ((Number) row.get("lab_manager_id")).longValue();
+                String equipmentName = (String) row.get("equipment_name");
+                String equipmentCode = (String) row.get("equipment_code");
+
+                notificationService.createNotification(
+                    findUserById(managerUserId),
+                    "Idle Equipment Alert",
+                    String.format("Equipment %s (%s) has had no bookings in the last 14 days. Consider reviewing utilization.", equipmentName, equipmentCode),
+                    NotificationType.IDLE_EQUIPMENT_ALERT,
+                    NotificationPriority.MEDIUM
+                );
+            }
+
+            log.info("Idle equipment alert completed for {} items", idleEquipment.size());
+        } catch (Exception e) {
+            log.error("Error checking idle equipment: {}", e.getMessage());
         }
     }
 

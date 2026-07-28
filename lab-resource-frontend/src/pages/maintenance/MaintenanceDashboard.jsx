@@ -25,9 +25,9 @@ const priorityConfig = {
 
 export default function MaintenanceDashboard() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const canManageWorkOrders = user?.role === 'LAB_MANAGER' || user?.role === 'LAB_TECHNICIAN';
-  const canDeleteWorkOrders = user?.role === 'LAB_MANAGER';
+  const { user, isManager, isTechnician } = useAuth();
+  const canManageWorkOrders = isManager || isTechnician;
+  const canDeleteWorkOrders = isManager;
   const [searchParams] = useSearchParams();
   const equipmentIdFromUrl = searchParams.get('equipmentId');
   const [showCreateForm, setShowCreateForm] = useState(false);

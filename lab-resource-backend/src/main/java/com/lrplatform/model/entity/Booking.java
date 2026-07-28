@@ -62,6 +62,15 @@ public class Booking {
     @Column(columnDefinition = "TEXT")
     private String remarks;
 
+    @Column(name = "recurrence_pattern", length = 20)
+    private String recurrencePattern;
+
+    @Column(name = "recurrence_end_date")
+    private LocalDate recurrenceEndDate;
+
+    @Column(name = "recurrence_parent_id")
+    private Long recurrenceParentId;
+
     @JsonIgnore
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default

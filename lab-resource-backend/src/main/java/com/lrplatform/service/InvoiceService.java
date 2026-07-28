@@ -4,6 +4,7 @@ import com.lrplatform.annotation.Auditable;
 import com.lrplatform.dto.request.InvoiceRequest;
 import com.lrplatform.dto.response.InvoiceResponse;
 import com.lrplatform.dto.response.PaginatedResponse;
+import com.lrplatform.exception.BadRequestException;
 import com.lrplatform.exception.ResourceNotFoundException;
 import com.lrplatform.model.entity.Booking;
 import com.lrplatform.model.entity.Equipment;
@@ -16,18 +17,35 @@ import com.lrplatform.repository.BookingRepository;
 import com.lrplatform.repository.InstitutionRepository;
 import com.lrplatform.repository.InvoiceRepository;
 import com.lrplatform.repository.PaymentRepository;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.LineSeparator;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Year;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -40,6 +58,9 @@ public class InvoiceService {
     private final InstitutionRepository institutionRepository;
     private final BookingRepository bookingRepository;
     private final PaymentRepository paymentRepository;
+
+    @Value("${storage.local.upload-dir:./uploads}")
+    private String uploadDir;
 
     @Transactional(readOnly = true)
     public PaginatedResponse<InvoiceResponse> getAllInvoices(int page, int size, String status, Long institutionId) {
@@ -224,6 +245,81 @@ public class InvoiceService {
                 .dueDate(invoice.getDueDate())
                 .generatedAt(invoice.getGeneratedAt())
                 .build();
+    }
+
+    public String generateInvoicePdf(Long invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with id: " + invoiceId));
+        InvoiceResponse response = toResponse(invoice);
+
+        File invoicesDir = new File(uploadDir, "invoices");
+        if (!invoicesDir.exists()) {
+            invoicesDir.mkdirs();
+        }
+
+        String fileName = "invoice_" + invoice.getInvoiceNumber() + ".pdf";
+        File file = new File(invoicesDir, fileName);
+
+        try (PdfWriter writer = new PdfWriter(file);
+             PdfDocument pdfDoc = new PdfDocument(writer);
+             Document document = new Document(pdfDoc)) {
+
+            PdfFont boldFont = PdfFontFactory.createFont();
+            PdfFont regularFont = PdfFontFactory.createFont();
+
+            document.add(new Paragraph("LAB RESOURCE UTILIZATION PLATFORM")
+                    .setFont(boldFont).setFontSize(18)
+                    .setTextAlignment(TextAlignment.CENTER));
+            document.add(new Paragraph("Invoice")
+                    .setFont(boldFont).setFontSize(14)
+                    .setTextAlignment(TextAlignment.CENTER));
+            document.add(new Paragraph(" "));
+            document.add(new LineSeparator(new SolidLine()));
+            document.add(new Paragraph(" "));
+
+            Table infoTable = new Table(UnitValue.createPercentArray(new float[]{3, 7})).useAllAvailableWidth();
+            addInfoRow(infoTable, "Invoice Number:", response.getInvoiceNumber());
+            addInfoRow(infoTable, "Institution:", response.getInstitutionName());
+            if (response.getEquipmentName() != null) {
+                addInfoRow(infoTable, "Equipment:", response.getEquipmentName());
+            }
+            if (response.getBookingUser() != null) {
+                addInfoRow(infoTable, "Booked By:", response.getBookingUser());
+            }
+            addInfoRow(infoTable, "Status:", response.getPaymentStatus());
+            addInfoRow(infoTable, "Due Date:", response.getDueDate() != null ? response.getDueDate().toString() : "N/A");
+            addInfoRow(infoTable, "Generated:", response.getGeneratedAt() != null ? response.getGeneratedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "N/A");
+            document.add(infoTable);
+
+            document.add(new Paragraph(" "));
+            document.add(new LineSeparator(new SolidLine()));
+            document.add(new Paragraph(" "));
+
+            Table amountTable = new Table(UnitValue.createPercentArray(new float[]{5, 5})).useAllAvailableWidth();
+            amountTable.addHeaderCell(new Cell().add(new Paragraph("Description").setFont(boldFont)));
+            amountTable.addHeaderCell(new Cell().add(new Paragraph("Amount").setFont(boldFont)).setTextAlignment(TextAlignment.RIGHT));
+            amountTable.addCell("Total Amount");
+            amountTable.addCell(response.getTotalAmount() != null ? "₹" + response.getTotalAmount() : "₹0").setTextAlignment(TextAlignment.RIGHT);
+            amountTable.addCell("Tax");
+            amountTable.addCell(response.getTaxAmount() != null ? "₹" + response.getTaxAmount() : "₹0").setTextAlignment(TextAlignment.RIGHT);
+            amountTable.addCell("Amount Paid");
+            amountTable.addCell(response.getAmountPaid() != null ? "₹" + response.getAmountPaid() : "₹0").setTextAlignment(TextAlignment.RIGHT);
+            amountTable.addCell(new Cell().add(new Paragraph("Amount Due").setFont(boldFont)));
+            amountTable.addCell(new Cell().add(new Paragraph(response.getAmountDue() != null ? "₹" + response.getAmountDue() : "₹0").setFont(boldFont))).setTextAlignment(TextAlignment.RIGHT);
+            document.add(amountTable);
+
+            log.info("Invoice PDF generated: {}", file.getAbsolutePath());
+        } catch (Exception e) {
+            log.error("Failed to generate invoice PDF for invoice {}", invoiceId, e);
+            throw new BadRequestException("Failed to generate invoice PDF: " + e.getMessage());
+        }
+
+        return file.getAbsolutePath();
+    }
+
+    private void addInfoRow(Table table, String label, String value) {
+        table.addCell(new Cell().add(new Paragraph(label).setBold()));
+        table.addCell(new Cell().add(new Paragraph(value != null ? value : "")));
     }
 
     private BigDecimal calculateAmountPaid(Long invoiceId) {

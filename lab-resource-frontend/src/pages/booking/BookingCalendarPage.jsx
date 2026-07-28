@@ -42,6 +42,8 @@ export default function BookingCalendarPage() {
     startTime: '',
     endTime: '',
     purpose: '',
+    recurrencePattern: '',
+    recurrenceEndDate: '',
   });
 
   useEffect(() => {
@@ -116,6 +118,8 @@ export default function BookingCalendarPage() {
       startTime: bookingForm.startTime,
       endTime: bookingForm.endTime,
       purpose: bookingForm.purpose,
+      recurrencePattern: bookingForm.recurrencePattern || null,
+      recurrenceEndDate: bookingForm.recurrenceEndDate || null,
     });
   };
 
@@ -311,11 +315,40 @@ export default function BookingCalendarPage() {
                   onChange={(e) => setBookingForm({ ...bookingForm, purpose: e.target.value })}
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Repeat</label>
+                  <select
+                    className="input-field"
+                    value={bookingForm.recurrencePattern}
+                    onChange={(e) => setBookingForm({ ...bookingForm, recurrencePattern: e.target.value })}
+                  >
+                    <option value="">No repeat</option>
+                    <option value="DAILY">Daily</option>
+                    <option value="WEEKLY">Weekly</option>
+                    <option value="BIWEEKLY">Biweekly</option>
+                    <option value="MONTHLY">Monthly</option>
+                  </select>
+                </div>
+                {bookingForm.recurrencePattern && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Repeat Until</label>
+                    <input
+                      type="date"
+                      className="input-field"
+                      value={bookingForm.recurrenceEndDate}
+                      min={selectedDate}
+                      onChange={(e) => setBookingForm({ ...bookingForm, recurrenceEndDate: e.target.value })}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-3 justify-end mt-6">
               <button
-                onClick={() => { setShowBookingForm(false); setBookingForm({ startTime: '', endTime: '', purpose: '' }); }}
+                onClick={() => { setShowBookingForm(false); setBookingForm({ startTime: '', endTime: '', purpose: '', recurrencePattern: '', recurrenceEndDate: '' }); }}
                 className="btn-secondary"
               >
                 Cancel

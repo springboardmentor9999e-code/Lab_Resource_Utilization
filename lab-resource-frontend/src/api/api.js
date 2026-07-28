@@ -52,6 +52,8 @@ export const equipmentApi = {
     headers: { 'Content-Type': undefined },
   }),
   getUtilization: (id, params) => api.get(`/equipment/${id}/utilization`, { params }),
+  searchTags: (query) => api.get('/equipment/tags/search', { params: { query } }),
+  getRecommendations: () => api.get('/equipment/recommendations'),
 };
 
 export const bookingApi = {
@@ -63,6 +65,10 @@ export const bookingApi = {
   reject: (id, data) => api.put(`/bookings/${id}/reject`, data),
   cancel: (id) => api.put(`/bookings/${id}/cancel`),
   complete: (id) => api.put(`/bookings/${id}/complete`),
+  getWaitlist: (params) => api.get('/bookings/waitlist', { params }),
+  joinWaitlist: (data) => api.post('/bookings/waitlist', data),
+  removeFromWaitlist: (id) => api.delete(`/bookings/waitlist/${id}`),
+  promoteFromWaitlist: (id) => api.put(`/bookings/waitlist/${id}/promote`),
 };
 
 export const maintenanceApi = {
@@ -122,6 +128,7 @@ export const invoiceApi = {
   update: (id, data) => api.put(`/invoices/${id}`, data),
   delete: (id) => api.delete(`/invoices/${id}`),
   generateFromBooking: (bookingId) => api.post(`/invoices/generate-from-booking/${bookingId}`),
+  downloadPdf: (id) => api.get(`/invoices/${id}/pdf`, { responseType: 'blob' }),
 };
 
 export const paymentApi = {

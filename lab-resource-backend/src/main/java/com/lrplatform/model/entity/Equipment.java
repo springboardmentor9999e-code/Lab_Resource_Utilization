@@ -6,12 +6,15 @@ import com.lrplatform.model.enums.EquipmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "equipment")
@@ -85,6 +88,19 @@ public class Equipment {
 
     @Column(name = "assigned_technician_id")
     private Long assignedTechnicianId;
+
+    @Column(columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, Object> specifications;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "equipment_tag_mappings",
+        joinColumns = @JoinColumn(name = "equipment_id"),
+        inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    @Builder.Default
+    private List<EquipmentTag> tags = new ArrayList<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "equipment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

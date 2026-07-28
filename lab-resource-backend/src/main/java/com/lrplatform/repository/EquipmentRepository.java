@@ -46,4 +46,13 @@ public interface EquipmentRepository extends JpaRepository<Equipment, Long> {
             @Param("laboratoryId") Long laboratoryId,
             @Param("status") String status
     );
+
+    @Query(value = "SELECT e.* FROM equipment e WHERE e.category_id IN :categoryIds " +
+           "AND e.id NOT IN (SELECT b.equipment_id FROM bookings b WHERE b.user_id = :userId) " +
+           "AND e.status = 'AVAILABLE' ORDER BY RANDOM()", nativeQuery = true)
+    List<Equipment> findUnbookedByUserAndCategories(@Param("userId") Long userId, @Param("categoryIds") List<Long> categoryIds);
+
+    @Query(value = "SELECT e.* FROM equipment e INNER JOIN bookings b ON e.id = b.equipment_id " +
+           "WHERE e.status = 'AVAILABLE' GROUP BY e.id ORDER BY COUNT(b.id) DESC LIMIT :limit", nativeQuery = true)
+    List<Equipment> findMostBookedEquipment(@Param("limit") int limit);
 }

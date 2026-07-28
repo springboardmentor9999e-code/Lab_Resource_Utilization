@@ -14,6 +14,9 @@ const REPORT_TYPES = [
   { value: 'DEPARTMENT_REPORT', label: 'Department Report' },
   { value: 'MAINTENANCE_REPORT', label: 'Maintenance Report' },
   { value: 'COST_ANALYSIS', label: 'Cost Analysis Report' },
+  { value: 'BOOKING_HISTORY', label: 'Booking History Report' },
+  { value: 'PAYMENT_SUMMARY', label: 'Payment Summary Report' },
+  { value: 'BUDGET_SUMMARY', label: 'Budget Summary Report' },
 ];
 
 const FORMAT_OPTIONS = [

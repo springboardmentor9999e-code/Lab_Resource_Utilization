@@ -1,6 +1,7 @@
 package com.lrplatform.service;
 
 import com.lrplatform.annotation.Auditable;
+import com.lrplatform.dto.response.BookingWaitlistResponse;
 import com.lrplatform.exception.BadRequestException;
 import com.lrplatform.exception.ResourceNotFoundException;
 import com.lrplatform.model.entity.*;
@@ -131,6 +132,14 @@ public class BookingService {
                 .updatedBy(user)
                 .build();
         bookingHistoryRepository.save(Objects.requireNonNull(history));
+
+        // Create recurring child bookings if pattern is set
+        if (booking.getRecurrencePattern() != null && !booking.getRecurrencePattern().isEmpty()
+                && booking.getRecurrenceEndDate() != null) {
+            saved.setRecurrenceParentId(saved.getId());
+            bookingRepository.save(saved);
+            createRecurringBookings(saved, equipment, user);
+        }
 
         // Notify lab managers about new booking request
         notifyLabManagers(equipment, user, saved);
@@ -381,6 +390,108 @@ public class BookingService {
                     );
                 }
             }
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingWaitlistResponse> getWaitlistByEquipment(Long equipmentId) {
+        List<BookingWaitlist> entries;
+        if (equipmentId != null) {
+            entries = waitlistRepository.findByEquipmentIdAndActiveTrueOrderByPositionAsc(equipmentId);
+        } else {
+            entries = waitlistRepository.findAll().stream()
+                    .filter(BookingWaitlist::getActive)
+                    .toList();
+        }
+        return entries.stream().map(w -> BookingWaitlistResponse.builder()
+                .id(w.getId())
+                .equipmentId(w.getEquipment() != null ? w.getEquipment().getId() : null)
+                .equipmentName(w.getEquipment() != null ? w.getEquipment().getEquipmentName() : null)
+                .equipmentCode(w.getEquipment() != null ? w.getEquipment().getEquipmentCode() : null)
+                .userId(w.getUser() != null ? w.getUser().getId() : null)
+                .userFullName(w.getUser() != null ? w.getUser().getFirstName() + " " + w.getUser().getLastName() : null)
+                .userEmail(w.getUser() != null ? w.getUser().getEmail() : null)
+                .userRole(w.getUser() != null && w.getUser().getRole() != null ? w.getUser().getRole().name() : null)
+                .position(w.getPosition())
+                .active(w.getActive())
+                .createdAt(w.getCreatedAt())
+                .build()).toList();
+    }
+
+    @Auditable(module = "BOOKING", action = "WAITLIST_REMOVE", entityType = "BookingWaitlist")
+    @Transactional
+    public void removeFromWaitlist(Long waitlistId, Long managerId) {
+        BookingWaitlist entry = waitlistRepository.findById(waitlistId)
+                .orElseThrow(() -> new ResourceNotFoundException("Waitlist entry not found"));
+        entry.setActive(false);
+        waitlistRepository.save(entry);
+    }
+
+    @Auditable(module = "BOOKING", action = "WAITLIST_PROMOTE", entityType = "BookingWaitlist")
+    @Transactional
+    public void promoteFromWaitlistManual(Long waitlistId, Long managerId) {
+        BookingWaitlist entry = waitlistRepository.findById(waitlistId)
+                .orElseThrow(() -> new ResourceNotFoundException("Waitlist entry not found"));
+
+        entry.setActive(false);
+        waitlistRepository.save(entry);
+
+        notificationService.createNotification(
+                entry.getUser(),
+                "Waitlist Promotion",
+                "You have been promoted from the waitlist for " +
+                        entry.getEquipment().getEquipmentName() +
+                        ". Please create your booking soon.",
+                NotificationType.WAITLIST_PROMOTED,
+                NotificationPriority.HIGH
+        );
+    }
+
+    private void createRecurringBookings(Booking parent, Equipment equipment, User user) {
+        String pattern = parent.getRecurrencePattern();
+        LocalDate endDate = parent.getRecurrenceEndDate();
+        LocalDate currentDate = parent.getBookingDate();
+        int maxIterations = 52;
+        int count = 0;
+
+        while (count < maxIterations) {
+            currentDate = switch (pattern) {
+                case "DAILY" -> currentDate.plusDays(1);
+                case "WEEKLY" -> currentDate.plusWeeks(1);
+                case "BIWEEKLY" -> currentDate.plusWeeks(2);
+                case "MONTHLY" -> currentDate.plusMonths(1);
+                default -> currentDate.plusWeeks(1);
+            };
+
+            if (currentDate.isAfter(endDate)) break;
+
+            List<Booking> conflicts = bookingRepository.findConflictingBookings(
+                    equipment.getId(), currentDate, parent.getStartTime(), parent.getEndTime());
+            if (!conflicts.isEmpty()) continue;
+
+            Booking child = Booking.builder()
+                    .equipment(equipment)
+                    .user(user)
+                    .bookingDate(currentDate)
+                    .startTime(parent.getStartTime())
+                    .endTime(parent.getEndTime())
+                    .purpose(parent.getPurpose())
+                    .status(BookingStatus.PENDING_APPROVAL)
+                    .recurrencePattern(pattern)
+                    .recurrenceEndDate(endDate)
+                    .recurrenceParentId(parent.getId())
+                    .build();
+            bookingRepository.save(child);
+
+            BookingHistory history = BookingHistory.builder()
+                    .booking(child)
+                    .status(BookingStatus.PENDING_APPROVAL.name())
+                    .remarks("Recurring booking (" + pattern + ")")
+                    .updatedBy(user)
+                    .build();
+            bookingHistoryRepository.save(history);
+
+            count++;
         }
     }
 }

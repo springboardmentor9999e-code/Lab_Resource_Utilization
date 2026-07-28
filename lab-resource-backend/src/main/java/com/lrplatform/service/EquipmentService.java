@@ -4,8 +4,11 @@ import com.lrplatform.annotation.Auditable;
 import com.lrplatform.exception.DuplicateResourceException;
 import com.lrplatform.exception.ResourceNotFoundException;
 import com.lrplatform.model.entity.Equipment;
+import com.lrplatform.model.entity.EquipmentTag;
 import com.lrplatform.model.enums.EquipmentStatus;
+import com.lrplatform.repository.BookingRepository;
 import com.lrplatform.repository.EquipmentRepository;
+import com.lrplatform.repository.EquipmentTagRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -26,6 +30,8 @@ import java.util.UUID;
 public class EquipmentService {
 
     private final EquipmentRepository equipmentRepository;
+    private final EquipmentTagRepository equipmentTagRepository;
+    private final BookingRepository bookingRepository;
 
     @Value("${storage.local.upload-dir:./uploads}")
     private String uploadDir;
@@ -58,6 +64,9 @@ public class EquipmentService {
             throw new DuplicateResourceException("Equipment code already exists: " + equipment.getEquipmentCode());
         }
         equipment.setStatus(EquipmentStatus.AVAILABLE);
+        if (equipment.getTags() != null && !equipment.getTags().isEmpty()) {
+            equipment.setTags(getOrCreateTags(equipment.getTags()));
+        }
         return equipmentRepository.save(equipment);
     }
 
@@ -71,11 +80,16 @@ public class EquipmentService {
         equipment.setSerialNumber(updated.getSerialNumber());
         equipment.setPurchaseDate(updated.getPurchaseDate());
         equipment.setPurchaseCost(updated.getPurchaseCost());
+        equipment.setHourlyRate(updated.getHourlyRate());
         equipment.setWarrantyExpiry(updated.getWarrantyExpiry());
         equipment.setDescription(updated.getDescription());
         equipment.setMaxBookingHours(updated.getMaxBookingHours());
         equipment.setCategory(updated.getCategory());
         equipment.setLaboratory(updated.getLaboratory());
+        equipment.setSpecifications(updated.getSpecifications());
+        if (updated.getTags() != null) {
+            equipment.setTags(getOrCreateTags(updated.getTags()));
+        }
         return equipmentRepository.save(equipment);
     }
 
@@ -120,5 +134,42 @@ public class EquipmentService {
         equipment.setImageUrl("/uploads/equipment/" + filename);
         log.info("Image uploaded for equipment {}: {}", id, filename);
         return equipmentRepository.save(equipment);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EquipmentTag> searchTags(String query) {
+        if (query == null || query.isBlank()) {
+            return equipmentTagRepository.findAll();
+        }
+        return equipmentTagRepository.searchByTagName(query);
+    }
+
+    @Transactional
+    public List<EquipmentTag> getOrCreateTags(List<EquipmentTag> inputTags) {
+        List<EquipmentTag> resolved = new ArrayList<>();
+        for (EquipmentTag input : inputTags) {
+            String name = input.getTagName() != null ? input.getTagName().trim() : "";
+            if (name.isEmpty()) continue;
+            EquipmentTag existing = equipmentTagRepository.findByTagNameIgnoreCase(name).orElse(null);
+            if (existing != null) {
+                resolved.add(existing);
+            } else {
+                EquipmentTag newTag = EquipmentTag.builder().tagName(name).build();
+                resolved.add(equipmentTagRepository.save(newTag));
+            }
+        }
+        return resolved;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Equipment> getRecommendations(Long userId) {
+        List<Long> userCategoryIds = bookingRepository.findTopCategoryIdsByUserId(userId, 3);
+        if (!userCategoryIds.isEmpty()) {
+            List<Equipment> recommended = equipmentRepository.findUnbookedByUserAndCategories(userId, userCategoryIds);
+            if (!recommended.isEmpty()) {
+                return recommended.stream().limit(5).toList();
+            }
+        }
+        return equipmentRepository.findMostBookedEquipment(5);
     }
 }

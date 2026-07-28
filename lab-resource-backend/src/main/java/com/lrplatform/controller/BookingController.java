@@ -2,6 +2,7 @@ package com.lrplatform.controller;
 
 import com.lrplatform.dto.response.ApiResponse;
 import com.lrplatform.dto.response.BookingResponse;
+import com.lrplatform.dto.response.BookingWaitlistResponse;
 import com.lrplatform.dto.response.PaginatedResponse;
 import com.lrplatform.model.entity.Booking;
 import com.lrplatform.model.entity.User;
@@ -133,6 +134,28 @@ public class BookingController {
         Long equipmentId = body.get("equipmentId");
         bookingService.joinWaitlist(equipmentId, userId);
         return ResponseEntity.ok(ApiResponse.success("Added to waitlist"));
+    }
+
+    @GetMapping("/waitlist")
+    public ResponseEntity<List<BookingWaitlistResponse>> getWaitlist(
+            @RequestParam(required = false) Long equipmentId) {
+        return ResponseEntity.ok(bookingService.getWaitlistByEquipment(equipmentId));
+    }
+
+    @DeleteMapping("/waitlist/{id}")
+    @PreAuthorize("hasRole('LAB_MANAGER') or hasRole('DEPARTMENT_HEAD') or hasRole('INSTITUTION_ADMIN') or hasRole('SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse> removeFromWaitlist(@PathVariable Long id, HttpServletRequest request) {
+        Long managerId = currentUserUtil.getCurrentUserId(request);
+        bookingService.removeFromWaitlist(id, managerId);
+        return ResponseEntity.ok(ApiResponse.success("Removed from waitlist"));
+    }
+
+    @PutMapping("/waitlist/{id}/promote")
+    @PreAuthorize("hasRole('LAB_MANAGER') or hasRole('DEPARTMENT_HEAD') or hasRole('INSTITUTION_ADMIN') or hasRole('SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse> promoteFromWaitlist(@PathVariable Long id, HttpServletRequest request) {
+        Long managerId = currentUserUtil.getCurrentUserId(request);
+        bookingService.promoteFromWaitlistManual(id, managerId);
+        return ResponseEntity.ok(ApiResponse.success("User promoted from waitlist"));
     }
 
     private BookingResponse toDto(Booking b) {

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Calendar, Clock, CheckCircle, XCircle, AlertTriangle, CheckSquare } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, AlertTriangle, CheckSquare, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { bookingApi } from '../../api/api';
+import { bookingApi, reportApi } from '../../api/api';
 
 const statusConfig = {
   'DRAFT': { color: 'badge-info', icon: Clock, label: 'Draft' },
@@ -49,6 +49,27 @@ export default function MyBookingsPage() {
     },
   });
 
+  const handleExportExcel = async () => {
+    try {
+      const res = await reportApi.generate({ reportType: 'BOOKING_HISTORY', format: 'EXCEL' });
+      const reportId = res.data?.id;
+      if (reportId) {
+        const downloadRes = await reportApi.download(reportId);
+        const url = URL.createObjectURL(new Blob([downloadRes.data]));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = res.data.fileName || 'booking_history.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success('Booking history exported');
+      }
+    } catch (err) {
+      toast.error('Failed to export bookings');
+    }
+  };
+
   const handleCancel = (id) => {
     if (window.confirm('Are you sure you want to cancel this booking?')) {
       cancelMutation.mutate(id);
@@ -73,7 +94,14 @@ export default function MyBookingsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">My Bookings</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">My Bookings</h1>
+        {bookings.length > 0 && (
+          <button onClick={handleExportExcel} className="btn-secondary flex items-center gap-2">
+            <Download size={16} /> Export Excel
+          </button>
+        )}
+      </div>
 
       {bookings.length === 0 ? (
         <div className="card text-center py-12">

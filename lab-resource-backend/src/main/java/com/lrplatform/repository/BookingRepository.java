@@ -55,4 +55,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("SELECT b.status, COUNT(b) FROM Booking b WHERE b.equipment.laboratory.department.institution.id = :institutionId GROUP BY b.status")
     List<Object[]> countByStatusGroupedByInstitutionId(@Param("institutionId") Long institutionId);
+
+    @Query(value = "SELECT e.category_id FROM bookings b INNER JOIN equipment e ON b.equipment_id = e.id " +
+           "WHERE b.user_id = :userId AND b.booking_status = 'COMPLETED' " +
+           "GROUP BY e.category_id ORDER BY COUNT(*) DESC LIMIT :limit", nativeQuery = true)
+    List<Long> findTopCategoryIdsByUserId(@Param("userId") Long userId, @Param("limit") int limit);
+
+    @Query(value = "SELECT e.id FROM equipment e WHERE e.status = 'AVAILABLE' " +
+           "AND e.id NOT IN (SELECT b.equipment_id FROM bookings b WHERE b.booking_date >= :since) " +
+           "AND e.laboratory_id IS NOT NULL", nativeQuery = true)
+    List<Long> findIdleEquipmentIdsSince(@Param("since") LocalDate since);
+
+    @Query("SELECT b FROM Booking b WHERE b.recurrenceParentId = :parentId ORDER BY b.bookingDate ASC")
+    List<Booking> findByRecurrenceParentId(@Param("parentId") Long parentId);
 }

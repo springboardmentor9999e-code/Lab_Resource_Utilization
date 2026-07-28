@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus, X, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { equipmentApi } from '../../api/api';
 
@@ -18,6 +18,7 @@ const equipmentSchema = z.object({
   serialNumber: z.string().max(100).optional().or(z.literal('')),
   purchaseDate: z.string().optional().or(z.literal('')),
   purchaseCost: z.string().optional().or(z.literal('')),
+  hourlyRate: z.string().optional().or(z.literal('')),
   warrantyExpiry: z.string().optional().or(z.literal('')),
   description: z.string().optional().or(z.literal('')),
   maxBookingHours: z.number().min(1).max(24).default(8),
@@ -28,6 +29,11 @@ export default function EquipmentFormPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isEdit = Boolean(id);
+
+  const [specifications, setSpecifications] = useState([{ key: '', value: '' }]);
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
+  const [tagSuggestions, setTagSuggestions] = useState([]);
 
   const { data: existing, isLoading: loadingExisting } = useQuery({
     queryKey: ['equipment', id],
@@ -50,6 +56,7 @@ export default function EquipmentFormPage() {
       serialNumber: '',
       purchaseDate: '',
       purchaseCost: '',
+      hourlyRate: '',
       warrantyExpiry: '',
       description: '',
       maxBookingHours: 8,
@@ -68,21 +75,76 @@ export default function EquipmentFormPage() {
         serialNumber: existing.serialNumber || '',
         purchaseDate: existing.purchaseDate || '',
         purchaseCost: existing.purchaseCost?.toString() || '',
+        hourlyRate: existing.hourlyRate?.toString() || '',
         warrantyExpiry: existing.warrantyExpiry || '',
         description: existing.description || '',
         maxBookingHours: existing.maxBookingHours || 8,
       });
+      if (existing.specifications && typeof existing.specifications === 'object') {
+        const specs = Object.entries(existing.specifications).map(([key, value]) => ({ key, value: String(value) }));
+        setSpecifications(specs.length > 0 ? specs : [{ key: '', value: '' }]);
+      }
+      if (existing.tags && Array.isArray(existing.tags)) {
+        setTags(existing.tags);
+      }
     }
   }, [existing, reset]);
 
+  const searchTags = useCallback(async (query) => {
+    if (!query || query.length < 1) {
+      setTagSuggestions([]);
+      return;
+    }
+    try {
+      const res = await equipmentApi.searchTags(query);
+      const existingNames = tags.map(t => typeof t === 'string' ? t : t.tagName);
+      setTagSuggestions((res.data || []).filter(t => !existingNames.includes(t.tagName)));
+    } catch {
+      setTagSuggestions([]);
+    }
+  }, [tags]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => searchTags(tagInput), 300);
+    return () => clearTimeout(timer);
+  }, [tagInput, searchTags]);
+
+  const addSpecRow = () => setSpecifications([...specifications, { key: '', value: '' }]);
+  const removeSpecRow = (index) => setSpecifications(specifications.filter((_, i) => i !== index));
+  const updateSpecRow = (index, field, val) => {
+    const updated = [...specifications];
+    updated[index][field] = val;
+    setSpecifications(updated);
+  };
+
+  const addTag = (tagName) => {
+    if (tagName && !tags.includes(tagName)) {
+      setTags([...tags, tagName]);
+    }
+    setTagInput('');
+    setTagSuggestions([]);
+  };
+
+  const removeTag = (tagToRemove) => {
+    setTags(tags.filter(t => t !== tagToRemove));
+  };
+
   const mutation = useMutation({
     mutationFn: (data) => {
+      const specsObj = {};
+      specifications.forEach(s => {
+        if (s.key.trim()) specsObj[s.key.trim()] = s.value;
+      });
+
       const payload = {
         ...data,
         categoryId: parseInt(data.categoryId),
         laboratoryId: parseInt(data.laboratoryId),
         purchaseCost: data.purchaseCost ? parseFloat(data.purchaseCost) : null,
+        hourlyRate: data.hourlyRate ? parseFloat(data.hourlyRate) : null,
         maxBookingHours: parseInt(data.maxBookingHours) || 8,
+        specifications: Object.keys(specsObj).length > 0 ? specsObj : null,
+        tags: tags.map(t => ({ tagName: typeof t === 'string' ? t : t.tagName })),
       };
       if (isEdit) {
         return equipmentApi.update(id, payload);
@@ -181,7 +243,7 @@ export default function EquipmentFormPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Serial Number</label>
               <input {...register('serialNumber')} className="input-field" />
@@ -190,6 +252,10 @@ export default function EquipmentFormPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Max Booking Hours</label>
               <input type="number" {...register('maxBookingHours', { valueAsNumber: true })} className="input-field" />
               {errors.maxBookingHours && <p className="text-danger-500 text-xs mt-1">{errors.maxBookingHours.message}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Hourly Rate (₹)</label>
+              <input type="number" step="0.01" {...register('hourlyRate')} className="input-field" placeholder="e.g. 500" />
             </div>
           </div>
 
@@ -211,6 +277,89 @@ export default function EquipmentFormPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
             <textarea {...register('description')} className="input-field" rows={3} />
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <Tag size={14} className="inline mr-1" /> Tags
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {tags.map((tag, i) => {
+                const name = typeof tag === 'string' ? tag : tag.tagName;
+                return (
+                  <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium">
+                    {name}
+                    <button type="button" onClick={() => removeTag(name)} className="hover:text-primary-900">
+                      <X size={12} />
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Type to search tags..."
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addTag(tagInput.trim());
+                  }
+                }}
+              />
+              {tagSuggestions.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                  {tagSuggestions.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-primary-50 flex items-center gap-2"
+                      onClick={() => addTag(s.tagName)}
+                    >
+                      <Tag size={12} className="text-gray-400" /> {s.tagName}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Press Enter to add a new tag</p>
+          </div>
+
+          {/* Specifications */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Technical Specifications</label>
+            <div className="space-y-2">
+              {specifications.map((spec, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    className="input-field flex-1"
+                    placeholder="Key (e.g. Power)"
+                    value={spec.key}
+                    onChange={(e) => updateSpecRow(index, 'key', e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className="input-field flex-1"
+                    placeholder="Value (e.g. 1500W)"
+                    value={spec.value}
+                    onChange={(e) => updateSpecRow(index, 'value', e.target.value)}
+                  />
+                  {specifications.length > 1 && (
+                    <button type="button" onClick={() => removeSpecRow(index)} className="p-2 text-red-400 hover:text-red-600">
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={addSpecRow} className="mt-2 flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700">
+              <Plus size={14} /> Add specification
+            </button>
           </div>
 
           <div className="flex gap-3 pt-4">

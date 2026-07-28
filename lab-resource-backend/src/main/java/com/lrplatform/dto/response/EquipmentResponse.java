@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -26,6 +28,7 @@ public class EquipmentResponse {
     private String serialNumber;
     private LocalDate purchaseDate;
     private BigDecimal purchaseCost;
+    private BigDecimal hourlyRate;
     private LocalDate warrantyExpiry;
     private String status;
     private String qrCode;
@@ -34,6 +37,8 @@ public class EquipmentResponse {
     private LocalDate calibrationDueDate;
     private String description;
     private Long assignedTechnicianId;
+    private Map<String, Object> specifications;
+    private List<String> tags;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

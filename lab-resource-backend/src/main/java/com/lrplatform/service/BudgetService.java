@@ -2,16 +2,23 @@ package com.lrplatform.service;
 
 import com.lrplatform.annotation.Auditable;
 import com.lrplatform.dto.request.BudgetRequest;
+import com.lrplatform.dto.response.BudgetResponse;
 import com.lrplatform.exception.ResourceNotFoundException;
 import com.lrplatform.model.entity.Department;
 import com.lrplatform.model.entity.DepartmentBudget;
+import com.lrplatform.model.entity.Invoice;
+import com.lrplatform.model.enums.PaymentStatus;
 import com.lrplatform.repository.DepartmentBudgetRepository;
 import com.lrplatform.repository.DepartmentRepository;
+import com.lrplatform.repository.InvoiceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,6 +30,7 @@ public class BudgetService {
 
     private final DepartmentBudgetRepository budgetRepository;
     private final DepartmentRepository departmentRepository;
+    private final InvoiceRepository invoiceRepository;
 
     @Auditable(module = "BUDGET", action = "CREATE", entityType = "DepartmentBudget")
     @Transactional
@@ -56,14 +64,67 @@ public class BudgetService {
                 .orElseThrow(() -> new ResourceNotFoundException("Budget not found with id: " + id));
     }
 
-    public List<DepartmentBudget> getAllBudgets(Integer fiscalYear, Long institutionId) {
+    public List<BudgetResponse> getAllBudgets(Integer fiscalYear, Long institutionId) {
+        List<DepartmentBudget> budgets;
         if (institutionId != null) {
-            return budgetRepository.findByInstitutionIdAndFiscalYear(institutionId, fiscalYear);
+            budgets = budgetRepository.findByInstitutionIdAndFiscalYear(institutionId, fiscalYear);
+        } else if (fiscalYear != null) {
+            budgets = budgetRepository.findByFiscalYear(fiscalYear);
+        } else {
+            budgets = budgetRepository.findAll();
         }
-        if (fiscalYear != null) {
-            return budgetRepository.findByFiscalYear(fiscalYear);
-        }
-        return budgetRepository.findAll();
+        return budgets.stream().map(this::toBudgetResponse).toList();
+    }
+
+    private BudgetResponse toBudgetResponse(DepartmentBudget b) {
+        BigDecimal budgetAmount = b.getBudgetAmount();
+        BigDecimal spent = getSpentAmount(b.getDepartment().getId());
+        BigDecimal remaining = budgetAmount.subtract(spent);
+        double utilPercent = budgetAmount.compareTo(BigDecimal.ZERO) > 0
+                ? spent.multiply(BigDecimal.valueOf(100))
+                .divide(budgetAmount, 2, RoundingMode.HALF_UP).doubleValue()
+                : 0.0;
+        int invoiceCount = getInvoiceCount(b.getDepartment().getId());
+
+        return BudgetResponse.builder()
+                .id(b.getId())
+                .departmentId(b.getDepartment().getId())
+                .departmentName(b.getDepartment().getDepartmentName())
+                .fiscalYear(b.getFiscalYear())
+                .budgetAmount(budgetAmount)
+                .spentAmount(spent)
+                .remaining(remaining)
+                .utilizationPercent(utilPercent)
+                .invoiceCount(invoiceCount)
+                .description(b.getDescription())
+                .build();
+    }
+
+    private BigDecimal getSpentAmount(Long departmentId) {
+        int currentYear = LocalDate.now().getYear();
+        return invoiceRepository.findAll().stream()
+                .filter(inv -> inv.getBooking() != null
+                        && inv.getBooking().getEquipment() != null
+                        && inv.getBooking().getEquipment().getLaboratory() != null
+                        && inv.getBooking().getEquipment().getLaboratory().getDepartment() != null
+                        && inv.getBooking().getEquipment().getLaboratory().getDepartment().getId().equals(departmentId)
+                        && inv.getGeneratedAt() != null
+                        && inv.getGeneratedAt().getYear() == currentYear)
+                .map(inv -> inv.getTotalAmount() != null ? inv.getTotalAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private int getInvoiceCount(Long departmentId) {
+        int currentYear = LocalDate.now().getYear();
+        return (int) invoiceRepository.findAll().stream()
+                .filter(inv -> inv.getBooking() != null
+                        && inv.getBooking().getEquipment() != null
+                        && inv.getBooking().getEquipment().getLaboratory() != null
+                        && inv.getBooking().getEquipment().getLaboratory().getDepartment() != null
+                        && inv.getBooking().getEquipment().getLaboratory().getDepartment().getId().equals(departmentId)
+                        && inv.getGeneratedAt() != null
+                        && inv.getGeneratedAt().getYear() == currentYear)
+                .count();
     }
 
     public List<DepartmentBudget> getBudgetsByDepartment(Long departmentId) {

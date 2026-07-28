@@ -14,5 +14,6 @@ public enum NotificationType {
     PARTNERSHIP_INVITATION,
     ANNOUNCEMENT,
     PASSWORD_RESET,
+    IDLE_EQUIPMENT_ALERT,
     GENERAL
 }

@@ -2,6 +2,7 @@ package com.lrplatform.controller;
 
 import com.lrplatform.dto.request.BudgetRequest;
 import com.lrplatform.dto.response.ApiResponse;
+import com.lrplatform.dto.response.BudgetResponse;
 import com.lrplatform.model.entity.DepartmentBudget;
 import com.lrplatform.service.BudgetService;
 import jakarta.validation.Valid;
@@ -29,7 +30,7 @@ public class BudgetController {
 
     @GetMapping
     @PreAuthorize("hasRole('SYSTEM_ADMIN') or hasRole('INSTITUTION_ADMIN') or hasRole('DEPARTMENT_HEAD') or hasRole('LAB_MANAGER')")
-    public ResponseEntity<List<DepartmentBudget>> getAllBudgets(
+    public ResponseEntity<List<BudgetResponse>> getAllBudgets(
             @RequestParam(required = false) Integer fiscalYear,
             @RequestParam(required = false) Long institutionId) {
         return ResponseEntity.ok(budgetService.getAllBudgets(fiscalYear, institutionId));

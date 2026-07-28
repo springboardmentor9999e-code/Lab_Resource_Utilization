@@ -11,6 +11,7 @@ import com.lrplatform.dto.response.EquipmentResponse;
 import com.lrplatform.dto.response.PaginatedResponse;
 import com.lrplatform.dto.response.UtilizationIntelligenceResponse.EquipmentUtilization;
 import com.lrplatform.model.entity.Equipment;
+import com.lrplatform.model.entity.EquipmentTag;
 import com.lrplatform.model.entity.User;
 import com.lrplatform.model.enums.EquipmentStatus;
 import com.lrplatform.security.CurrentUserUtil;
@@ -223,6 +224,18 @@ public class EquipmentController {
         return ResponseEntity.ok(util);
     }
 
+    @GetMapping("/tags/search")
+    public ResponseEntity<List<EquipmentTag>> searchTags(@RequestParam(required = false) String query) {
+        return ResponseEntity.ok(equipmentService.searchTags(query));
+    }
+
+    @GetMapping("/recommendations")
+    public ResponseEntity<List<EquipmentResponse>> getRecommendations(HttpServletRequest httpRequest) {
+        User user = currentUserUtil.getCurrentUser(httpRequest);
+        return ResponseEntity.ok(equipmentService.getRecommendations(user.getId())
+                .stream().map(this::toDto).toList());
+    }
+
     private EquipmentResponse toDto(Equipment e) {
         return EquipmentResponse.builder()
                 .id(e.getId())
@@ -237,6 +250,7 @@ public class EquipmentController {
                 .serialNumber(e.getSerialNumber())
                 .purchaseDate(e.getPurchaseDate())
                 .purchaseCost(e.getPurchaseCost())
+                .hourlyRate(e.getHourlyRate())
                 .warrantyExpiry(e.getWarrantyExpiry())
                 .status(e.getStatus() != null ? e.getStatus().name() : null)
                 .qrCode(e.getQrCode())
@@ -245,6 +259,8 @@ public class EquipmentController {
                 .calibrationDueDate(e.getCalibrationDueDate())
                 .description(e.getDescription())
                 .assignedTechnicianId(e.getAssignedTechnicianId())
+                .specifications(e.getSpecifications())
+                .tags(e.getTags() != null ? e.getTags().stream().map(EquipmentTag::getTagName).toList() : List.of())
                 .createdAt(e.getCreatedAt())
                 .updatedAt(e.getUpdatedAt())
                 .build();

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FileText, Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, X, Zap, CreditCard } from 'lucide-react';
+import { FileText, Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, X, Zap, CreditCard, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoiceApi, institutionApi } from '../../api/api';
 import MockPaymentModal from './MockPaymentModal';
@@ -70,6 +70,23 @@ export default function InvoiceManagement() {
     mutationFn: (id) => invoiceApi.generateFromBooking(id),
     onSuccess: () => { toast.success('Invoice generated from booking'); queryClient.invalidateQueries(['invoices']); setModal(null); setBookingId(''); },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed to generate invoice from booking'),
+  });
+
+  const downloadPdfMutation = useMutation({
+    mutationFn: (id) => invoiceApi.downloadPdf(id),
+    onSuccess: (data, id) => {
+      const blob = new Blob([data.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice_${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Invoice PDF downloaded');
+    },
+    onError: () => toast.error('Failed to download invoice PDF'),
   });
 
   const resetForm = () => setForm({ institutionId: '', bookingId: '', totalAmount: '', taxAmount: '', dueDate: '' });
@@ -170,8 +187,8 @@ export default function InvoiceManagement() {
                       <td className="py-3 px-4 text-sm text-gray-600 text-right">{formatCurrency(invoice.amountPaid)}</td>
                       <td className="py-3 px-4 text-sm text-gray-600 text-right">{formatCurrency(invoice.amountDue)}</td>
                       <td className="py-3 px-4">
-                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(invoice.status)}`}>
-                          {invoice.status?.replace(/_/g, ' ')}
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(invoice.paymentStatus)}`}>
+                          {invoice.paymentStatus?.replace(/_/g, ' ')}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-600">
@@ -179,6 +196,11 @@ export default function InvoiceManagement() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex gap-1 justify-end">
+                          <button onClick={() => downloadPdfMutation.mutate(invoice.id)}
+                            className="p-1.5 hover:bg-blue-100 rounded text-blue-600 flex items-center gap-1 text-xs font-medium"
+                            title="Download PDF">
+                            <Download size={14} />
+                          </button>
                           {(invoice.paymentStatus === 'PENDING' || invoice.paymentStatus === 'PARTIALLY_PAID') && (
                             <button onClick={() => setPayingInvoice(invoice)}
                               className="p-1.5 hover:bg-green-100 rounded text-green-600 flex items-center gap-1 text-xs font-medium"
