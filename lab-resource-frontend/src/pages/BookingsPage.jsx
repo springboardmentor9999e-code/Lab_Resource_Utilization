@@ -158,82 +158,101 @@ function FilterPill({ label, active, onClick, count }) {
 
 function BookingRow({ booking, selfService, canApprove, onUpdated }) {
   const [saving, setSaving] = useState(false);
+  const [actionError, setActionError] = useState(null);
   const bookingId = booking.bookingId || booking.id;
 
   async function setStatus(status) {
     setSaving(true);
+    setActionError(null);
     try {
       const updated = await bookingsApi.update(bookingId, { status });
       onUpdated(updated);
+    } catch (err) {
+      // Surfaces the backend's conflict rejection (e.g. approving a Waitlisted
+      // booking whose slot was taken by another active booking in the
+      // meantime) instead of failing silently - previously this had no catch
+      // at all, so the button would just stop spinning with no explanation.
+      setActionError(err.response?.data?.message || "Couldn't update this booking.");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <tr>
-      <td className="px-5 py-3 text-[var(--color-ink-900)] font-medium">
-        <div className="flex items-center gap-2">
-          <span>{booking.equipment?.equipmentName || `Equipment #${booking.equipment?.equipmentId ?? "—"}`}</span>
-          {booking.equipment?.documentationUrl && (
-            <a
-              href={booking.equipment.documentationUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="View equipment documentation"
-              className="text-[var(--color-brass-600)] hover:text-[var(--color-brass-500)]"
-            >
-              <DocIcon className="h-3.5 w-3.5" />
-            </a>
-          )}
-        </div>
-      </td>
-      {!selfService && (
-        <td className="px-5 py-3 text-[var(--color-ink-600)]">{booking.user?.name || "—"}</td>
-      )}
-      <td className="px-5 py-3 text-[var(--color-ink-600)]">{formatRange(booking.startTime, booking.endTime)}</td>
-      <td className="px-5 py-3">
-        <StatusDial status={booking.status} size="sm" />
-      </td>
-      {canApprove && (
-        <td className="px-5 py-3 text-right">
-          {booking.status === "Pending Approval" || booking.status === "Waitlisted" ? (
-            <div className="flex gap-2 justify-end">
-              <button
-                disabled={saving}
-                onClick={() => setStatus("Confirmed")}
-                className="text-xs font-medium rounded-md px-2.5 py-1 bg-[var(--color-status-available-bg)] text-[var(--color-ink-900)] hover:opacity-80 disabled:opacity-50 transition-opacity"
+    <>
+      <tr>
+        <td className="px-5 py-3 text-[var(--color-ink-900)] font-medium">
+          <div className="flex items-center gap-2">
+            <span>{booking.equipment?.equipmentName || `Equipment #${booking.equipment?.equipmentId ?? "—"}`}</span>
+            {booking.equipment?.documentationUrl && (
+              <a
+                href={booking.equipment.documentationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View equipment documentation"
+                className="text-[var(--color-brass-600)] hover:text-[var(--color-brass-500)]"
               >
-                Approve
-              </button>
-              <button
-                disabled={saving}
-                onClick={() => setStatus("Cancelled")}
-                className="text-xs font-medium rounded-md px-2.5 py-1 bg-[var(--color-status-maintenance-bg)] text-[var(--color-status-maintenance)] hover:opacity-80 disabled:opacity-50 transition-opacity"
-              >
-                Reject
-              </button>
-            </div>
-          ) : (
-            <select
-              defaultValue=""
-              disabled={saving}
-              onChange={(e) => e.target.value && setStatus(e.target.value)}
-              className="text-xs border border-[var(--color-paper-200)] rounded-md px-2 py-1 disabled:opacity-50"
-            >
-              <option value="" disabled>
-                Update…
-              </option>
-              {STAFF_STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          )}
+                <DocIcon className="h-3.5 w-3.5" />
+              </a>
+            )}
+          </div>
         </td>
+        {!selfService && (
+          <td className="px-5 py-3 text-[var(--color-ink-600)]">{booking.user?.name || "—"}</td>
+        )}
+        <td className="px-5 py-3 text-[var(--color-ink-600)]">{formatRange(booking.startTime, booking.endTime)}</td>
+        <td className="px-5 py-3">
+          <StatusDial status={booking.status} size="sm" />
+        </td>
+        {canApprove && (
+          <td className="px-5 py-3 text-right">
+            {booking.status === "Pending Approval" || booking.status === "Waitlisted" ? (
+              <div className="flex gap-2 justify-end">
+                <button
+                  disabled={saving}
+                  onClick={() => setStatus("Confirmed")}
+                  className="text-xs font-medium rounded-md px-2.5 py-1 bg-[var(--color-status-available-bg)] text-[var(--color-ink-900)] hover:opacity-80 disabled:opacity-50 transition-opacity"
+                >
+                  Approve
+                </button>
+                <button
+                  disabled={saving}
+                  onClick={() => setStatus("Cancelled")}
+                  className="text-xs font-medium rounded-md px-2.5 py-1 bg-[var(--color-status-maintenance-bg)] text-[var(--color-status-maintenance)] hover:opacity-80 disabled:opacity-50 transition-opacity"
+                >
+                  Reject
+                </button>
+              </div>
+            ) : (
+              <select
+                defaultValue=""
+                disabled={saving}
+                onChange={(e) => e.target.value && setStatus(e.target.value)}
+                className="text-xs border border-[var(--color-paper-200)] rounded-md px-2 py-1 disabled:opacity-50"
+              >
+                <option value="" disabled>
+                  Update…
+                </option>
+                {STAFF_STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            )}
+          </td>
+        )}
+      </tr>
+      {actionError && (
+        <tr>
+          <td colSpan={(selfService ? 3 : 4) + (canApprove ? 1 : 0)} className="px-5 pb-3 -mt-1">
+            <div className="text-xs text-[var(--color-status-maintenance)] bg-[var(--color-status-maintenance-bg)]/50 rounded-md px-3 py-1.5 inline-block">
+              {actionError}
+            </div>
+          </td>
+        </tr>
       )}
-    </tr>
+    </>
   );
 }
 

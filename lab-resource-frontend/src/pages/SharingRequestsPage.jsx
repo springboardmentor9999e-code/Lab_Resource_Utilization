@@ -181,6 +181,14 @@ function RequestRow({ request, canApprove, onUpdated }) {
       <tr>
         <td className="px-5 py-3 text-[var(--color-ink-900)] font-medium">
           {request.equipment?.equipmentName || `Equipment #${request.equipment?.equipmentId ?? "—"}`}
+          {request.booking && (
+            <span
+              title="Booked directly rather than submitted for review — logged here for visibility."
+              className="ml-2 align-middle text-[10px] font-medium uppercase tracking-wide text-[var(--color-ink-600)] bg-[var(--color-paper-200)] rounded px-1.5 py-0.5"
+            >
+              Auto-logged
+            </span>
+          )}
         </td>
         <td className="px-5 py-3 text-[var(--color-ink-600)]">
           {request.requesterInstitution?.institutionName || "—"}
@@ -213,7 +221,11 @@ function RequestRow({ request, canApprove, onUpdated }) {
               </div>
             ) : (
               <span className="text-xs text-[var(--color-ink-600)]">
-                {request.approvedBy?.name ? `by ${request.approvedBy.name}` : "—"}
+                {request.booking
+                  ? "booked directly"
+                  : request.approvedBy?.name
+                  ? `by ${request.approvedBy.name}`
+                  : "—"}
               </span>
             )}
           </td>

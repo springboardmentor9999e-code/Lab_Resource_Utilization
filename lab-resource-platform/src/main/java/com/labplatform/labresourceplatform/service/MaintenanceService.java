@@ -111,4 +111,16 @@ public class MaintenanceService {
 
         equipmentService.applyMaintenanceDrivenStatus(equipmentId, anyActive ? "Under Maintenance" : "Available");
     }
+
+    // Public entry point for a one-time reconciliation pass across every piece
+    // of equipment that has ANY maintenance record at all. Needed because the
+    // per-record sync above only fires when a maintenance record is created,
+    // updated, or deleted going forward - equipment whose maintenance record
+    // already existed before this sync logic was added never got its status
+    // corrected. Run once at startup (see StartupReconciliationRunner) so any
+    // existing drift self-heals without a manual SQL backfill.
+    public void reconcileAllEquipmentWithMaintenanceHistory(){
+        maintenanceRepository.findDistinctEquipmentIdsWithMaintenanceHistory()
+                .forEach(this::reconcileEquipmentStatus);
+    }
 }

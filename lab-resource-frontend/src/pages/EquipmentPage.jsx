@@ -3,6 +3,7 @@ import { useAuth } from "../auth/AuthContext";
 import { can } from "../auth/permissions";
 import { equipmentApi } from "../api/equipment";
 import { labsApi } from "../api/labs";
+import { bookingsApi } from "../api/bookings";
 import { Card, LoadingState, ErrorState, PageHeader, EmptyState } from "../components/ui";
 import { StatusDial } from "../components/StatusDial";
 import { DocIcon } from "../components/DocIcon";
@@ -300,6 +301,39 @@ function EquipmentRow({ item, canUpdateStatus, canManage, onStatusChange, onView
 }
 
 function EquipmentDetails({ item }) {
+  const { user } = useAuth();
+  // Matches the backend's @PreAuthorize on GET /api/bookings/waitlist/{id} -
+  // STUDENT/RESEARCHER would get a 403 from that endpoint, so skip the section
+  // (and the request) entirely for them rather than showing an error.
+  const canViewWaitlist = can(user?.role, "bookings:approve");
+
+  const [waitlist, setWaitlist] = useState([]);
+  const [waitlistLoading, setWaitlistLoading] = useState(canViewWaitlist);
+  const [waitlistError, setWaitlistError] = useState(null);
+
+  useEffect(() => {
+    if (!canViewWaitlist) {
+      return;
+    }
+    let cancelled = false;
+    setWaitlistLoading(true);
+    setWaitlistError(null);
+    bookingsApi
+      .waitlistFor(item.equipmentId)
+      .then((data) => {
+        if (!cancelled) setWaitlist(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setWaitlistError(err.response?.data?.message || "Couldn't load the waitlist.");
+      })
+      .finally(() => {
+        if (!cancelled) setWaitlistLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [item.equipmentId, canViewWaitlist]);
+
   return (
     <div className="space-y-4">
       <div>
@@ -314,6 +348,39 @@ function EquipmentDetails({ item }) {
         <p className="text-xs font-medium text-[var(--color-ink-600)] uppercase tracking-wide mb-1">Status</p>
         <StatusDial status={item.status} size="sm" />
       </div>
+      {/* Uses the per-equipment waitlist endpoint that previously existed in
+          the API client but was never called from anywhere - the Bookings
+          page only showed a Waitlisted badge on individual bookings, with no
+          view of the ordered queue for a specific piece of equipment. */}
+      {canViewWaitlist && (
+        <div>
+          <p className="text-xs font-medium text-[var(--color-ink-600)] uppercase tracking-wide mb-1">
+            Waitlist{waitlist.length > 0 ? ` (${waitlist.length})` : ""}
+          </p>
+          {waitlistLoading ? (
+            <p className="text-sm text-[var(--color-ink-600)]">Loading…</p>
+          ) : waitlistError ? (
+            <p className="text-sm text-[var(--color-status-maintenance)]">{waitlistError}</p>
+          ) : waitlist.length === 0 ? (
+            <p className="text-sm text-[var(--color-ink-600)]">No one is waitlisted for this equipment.</p>
+          ) : (
+            <ol className="space-y-1.5">
+              {waitlist.map((booking, index) => (
+                <li
+                  key={booking.bookingId || booking.id}
+                  className="flex items-center justify-between text-sm bg-[var(--color-paper-100)] rounded-md px-3 py-1.5"
+                >
+                  <span className="text-[var(--color-ink-900)]">
+                    <span className="text-[var(--color-ink-600)] mr-1.5">#{index + 1}</span>
+                    {booking.user?.name || "—"}
+                  </span>
+                  <span className="text-[var(--color-ink-600)] text-xs">{formatWaitlistRange(booking.startTime, booking.endTime)}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
       <div>
         <p className="text-xs font-medium text-[var(--color-ink-600)] uppercase tracking-wide mb-1">Specification</p>
         <p className="text-sm text-[var(--color-ink-900)] whitespace-pre-wrap">
@@ -338,6 +405,14 @@ function EquipmentDetails({ item }) {
       </div>
     </div>
   );
+}
+
+function formatWaitlistRange(start, end) {
+  if (!start) return "—";
+  const dateFmt = { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" };
+  const s = new Date(start).toLocaleString(undefined, dateFmt);
+  const e = end ? new Date(end).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) : null;
+  return e ? `${s} – ${e}` : s;
 }
 
 function EquipmentForm({ initial, labs, onSaved }) {

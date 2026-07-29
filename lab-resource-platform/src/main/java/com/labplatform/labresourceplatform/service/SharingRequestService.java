@@ -170,6 +170,17 @@ public class SharingRequestService {
 
     public SharingRequest approveSharingRequest(Long id, User approver) {
         SharingRequest request = getSharingRequestById(id);
+
+        // Auto-logged requests (see BookingService.logSharingRequestIfCrossInstitution)
+        // already have a linked booking and a real outcome (APPROVED/WAITLISTED) -
+        // there's nothing left to approve, and running this would create a
+        // *second*, duplicate booking for the same access. Reject the action
+        // with a clear reason rather than silently double-booking.
+        if (request.getBooking() != null) {
+            throw new RuntimeException(
+                    "This request was auto-logged from a direct booking and doesn't need approval.");
+        }
+
         request.setApprovedBy(approver);
 
         Booking createdBooking = createBookingForApprovedRequest(request);
@@ -180,6 +191,9 @@ public class SharingRequestService {
         // requester silently got no usable access - see item #9 of the fixes spec.
         boolean waitlisted = createdBooking != null && "Waitlisted".equals(createdBooking.getStatus());
         request.setStatus(waitlisted ? SharingRequestStatus.WAITLISTED : SharingRequestStatus.APPROVED);
+        // Link the request to the booking it created, same as an auto-logged
+        // one, so a manually-approved request is traceable to its booking too.
+        request.setBooking(createdBooking);
 
         return sharingRequestRepository.save(request);
     }
@@ -205,11 +219,25 @@ public class SharingRequestService {
         booking.setBookingDate(request.getStartDate().toLocalDate());
         booking.setStartTime(request.getStartDate());
         booking.setEndTime(request.getEndDate());
-        return bookingService.createBooking(booking);
+        // Uses the no-audit variant: this booking is already the direct result
+        // of approving `request` itself, which gets linked to it right after -
+        // going through the normal createBooking() here would also trigger
+        // logSharingRequestIfCrossInstitution() and create a second, redundant
+        // SharingRequest for the same access.
+        return bookingService.createBookingWithoutSharingAudit(booking);
     }
 
     public SharingRequest rejectSharingRequest(Long id) {
         SharingRequest request = getSharingRequestById(id);
+        // Same reasoning as approveSharingRequest(): an auto-logged request's
+        // access was already granted via its linked booking. "Rejecting" it here
+        // would just flip a status label while leaving the actual booking
+        // active - misleading rather than actually revoking access. If the
+        // intent is to revoke access, cancel the linked booking directly instead.
+        if (request.getBooking() != null) {
+            throw new RuntimeException(
+                    "This request was auto-logged from a direct booking. To revoke access, cancel the booking itself.");
+        }
         request.setStatus(SharingRequestStatus.REJECTED);
         return sharingRequestRepository.save(request);
     }

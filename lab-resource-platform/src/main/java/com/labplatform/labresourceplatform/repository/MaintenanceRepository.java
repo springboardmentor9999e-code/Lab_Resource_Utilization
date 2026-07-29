@@ -16,4 +16,13 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, Long> 
     // rather than a derived findBy...Status(equipmentId, null) call.
     @Query("SELECT m FROM Maintenance m WHERE m.equipment.equipmentId = :equipmentId AND m.status IS NULL")
     List<Maintenance> findByEquipmentIdAndStatusIsNull(@Param("equipmentId") Long equipmentId);
+
+    // Distinct equipment ids that have at least one maintenance record, for the
+    // startup reconciliation pass. Selects the id directly rather than loading
+    // full Maintenance/Equipment entities and traversing the lazy association -
+    // that traversal would throw LazyInitializationException outside a request
+    // (no open Hibernate session), since this runs from a CommandLineRunner at
+    // startup rather than from a web request.
+    @Query("SELECT DISTINCT m.equipment.equipmentId FROM Maintenance m WHERE m.equipment IS NOT NULL")
+    List<Long> findDistinctEquipmentIdsWithMaintenanceHistory();
 }

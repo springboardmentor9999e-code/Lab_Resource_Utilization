@@ -1,7 +1,12 @@
 package com.labplatform.labresourceplatform.service;
 
 import com.labplatform.labresourceplatform.entity.Booking;
+import com.labplatform.labresourceplatform.entity.Institution;
+import com.labplatform.labresourceplatform.entity.SharingRequest;
+import com.labplatform.labresourceplatform.entity.User;
+import com.labplatform.labresourceplatform.enums.SharingRequestStatus;
 import com.labplatform.labresourceplatform.repository.BookingRepository;
+import com.labplatform.labresourceplatform.repository.SharingRequestRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,13 +21,19 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final UtilizationService utilizationService;
     private final EquipmentService equipmentService;
+    private final UserService userService;
+    private final SharingRequestRepository sharingRequestRepository;
 
     public BookingService(BookingRepository bookingRepository,
                            UtilizationService utilizationService,
-                           EquipmentService equipmentService){
+                           EquipmentService equipmentService,
+                           UserService userService,
+                           SharingRequestRepository sharingRequestRepository){
         this.bookingRepository = bookingRepository;
         this.utilizationService = utilizationService;
         this.equipmentService = equipmentService;
+        this.userService = userService;
+        this.sharingRequestRepository = sharingRequestRepository;
     }
 
     public List<Booking> getAllBookings(){
@@ -44,6 +55,17 @@ public class BookingService {
     }
 
     public Booking createBooking(Booking booking){
+        return createBooking(booking, true);
+    }
+
+    // logCrossInstitutionSharing=false is used when this booking is itself
+    // being created as the side effect of approving a SharingRequest (see
+    // SharingRequestService.approveSharingRequest) - that caller already links
+    // the real, human-reviewed SharingRequest to the booking it creates, so
+    // auto-logging here too would create a second, redundant audit record for
+    // the same access. Only a booking made directly by a user (bypassing the
+    // request-first workflow entirely) should trigger the auto-log.
+    private Booking createBooking(Booking booking, boolean logCrossInstitutionSharing){
         // The incoming booking's `equipment` is whatever the client sent in the
         // request body - typically just { equipmentId: N } with no other fields
         // populated. Re-fetch the real, fully-loaded Equipment before saving so
@@ -55,6 +77,16 @@ public class BookingService {
         Long equipmentId = booking.getEquipment().getEquipmentId();
         booking.setEquipment(equipmentService.getEquipmentById(equipmentId));
 
+        // Same re-fetch for the user - for self-service roles the controller
+        // already attaches the real, DB-loaded current user, but a staff member
+        // booking on someone else's behalf sends only { userId: N }. Re-fetching
+        // here guarantees booking.getUser().getInstitution() below is always
+        // real data, and keeps the response consistent for both cases.
+        if (booking.getUser() == null || booking.getUser().getUserId() == null) {
+            throw new RuntimeException("A booking must specify which user it is for.");
+        }
+        booking.setUser(userService.getUserById(booking.getUser().getUserId()));
+
         // If the requested slot conflicts with an existing active booking on the same
         // equipment, place this request on the waitlist instead of Pending Approval
         // (Milestone 2: waitlist management for high-demand equipment).
@@ -65,7 +97,58 @@ public class BookingService {
         Booking saved = bookingRepository.save(booking);
 
         syncEquipmentStatus(saved);
+        if (logCrossInstitutionSharing) {
+            logSharingRequestIfCrossInstitution(saved);
+        }
         return saved;
+    }
+
+    // Used only by SharingRequestService when approving a manually-submitted
+    // sharing request, so its booking-creation doesn't also trigger the
+    // auto-log path above (that would create a duplicate, redundant
+    // SharingRequest for access that's already being tracked by the original,
+    // human-reviewed one).
+    Booking createBookingWithoutSharingAudit(Booking booking){
+        return createBooking(booking, false);
+    }
+
+    // Booking equipment that belongs to a different institution than the
+    // booker is allowed directly (no approval gate) - but it should still show
+    // up in Sharing Requests for visibility/audit, the same place a
+    // manually-submitted cross-institution request would appear. This creates
+    // that record automatically, already reflecting the real outcome
+    // (APPROVED if the booking is active, WAITLISTED if it landed on the
+    // waitlist) rather than PENDING, since the access has already happened -
+    // there's nothing left to approve.
+    private void logSharingRequestIfCrossInstitution(Booking booking){
+        User requester = booking.getUser();
+        Institution requesterInstitution = requester != null ? requester.getInstitution() : null;
+
+        Institution ownerInstitution = booking.getEquipment() != null && booking.getEquipment().getLab() != null
+                ? booking.getEquipment().getLab().getInstitution()
+                : null;
+
+        if (requesterInstitution == null || ownerInstitution == null) {
+            return;
+        }
+        if (requesterInstitution.getInstitutionId().equals(ownerInstitution.getInstitutionId())) {
+            return;
+        }
+
+        SharingRequest auditRecord = new SharingRequest();
+        auditRecord.setEquipment(booking.getEquipment());
+        auditRecord.setRequesterInstitution(requesterInstitution);
+        auditRecord.setOwnerInstitution(ownerInstitution);
+        auditRecord.setRequestedBy(requester);
+        auditRecord.setStartDate(booking.getStartTime());
+        auditRecord.setEndDate(booking.getEndTime());
+        auditRecord.setPurpose("Auto-logged: booked directly rather than via a sharing request.");
+        auditRecord.setBooking(booking);
+        auditRecord.setStatus("Waitlisted".equals(booking.getStatus())
+                ? SharingRequestStatus.WAITLISTED
+                : SharingRequestStatus.APPROVED);
+
+        sharingRequestRepository.save(auditRecord);
     }
 
     public List<Booking> getWaitlistForEquipment(Long equipmentId){
@@ -105,7 +188,10 @@ public class BookingService {
         Booking existing = getBookingById(id);
 
         if(updatedBooking.getUser() != null)
-            existing.setUser(updatedBooking.getUser());
+            // Same re-fetch as createBooking(): avoid saving/echoing back a
+            // partial user object (just an id) if a booking is reassigned to a
+            // different user during an edit.
+            existing.setUser(userService.getUserById(updatedBooking.getUser().getUserId()));
 
         if(updatedBooking.getEquipment() != null)
             // Same fix as createBooking(): re-fetch the real, fully-loaded
@@ -123,11 +209,27 @@ public class BookingService {
         // check; a Completed/Cancelled/No Show/Waitlisted booking being edited for
         // other reasons doesn't hold a live slot to protect.
         boolean timeChanging = updatedBooking.getStartTime() != null || updatedBooking.getEndTime() != null;
-        if (timeChanging) {
+
+        // Second, related gap this closes: approving a Waitlisted booking (e.g.
+        // via the Bookings page "Approve" button) sends only { status:
+        // "Confirmed" } with no time fields at all, since the time isn't
+        // changing. That meant timeChanging was false and the conflict check
+        // above never ran - a Waitlisted booking could be manually approved
+        // straight past an active conflict it was waitlisted for in the first
+        // place, double-booking the equipment. Anytime a booking is moving INTO
+        // an active status (regardless of whether the time itself changed), it
+        // needs the same validation against its *current* time range.
+        String previousStatus = existing.getStatus();
+        String requestedStatus = updatedBooking.getStatus();
+        boolean enteringActiveStatus = requestedStatus != null
+                && ACTIVE_STATUSES.contains(requestedStatus)
+                && !ACTIVE_STATUSES.contains(previousStatus);
+
+        if (timeChanging || enteringActiveStatus) {
             LocalDateTime newStart = updatedBooking.getStartTime() != null ? updatedBooking.getStartTime() : existing.getStartTime();
             LocalDateTime newEnd = updatedBooking.getEndTime() != null ? updatedBooking.getEndTime() : existing.getEndTime();
 
-            String effectiveStatus = updatedBooking.getStatus() != null ? updatedBooking.getStatus() : existing.getStatus();
+            String effectiveStatus = requestedStatus != null ? requestedStatus : previousStatus;
             if (ACTIVE_STATUSES.contains(effectiveStatus)) {
                 List<Booking> conflicts = bookingRepository.findOverlappingBookingsExcluding(
                         existing.getEquipment().getEquipmentId(), newStart, newEnd, existing.getBookingId());
