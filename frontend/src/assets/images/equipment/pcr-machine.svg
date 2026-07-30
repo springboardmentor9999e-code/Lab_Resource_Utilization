@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#022c22"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" rx="16" fill="url(#bg)"/>
+
+  <!-- Main qPCR Unit Body -->
+  <rect x="180" y="50" width="440" height="400" rx="24" fill="url(#body)" stroke="#94a3b8" stroke-width="4"/>
+  <!-- Dark Front Inset Accent -->
+  <rect x="200" y="70" width="400" height="360" rx="16" fill="#0f172a"/>
+
+  <!-- Top Thermal Cycler Heated Lid Cover -->
+  <rect x="220" y="90" width="360" height="130" rx="12" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+  <rect x="240" y="105" width="320" height="100" rx="8" fill="#020617"/>
+  
+  <!-- 96-Well Sample Plate Representation -->
+  <g fill="#10b981" stroke="#047857" stroke-width="1">
+    <!-- Row of Well Tubes Grid -->
+    <circle cx="270" cy="130" r="7"/><circle cx="295" cy="130" r="7"/><circle cx="320" cy="130" r="7"/><circle cx="345" cy="130" r="7"/><circle cx="370" cy="130" r="7"/><circle cx="395" cy="130" r="7"/><circle cx="420" cy="130" r="7"/><circle cx="445" cy="130" r="7"/><circle cx="470" cy="130" r="7"/><circle cx="495" cy="130" r="7"/><circle cx="520" cy="130" r="7"/>
+    <circle cx="270" cy="155" r="7"/><circle cx="295" cy="155" r="7"/><circle cx="320" cy="155" r="7"/><circle cx="345" cy="155" r="7"/><circle cx="370" cy="155" r="7"/><circle cx="395" cy="155" r="7"/><circle cx="420" cy="155" r="7"/><circle cx="445" cy="155" r="7"/><circle cx="470" cy="155" r="7"/><circle cx="495" cy="155" r="7"/><circle cx="520" cy="155" r="7"/>
+    <circle cx="270" cy="180" r="7"/><circle cx="295" cy="180" r="7"/><circle cx="320" cy="180" r="7"/><circle cx="345" cy="180" r="7"/><circle cx="370" cy="180" r="7"/><circle cx="395" cy="180" r="7"/><circle cx="420" cy="180" r="7"/><circle cx="445" cy="180" r="7"/><circle cx="470" cy="180" r="7"/><circle cx="495" cy="180" r="7"/><circle cx="520" cy="180" r="7"/>
+  </g>
+
+  <!-- Touch Display Screen (Bottom Half) -->
+  <rect x="220" y="240" width="360" height="170" rx="12" fill="#020617" stroke="#34d399" stroke-width="2.5"/>
+
+  <!-- qPCR Amplification Curves Plot -->
+  <rect x="235" y="255" width="220" height="135" rx="6" fill="#064e3b" fill-opacity="0.3" stroke="#047857"/>
+
+  <!-- Exponential Amplification Sigmoid Curves (FAM / VIC / ROX Dyes) -->
+  <path d="M 245 370 Q 310 370 330 310 T 425 270" fill="none" stroke="#34d399" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 245 370 Q 320 370 345 320 T 435 285" fill="none" stroke="#facc15" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 245 370 Q 340 370 370 340 T 440 310" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round"/>
+  <!-- Threshold Line -->
+  <line x1="240" y1="335" x2="445" y2="335" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+  <!-- Real-time Run Metrics -->
+  <text x="468" y="275" font-family="monospace" font-size="11" font-weight="bold" fill="#34d399">CYCLE: 34 / 40</text>
+  <text x="468" y="295" font-family="monospace" font-size="10" fill="#a7f3d0">TEMP: 95.0°C</text>
+  <text x="468" y="315" font-family="monospace" font-size="10" fill="#a7f3d0">Ct Avg: 18.4</text>
+  <text x="468" y="335" font-family="monospace" font-size="10" fill="#22c55e">STATUS: RUNNING</text>
+
+  <!-- Run Control Button -->
+  <rect x="468" y="355" width="95" height="28" rx="6" fill="#10b981"/>
+  <text x="488" y="373" font-family="sans-serif" font-size="11" font-weight="bold" fill="#ffffff">PAUSE</text>
+
+  <!-- Title Label -->
+  <text x="220" y="426" font-family="sans-serif" font-size="12" font-weight="bold" fill="#64748b" letter-spacing="1">REAL-TIME QUANTITATIVE PCR SYSTEM</text>
+</svg>

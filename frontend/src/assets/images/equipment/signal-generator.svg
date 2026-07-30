@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1329"/>
+      <stop offset="100%" stop-color="#1d283c"/>
+    </linearGradient>
+    <linearGradient id="chassis" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" rx="16" fill="url(#bg)"/>
+
+  <!-- Instrument Chassis -->
+  <rect x="90" y="70" width="620" height="360" rx="14" fill="url(#chassis)" stroke="#475569" stroke-width="4"/>
+
+  <!-- Screen Frame -->
+  <rect x="120" y="100" width="340" height="230" rx="8" fill="#020617" stroke="#0ea5e9" stroke-width="2"/>
+
+  <!-- Frequency & Power Display (OLED Style) -->
+  <text x="140" y="140" font-family="monospace" font-size="22" font-weight="bold" fill="#38bdf8">6.000 000 000 GHz</text>
+  <text x="140" y="175" font-family="monospace" font-size="16" font-weight="bold" fill="#22c55e">AM / FM / QAM  |  +13.00 dBm</text>
+
+  <!-- Vector IQ Modulation Graph -->
+  <rect x="140" y="195" width="300" height="115" rx="6" fill="#090d16" stroke="#1e293b"/>
+  <!-- Constellation Diagram Points -->
+  <g fill="#38bdf8">
+    <circle cx="200" cy="230" r="4"/><circle cx="240" cy="230" r="4"/><circle cx="280" cy="230" r="4"/><circle cx="320" cy="230" r="4"/>
+    <circle cx="200" cy="255" r="4"/><circle cx="240" cy="255" r="4"/><circle cx="280" cy="255" r="4"/><circle cx="320" cy="255" r="4"/>
+    <circle cx="200" cy="280" r="4"/><circle cx="240" cy="280" r="4"/><circle cx="280" cy="280" r="4"/><circle cx="320" cy="280" r="4"/>
+  </g>
+  <line x1="260" y1="200" x2="260" y2="305" stroke="#334155" stroke-dasharray="2,2"/>
+  <line x1="145" y1="255" x2="435" y2="255" stroke="#334155" stroke-dasharray="2,2"/>
+
+  <!-- Keypad & Control Area (Right Side) -->
+  <rect x="480" y="100" width="200" height="230" rx="8" fill="#1e293b" stroke="#334155"/>
+
+  <!-- Main Frequency Dial -->
+  <circle cx="580" cy="160" r="32" fill="#0f172a" stroke="#cbd5e1" stroke-width="4"/>
+  <circle cx="580" cy="160" r="24" fill="#334155"/>
+  <circle cx="580" cy="138" r="4" fill="#38bdf8"/>
+
+  <!-- Numeric Keypad Matrix -->
+  <g fill="#0f172a" stroke="#475569" stroke-width="1">
+    <rect x="500" y="215" width="25" height="18" rx="3"/><rect x="535" y="215" width="25" height="18" rx="3"/><rect x="570" y="215" width="25" height="18" rx="3"/><rect x="605" y="215" width="50" height="18" rx="3" fill="#0284c7"/>
+    <rect x="500" y="240" width="25" height="18" rx="3"/><rect x="535" y="240" width="25" height="18" rx="3"/><rect x="570" y="240" width="25" height="18" rx="3"/><rect x="605" y="240" width="50" height="18" rx="3" fill="#0369a1"/>
+    <rect x="500" y="265" width="25" height="18" rx="3"/><rect x="535" y="265" width="25" height="18" rx="3"/><rect x="570" y="265" width="25" height="18" rx="3"/><rect x="605" y="265" width="50" height="43" rx="3" fill="#22c55e"/>
+    <rect x="500" y="290" width="60" height="18" rx="3"/><rect x="570" y="290" width="25" height="18" rx="3"/>
+  </g>
+
+  <!-- Bottom Connector Row -->
+  <rect x="120" y="350" width="560" height="60" rx="8" fill="#0f172a" stroke="#334155"/>
+
+  <!-- RF Output N-Type Connector (Gold Metallic) -->
+  <circle cx="170" cy="380" r="18" fill="#eab308" stroke="#fef08a" stroke-width="2"/>
+  <circle cx="170" cy="380" r="8" fill="#78350f"/>
+  <circle cx="170" cy="380" r="3" fill="#fef08a"/>
+  <text x="145" y="405" font-family="sans-serif" font-size="9" fill="#facc15" font-weight="bold">RF OUT 50Ω</text>
+
+  <!-- Modulation I/Q Inputs -->
+  <circle cx="280" cy="380" r="12" fill="#334155" stroke="#38bdf8" stroke-width="2"/>
+  <circle cx="340" cy="380" r="12" fill="#334155" stroke="#38bdf8" stroke-width="2"/>
+  <text x="272" y="405" font-family="sans-serif" font-size="9" fill="#94a3b8">I IN</text>
+  <text x="332" y="405" font-family="sans-serif" font-size="9" fill="#94a3b8">Q IN</text>
+
+  <!-- Title Label -->
+  <text x="120" y="88" font-family="sans-serif" font-size="12" font-weight="bold" fill="#cbd5e1" letter-spacing="1">RF VECTOR SIGNAL GENERATOR 6GHz</text>
+</svg>

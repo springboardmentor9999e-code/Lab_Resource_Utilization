@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="metallic" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#94a3b8"/>
+      <stop offset="50%" stop-color="#f1f5f9"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" rx="16" fill="url(#bg)"/>
+
+  <!-- CNC Heavy Machine Frame -->
+  <rect x="140" y="40" width="520" height="420" rx="18" fill="url(#panel)" stroke="#475569" stroke-width="4"/>
+  
+  <!-- Working Chamber Window -->
+  <rect x="170" y="65" width="370" height="330" rx="10" fill="#020617" stroke="#38bdf8" stroke-width="2"/>
+  <rect x="175" y="70" width="360" height="320" rx="6" fill="#38bdf8" fill-opacity="0.05"/>
+
+  <!-- Machine Bed & Rotary Table (5-Axis) -->
+  <rect x="200" y="310" width="310" height="40" rx="6" fill="#334155" stroke="#64748b" stroke-width="2"/>
+  <ellipse cx="355" cy="310" rx="90" ry="16" fill="url(#metallic)" stroke="#475569" stroke-width="2"/>
+
+  <!-- Metallic Machined Workpiece -->
+  <rect x="320" y="250" width="70" height="50" rx="4" fill="url(#metallic)" stroke="#cbd5e1" stroke-width="2"/>
+  <!-- Cuts & Facets -->
+  <path d="M 330 250 L 345 270 L 375 270 L 385 250 Z" fill="#64748b"/>
+
+  <!-- Milling Spindle Head & Vertical Column -->
+  <rect x="325" y="80" width="60" height="120" rx="8" fill="#1e293b" stroke="#0ea5e9" stroke-width="2"/>
+  <rect x="340" y="190" width="30" height="35" rx="4" fill="url(#metallic)"/>
+  <!-- Milling Tool Bit -->
+  <polygon points="350,225 360,225 355,248" fill="#e2e8f0"/>
+  <line x1="355" y1="245" x2="355" y2="252" stroke="#f59e0b" stroke-width="3"/>
+  <!-- Coolant Spray / Sparks -->
+  <path d="M 350 248 L 340 260 M 360 248 L 370 260 M 355 248 L 355 262" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- CNC Control Console (Right Side Panel) -->
+  <rect x="555" y="80" width="90" height="300" rx="10" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
+  <!-- Screen -->
+  <rect x="565" y="95" width="70" height="90" rx="4" fill="#020617" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="572" y="115" font-family="monospace" font-size="9" fill="#22c55e">G01 X120.5</text>
+  <text x="572" y="130" font-family="monospace" font-size="9" fill="#22c55e">Y45.2 Z-2.0</text>
+  <text x="572" y="145" font-family="monospace" font-size="9" fill="#22c55e">S12000 M03</text>
+  <path d="M 572 165 L 625 165" stroke="#38bdf8" stroke-width="2" stroke-dasharray="3,3"/>
+
+  <!-- Control Buttons Matrix -->
+  <circle cx="580" cy="210" r="6" fill="#ef4444"/>
+  <circle cx="600" cy="210" r="6" fill="#22c55e"/>
+  <circle cx="620" cy="210" r="6" fill="#f59e0b"/>
+  
+  <!-- Keypad Grid -->
+  <rect x="570" y="230" width="60" height="80" rx="4" fill="#1e293b"/>
+  <g fill="#475569">
+    <rect x="575" y="235" width="12" height="12" rx="2"/><rect x="594" y="235" width="12" height="12" rx="2"/><rect x="613" y="235" width="12" height="12" rx="2"/>
+    <rect x="575" y="252" width="12" height="12" rx="2"/><rect x="594" y="252" width="12" height="12" rx="2"/><rect x="613" y="252" width="12" height="12" rx="2"/>
+    <rect x="575" y="269" width="12" height="12" rx="2"/><rect x="594" y="269" width="12" height="12" rx="2"/><rect x="613" y="269" width="12" height="12" rx="2"/>
+  </g>
+  <!-- Emergency Stop Button -->
+  <circle cx="600" cy="345" r="16" fill="#dc2626" stroke="#fef08a" stroke-width="3"/>
+
+  <!-- Title Label -->
+  <text x="180" y="425" font-family="sans-serif" font-size="13" font-weight="bold" fill="#94a3b8" letter-spacing="1">5-AXIS PRECISION CNC MILLING CENTER</text>
+</svg>

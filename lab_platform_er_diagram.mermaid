@@ -1,0 +1,114 @@
+erDiagram
+    INSTITUTION ||--o{ DEPARTMENT : "has"
+    DEPARTMENT ||--o{ USER : "employs"
+    DEPARTMENT ||--o{ EQUIPMENT_ASSET : "owns"
+
+    ROLE }o--o{ USER : "USER_ROLE"
+    ROLE }o--o{ PERMISSION : "ROLE_PERMISSION"
+    USER ||--o{ OAUTH_ACCOUNT : "links"
+    USER ||--o{ REFRESH_TOKEN : "issues"
+
+    EQUIPMENT_CATEGORY ||--o{ EQUIPMENT : "classifies"
+    EQUIPMENT ||--o{ EQUIPMENT_ASSET : "instantiated as"
+    EQUIPMENT_ASSET ||--o{ EQUIPMENT_DOCUMENT : "has"
+    EQUIPMENT_ASSET ||--o{ EQUIPMENT_IMAGE : "has"
+
+    USER ||--o{ BOOKING : "requests"
+    EQUIPMENT_ASSET ||--o{ BOOKING : "reserved via"
+    BOOKING ||--o{ BOOKING_APPROVAL : "decided by"
+    BOOKING }o--o| BOOKING_RECURRENCE_RULE : "follows"
+    EQUIPMENT_ASSET ||--o{ WAITLIST : "queues"
+    USER ||--o{ WAITLIST : "joins"
+
+    EQUIPMENT_ASSET ||--o{ UTILIZATION_LOG : "generates"
+    UTILIZATION_LOG }o--|| BOOKING : "derived from"
+    EQUIPMENT_ASSET ||--o{ UTILIZATION_SUMMARY : "rolls up"
+
+    MAINTENANCE_TYPE ||--o{ MAINTENANCE_WORK_ORDER : "categorizes"
+    EQUIPMENT_ASSET ||--o{ MAINTENANCE_REQUEST : "raised for"
+    MAINTENANCE_REQUEST ||--o| MAINTENANCE_WORK_ORDER : "spawns"
+    MAINTENANCE_WORK_ORDER ||--o{ SERVICE_LOG : "logs"
+    USER ||--o{ MAINTENANCE_WORK_ORDER : "assigned to"
+    EQUIPMENT_ASSET ||--o{ CALIBRATION_RECORD : "tracked by"
+
+    INSTITUTION ||--o{ SHARING_AGREEMENT : "party to"
+    SHARING_AGREEMENT ||--o{ SHARING_REQUEST : "governs"
+    SHARING_REQUEST ||--o| BOOKING : "authorizes"
+
+    NOTIFICATION_TEMPLATE ||--o{ NOTIFICATION : "renders"
+    USER ||--o{ NOTIFICATION : "receives"
+    USER ||--o{ NOTIFICATION_PREFERENCE : "sets"
+
+    EQUIPMENT ||--o{ COST_RATE : "priced by"
+    UTILIZATION_LOG ||--o| USAGE_COST_ENTRY : "billed as"
+    DEPARTMENT ||--o{ INVOICE : "billed to"
+    INVOICE ||--o{ INVOICE_LINE_ITEM : "itemizes"
+    USAGE_COST_ENTRY }o--|| INVOICE_LINE_ITEM : "grouped into"
+
+    USER ||--o{ REPORT_REQUEST : "requests"
+    REPORT_REQUEST ||--o| FILE : "produces"
+
+    INSTITUTION {
+        uuid id PK
+        string name
+        string address
+        timestamptz created_at
+    }
+    DEPARTMENT {
+        uuid id PK
+        uuid institution_id FK
+        string name
+    }
+    USER {
+        uuid id PK
+        uuid department_id FK
+        string email
+        string password_hash
+        string status
+    }
+    ROLE {
+        uuid id PK
+        string name
+    }
+    EQUIPMENT {
+        uuid id PK
+        uuid category_id FK
+        string name
+        string model
+    }
+    EQUIPMENT_ASSET {
+        uuid id PK
+        uuid equipment_id FK
+        uuid department_id FK
+        string serial_number
+        string status
+        timestamptz deleted_at
+    }
+    BOOKING {
+        uuid id PK
+        uuid user_id FK
+        uuid equipment_asset_id FK
+        uuid recurrence_rule_id FK
+        uuid sharing_request_id FK
+        tstzrange time_range
+        string status
+    }
+    MAINTENANCE_WORK_ORDER {
+        uuid id PK
+        uuid equipment_asset_id FK
+        uuid maintenance_type_id FK
+        uuid assigned_technician_id FK
+        string status
+    }
+    SHARING_AGREEMENT {
+        uuid id PK
+        uuid institution_a_id FK
+        uuid institution_b_id FK
+        string status
+    }
+    INVOICE {
+        uuid id PK
+        uuid department_id FK
+        numeric total_amount
+        string status
+    }

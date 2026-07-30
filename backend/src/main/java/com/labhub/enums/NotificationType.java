@@ -1,0 +1,21 @@
+package com.labhub.enums;
+
+/**
+ * Notification type for categorizing alerts across all system workflows.
+ */
+public enum NotificationType {
+    BOOKING_CONFIRMED,
+    BOOKING_APPROVED,
+    BOOKING_REJECTED,
+    BOOKING_CANCELLED,
+    BOOKING_REMINDER,
+    MAINTENANCE_SCHEDULED,
+    MAINTENANCE_APPROVED,
+    MAINTENANCE_REJECTED,
+    EQUIPMENT_AVAILABLE,
+    WAITLIST_UPDATE,
+    APPROVAL_REQUIRED,
+    PARTNERSHIP_REQUEST,
+    EQUIPMENT_SHARING_REQUEST,
+    SYSTEM_ALERT
+}

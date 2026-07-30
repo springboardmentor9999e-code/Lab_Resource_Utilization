@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="50%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" rx="16" fill="url(#bg)"/>
+
+  <!-- UTM Frame Base -->
+  <rect x="220" y="380" width="360" height="70" rx="12" fill="#1e293b" stroke="#475569" stroke-width="3"/>
+  <rect x="240" y="395" width="320" height="40" rx="6" fill="#0f172a"/>
+
+  <!-- Top Crosshead Frame Cap -->
+  <rect x="220" y="50" width="360" height="40" rx="10" fill="#334155" stroke="#64748b" stroke-width="3"/>
+
+  <!-- Dual Heavy Load Columns (Left & Right) -->
+  <rect x="250" y="85" width="45" height="300" rx="6" fill="url(#metal)" stroke="#334155" stroke-width="2"/>
+  <rect x="505" y="85" width="45" height="300" rx="6" fill="url(#metal)" stroke="#334155" stroke-width="2"/>
+  <!-- Lead Screws -->
+  <line x1="272" y1="90" x2="272" y2="380" stroke="#0f172a" stroke-width="6" stroke-dasharray="4,4"/>
+  <line x1="527" y1="90" x2="527" y2="380" stroke="#0f172a" stroke-width="6" stroke-dasharray="4,4"/>
+
+  <!-- Moving Crosshead Assembly -->
+  <rect x="240" y="170" width="320" height="45" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+  <!-- Load Cell -->
+  <rect x="375" y="215" width="50" height="30" rx="4" fill="#38bdf8" stroke="#0ea5e9" stroke-width="2"/>
+
+  <!-- Upper Tensile Grip Jaw -->
+  <rect x="380" y="245" width="40" height="35" rx="4" fill="url(#metal)" stroke="#1e293b"/>
+
+  <!-- Lower Tensile Grip Jaw (Mounted on Base) -->
+  <rect x="380" y="335" width="40" height="35" rx="4" fill="url(#metal)" stroke="#1e293b"/>
+
+  <!-- Dogbone Tensile Specimen (Dogbone Specimen under test) -->
+  <path d="M 390 280 L 410 280 L 405 290 L 405 325 L 410 335 L 390 335 L 395 325 L 395 290 Z" fill="#facc15" stroke="#eab308" stroke-width="1.5"/>
+  <!-- Stress / Strain Crack/Force Vectors -->
+  <line x1="370" y1="307" x2="390" y2="307" stroke="#ef4444" stroke-width="2"/>
+  <polygon points="365,307 372,303 372,311" fill="#ef4444"/>
+  <line x1="430" y1="307" x2="410" y2="307" stroke="#ef4444" stroke-width="2"/>
+  <polygon points="435,307 428,303 428,311" fill="#ef4444"/>
+
+  <!-- Digital Controller Display Unit (Right Side Panel) -->
+  <rect x="600" y="120" width="140" height="240" rx="10" fill="#020617" stroke="#38bdf8" stroke-width="2"/>
+  <!-- Readout Screen -->
+  <rect x="610" y="135" width="120" height="100" rx="6" fill="#090d16"/>
+  <text x="618" y="160" font-family="monospace" font-size="11" font-weight="bold" fill="#38bdf8">FORCE: 84.5 kN</text>
+  <text x="618" y="185" font-family="monospace" font-size="11" font-weight="bold" fill="#22c55e">EXT: 3.42 mm</text>
+  <text x="618" y="210" font-family="monospace" font-size="10" fill="#facc15">STRESS: 420MPa</text>
+
+  <!-- Emergency Stop Button -->
+  <circle cx="670" cy="285" r="18" fill="#dc2626" stroke="#fef08a" stroke-width="3"/>
+
+  <!-- Title Label -->
+  <text x="210" y="470" font-family="sans-serif" font-size="12" font-weight="bold" fill="#94a3b8" letter-spacing="1">UNIVERSAL TESTING MACHINE (100kN TENSILE/COMPRESSION)</text>
+</svg>
