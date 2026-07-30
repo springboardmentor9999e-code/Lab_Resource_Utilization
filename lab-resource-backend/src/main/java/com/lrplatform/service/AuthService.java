@@ -18,6 +18,7 @@ import com.lrplatform.repository.PasswordResetTokenRepository;
 import com.lrplatform.repository.RefreshTokenRepository;
 import com.lrplatform.repository.UserRepository;
 import com.lrplatform.security.JwtTokenProvider;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,8 +66,8 @@ public class AuthService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = tokenProvider.generateAccessToken(authentication);
-            String refreshToken = tokenProvider.generateRefreshToken(authentication);
+            String accessToken = tokenProvider.generateAccessTokenFromEmail(request.getEmail());
+            String refreshToken = tokenProvider.generateRefreshTokenFromEmail(request.getEmail());
 
             User user = userRepository.findByEmail(request.getEmail())
                     .orElseThrow(() -> new BadRequestException("User not found"));
@@ -226,8 +227,14 @@ public class AuthService {
 
     @Transactional
     public AuthResponse completeOAuthProfile(CompleteProfileRequest request) {
-        String email = tokenProvider.getEmailFromToken(request.getSetupToken());
-        String tokenType = tokenProvider.getClaimFromToken(request.getSetupToken(), "type");
+        String email;
+        String tokenType;
+        try {
+            email = tokenProvider.getEmailFromToken(request.getSetupToken());
+            tokenType = tokenProvider.getClaimFromToken(request.getSetupToken(), "type");
+        } catch (JwtException e) {
+            throw new BadRequestException("Invalid or expired setup token");
+        }
 
         if (!"setup".equals(tokenType)) {
             throw new BadRequestException("Invalid setup token");

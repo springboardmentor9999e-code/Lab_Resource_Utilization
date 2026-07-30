@@ -22,6 +22,7 @@ export default function ResourceSharingDashboard() {
   const [activeTab, setActiveTab] = useState('equipment');
   const [equipmentStatusFilter, setEquipmentStatusFilter] = useState('');
   const [bookingStatusFilter, setBookingStatusFilter] = useState('');
+  const [partnershipStatusFilter, setPartnershipStatusFilter] = useState('');
   const [equipmentModal, setEquipmentModal] = useState(null);
   const [partnershipModal, setPartnershipModal] = useState(null);
   const [bookingModal, setBookingModal] = useState(null);
@@ -172,6 +173,7 @@ export default function ResourceSharingDashboard() {
 
   const filteredEquipment = sharedEquipment.filter((e) => !equipmentStatusFilter || e.sharingStatus === equipmentStatusFilter);
   const filteredBookings = externalBookings.filter((b) => !bookingStatusFilter || b.status === bookingStatusFilter);
+  const filteredPartnerships = partnerships.filter((p) => !partnershipStatusFilter || p.status === partnershipStatusFilter);
 
   const statCards = [
     { label: 'Total Shared Equipment', value: analytics?.totalSharedEquipment ?? sharedEquipment.length, icon: Cpu, color: 'bg-blue-100 text-blue-700' },
@@ -316,11 +318,13 @@ export default function ResourceSharingDashboard() {
                     }} className="flex-1 flex items-center justify-center gap-1 p-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors">
                       <Edit size={14} /> Edit
                     </button>
+                    {item.sharingStatus === 'ACTIVE' && (
                     <button onClick={() => {
                       if (window.confirm('Stop sharing this equipment?')) stopSharingMutation.mutate(item.id);
                     }} className="flex-1 flex items-center justify-center gap-1 p-2 text-sm text-red-600 hover:bg-red-50 rounded transition-colors">
                       <Pause size={14} /> Stop Sharing
                     </button>
+                    )}
                   </div>
                   )}
                 </div>
@@ -333,7 +337,17 @@ export default function ResourceSharingDashboard() {
       {/* Tab 2: Partnerships */}
       {activeTab === 'partnerships' && (
         <div>
-          <div className="flex items-center justify-end mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Filter size={16} className="text-gray-400" />
+                <select className="input-field" value={partnershipStatusFilter} onChange={(e) => setPartnershipStatusFilter(e.target.value)}>
+                  <option value="">All Status</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="INACTIVE">Inactive</option>
+                </select>
+              </div>
+            </div>
             {isAdmin && (
             <button onClick={() => { resetPartnershipForm(); setPartnershipModal('create'); }} className="btn-primary flex items-center gap-2">
               <Plus size={16} /> Create Partnership
@@ -345,14 +359,14 @@ export default function ResourceSharingDashboard() {
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
             </div>
-          ) : partnerships.length === 0 ? (
+          ) : filteredPartnerships.length === 0 ? (
             <div className="card text-center py-12">
               <Handshake size={48} className="mx-auto text-gray-300 mb-3" />
               <p className="text-gray-500">No partnerships found</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {partnerships.map((p) => (
+              {filteredPartnerships.map((p) => (
                 <div key={p.id} className="card hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">

@@ -36,9 +36,9 @@ spring:
             user-name-attribute: sub
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/lrup
+    url: jdbc:postgresql://localhost:5432/lrup
     username: postgres
-    password: root
+    password: postgres
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -144,8 +144,19 @@ spring:
     show-sql: false
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
   datasource:
-    url: jdbc:postgresql://localhost:5433/lrup
+    url: jdbc:h2:mem:lrup;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  flyway:
+    enabled: false
+  h2:
+    console:
+      enabled: true
 
 ---
 spring:

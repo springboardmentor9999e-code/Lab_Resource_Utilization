@@ -12,5 +12,6 @@ import java.util.Optional;
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
     List<Department> findByInstitutionId(Long institutionId);
     Boolean existsByDepartmentNameAndInstitutionId(String name, Long institutionId);
+    Optional<Department> findByDepartmentNameAndInstitutionId(String departmentName, Long institutionId);
     Optional<Department> findByHodId(Long hodId);
 }

@@ -86,7 +86,7 @@ public class UtilizationIntelligenceService {
         String sql = "SELECT e.id, e.equipment_name, e.equipment_code, e.status, " +
                 "COALESCE(e.max_booking_hours, " + DEFAULT_MAX_DAILY_HOURS + ") as max_daily_hours, " +
                 "COUNT(b.id) as bookings, " +
-                "COALESCE(SUM(EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600), 0) as booked_hours " +
+                "COALESCE(SUM(" + timeDiffSecs("b.end_time", "b.start_time") + " / 3600), 0) as booked_hours " +
                 "FROM equipment e " + baseJoin +
                 "LEFT JOIN bookings b ON b.equipment_id = e.id " +
                 "AND b.booking_date BETWEEN ? AND ? " +
@@ -139,15 +139,16 @@ public class UtilizationIntelligenceService {
     }
 
     private List<SlotOccupancy> getSlotOccupancy(Long equipmentId, LocalDate startDate, LocalDate endDate, long operatingDays) {
-        String sql = "SELECT EXTRACT(HOUR FROM start_time) as hour, " +
+        String hourExpr = "CAST(SUBSTRING(CAST(start_time AS VARCHAR) FROM 1 FOR 2) AS INTEGER)";
+        String sql = "SELECT " + hourExpr + " as hour, " +
                 "COUNT(DISTINCT booking_date) as days_booked, " +
                 "COUNT(*) as booking_count " +
                 "FROM bookings " +
                 "WHERE equipment_id = ? " +
                 "AND booking_date BETWEEN ? AND ? " +
                 "AND booking_status IN " + BOOKING_STATUS_FILTER + " " +
-                "AND EXTRACT(HOUR FROM start_time) >= ? AND EXTRACT(HOUR FROM start_time) < ? " +
-                "GROUP BY EXTRACT(HOUR FROM start_time) " +
+                "AND " + hourExpr + " >= ? AND " + hourExpr + " < ? " +
+                "GROUP BY " + hourExpr + " " +
                 "ORDER BY hour";
 
         List<SlotOccupancy> slots = new ArrayList<>();
@@ -254,7 +255,7 @@ public class UtilizationIntelligenceService {
     }
 
     private long[] getDepartmentBookedAndAvailableHours(Long departmentId, LocalDate startDate, LocalDate endDate, long operatingDays) {
-        String sql = "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600), 0) as booked, " +
+        String sql = "SELECT COALESCE(SUM(" + timeDiffSecs("b.end_time", "b.start_time") + " / 3600), 0) as booked, " +
                 "COALESCE(SUM(COALESCE(e.max_booking_hours, " + DEFAULT_MAX_DAILY_HOURS + ") * " + operatingDays + "), 0) as available " +
                 "FROM equipment e " +
                 "INNER JOIN laboratories l ON e.laboratory_id = l.id " +
@@ -340,11 +341,11 @@ public class UtilizationIntelligenceService {
             baseParams = new Object[]{};
         }
 
-        String peakHourSql = "SELECT EXTRACT(HOUR FROM b.start_time) as hour, COUNT(*) as count " +
+        String peakHourSql = "SELECT " + hourExpr("b.start_time") + " as hour, COUNT(*) as count " +
                 "FROM bookings b " + joinClause +
                 "WHERE b.booking_date BETWEEN ? AND ? " +
                 "AND b.booking_status IN " + BOOKING_STATUS_FILTER + " " + filterClause +
-                "GROUP BY EXTRACT(HOUR FROM b.start_time) ORDER BY count DESC LIMIT 1";
+                "GROUP BY " + hourExpr("b.start_time") + " ORDER BY count DESC LIMIT 1";
 
         String peakDaySql = "SELECT EXTRACT(DOW FROM b.booking_date) as day_of_week, COUNT(*) as count " +
                 "FROM bookings b " + joinClause +
@@ -352,11 +353,11 @@ public class UtilizationIntelligenceService {
                 "AND b.booking_status IN " + BOOKING_STATUS_FILTER + " " + filterClause +
                 "GROUP BY EXTRACT(DOW FROM b.booking_date) ORDER BY count DESC LIMIT 1";
 
-        String hourlySql = "SELECT EXTRACT(HOUR FROM b.start_time) as hour, COUNT(*) as count " +
+        String hourlySql = "SELECT " + hourExpr("b.start_time") + " as hour, COUNT(*) as count " +
                 "FROM bookings b " + joinClause +
                 "WHERE b.booking_date BETWEEN ? AND ? " +
                 "AND b.booking_status IN " + BOOKING_STATUS_FILTER + " " + filterClause +
-                "GROUP BY EXTRACT(HOUR FROM b.start_time) ORDER BY hour";
+                "GROUP BY " + hourExpr("b.start_time") + " ORDER BY hour";
 
         String peakHour = "N/A";
         long peakBookings = 0;
@@ -434,5 +435,16 @@ public class UtilizationIntelligenceService {
             current = current.plusDays(1);
         }
         return count;
+    }
+
+    private static String hourExpr(String col) {
+        return "CAST(SUBSTRING(CAST(" + col + " AS VARCHAR) FROM 1 FOR 2) AS INTEGER)";
+    }
+
+    private static String timeDiffSecs(String endCol, String startCol) {
+        String h = "CAST(SUBSTRING(CAST(%s AS VARCHAR) FROM 1 FOR 2) AS INTEGER)";
+        String m = "CAST(SUBSTRING(CAST(%s AS VARCHAR) FROM 4 FOR 2) AS INTEGER)";
+        return "((" + String.format(h, endCol) + " * 3600 + " + String.format(m, endCol) + " * 60)" +
+               " - (" + String.format(h, startCol) + " * 3600 + " + String.format(m, startCol) + " * 60))";
     }
 }
