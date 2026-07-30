@@ -1,0 +1,69 @@
+body{
+    background:#f4f7fc;
+}
+
+.admin-dashboard{
+    max-width:1300px;
+    margin:40px auto;
+    padding:20px;
+}
+
+.admin-dashboard h2{
+    font-weight:bold;
+    color:#0d6efd;
+}
+
+.card{
+    border:none;
+    border-radius:15px;
+    transition:.3s;
+}
+
+.card:hover{
+    transform:translateY(-5px);
+}
+
+.card h4{
+    font-size:30px;
+    font-weight:bold;
+}
+
+.card p{
+    margin-bottom:0;
+    color:#666;
+}
+
+.table{
+    background:#fff;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+}
+
+.table th{
+    text-align:center;
+    vertical-align:middle;
+}
+
+.table td{
+    text-align:center;
+    vertical-align:middle;
+}
+
+.btn{
+    border-radius:8px;
+    min-width:100px;
+}
+
+.input-group{
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
+.form-control{
+    border-left:none;
+}
+
+.input-group-text{
+    background:white;
+    border-right:none;
+}
