@@ -51,8 +51,8 @@ cp .env.example .env
 Edit `backend/.env`:
 ```env
 DB_PASSWORD=your_postgres_password
-MAIL_USERNAME=badalkusingh8@gmail.com
-MAIL_PASSWORD=fpippkhczipkwckb
+MAIL_USERNAME=
+MAIL_PASSWORD=
 ```
 
 **Get a Gmail App Password:**
