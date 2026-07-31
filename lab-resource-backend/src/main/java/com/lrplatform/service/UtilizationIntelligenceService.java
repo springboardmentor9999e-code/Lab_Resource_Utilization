@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalTime;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -64,9 +64,25 @@ public class UtilizationIntelligenceService {
                 .build();
     }
 
+    private Map<Long, Long> loadBookedHoursByEquipment(LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT equipment_id, start_time, end_time FROM bookings " +
+                "WHERE booking_date BETWEEN ? AND ? " +
+                "AND booking_status IN " + BOOKING_STATUS_FILTER;
+        Map<Long, Long> hoursMap = new HashMap<>();
+        jdbcTemplate.query(sql, (rs) -> {
+            Long eqId = rs.getLong("equipment_id");
+            LocalTime st = rs.getTime("start_time").toLocalTime();
+            LocalTime et = rs.getTime("end_time").toLocalTime();
+            long mins = Duration.between(st, et).toMinutes();
+            if (mins < 0) mins += 24 * 60;
+            hoursMap.merge(eqId, mins / 60, Long::sum);
+        }, startDate, endDate);
+        return hoursMap;
+    }
+
     private List<EquipmentUtilization> buildEquipmentUtilizations(Long institutionId, Long departmentId,
-                                                                   LocalDate startDate, LocalDate endDate,
-                                                                   long operatingDays) {
+                                                                    LocalDate startDate, LocalDate endDate,
+                                                                    long operatingDays) {
         String baseJoin = "";
         String whereClause = "";
         Object[] params;
@@ -85,8 +101,7 @@ public class UtilizationIntelligenceService {
 
         String sql = "SELECT e.id, e.equipment_name, e.equipment_code, e.status, " +
                 "COALESCE(e.max_booking_hours, " + DEFAULT_MAX_DAILY_HOURS + ") as max_daily_hours, " +
-                "COUNT(b.id) as bookings, " +
-                "COALESCE(SUM(" + timeDiffSecs("b.end_time", "b.start_time") + " / 3600), 0) as booked_hours " +
+                "COUNT(b.id) as bookings " +
                 "FROM equipment e " + baseJoin +
                 "LEFT JOIN bookings b ON b.equipment_id = e.id " +
                 "AND b.booking_date BETWEEN ? AND ? " +
@@ -105,11 +120,13 @@ public class UtilizationIntelligenceService {
             fullParams = new Object[]{startDate, endDate};
         }
 
+        Map<Long, Long> bookedHoursMap = loadBookedHoursByEquipment(startDate, endDate);
+
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             long equipmentId = rs.getLong("id");
             int maxDailyHours = rs.getInt("max_daily_hours");
             long bookings = rs.getLong("bookings");
-            long bookedHours = rs.getLong("booked_hours");
+            long bookedHours = bookedHoursMap.getOrDefault(equipmentId, 0L);
             long availableHours = maxDailyHours * operatingDays;
             double utilRate = availableHours > 0 ? Math.round((double) bookedHours / availableHours * 10000.0) / 100.0 : 0;
             double sessionFreq = operatingDays > 0 ? Math.round((double) bookings / operatingDays * 100.0) / 100.0 : 0;
@@ -139,37 +156,29 @@ public class UtilizationIntelligenceService {
     }
 
     private List<SlotOccupancy> getSlotOccupancy(Long equipmentId, LocalDate startDate, LocalDate endDate, long operatingDays) {
-        String hourExpr = "CAST(SUBSTRING(CAST(start_time AS VARCHAR) FROM 1 FOR 2) AS INTEGER)";
-        String sql = "SELECT " + hourExpr + " as hour, " +
-                "COUNT(DISTINCT booking_date) as days_booked, " +
-                "COUNT(*) as booking_count " +
-                "FROM bookings " +
-                "WHERE equipment_id = ? " +
-                "AND booking_date BETWEEN ? AND ? " +
-                "AND booking_status IN " + BOOKING_STATUS_FILTER + " " +
-                "AND " + hourExpr + " >= ? AND " + hourExpr + " < ? " +
-                "GROUP BY " + hourExpr + " " +
-                "ORDER BY hour";
+        String sql = "SELECT start_time, booking_date FROM bookings " +
+                "WHERE equipment_id = ? AND booking_date BETWEEN ? AND ? " +
+                "AND booking_status IN " + BOOKING_STATUS_FILTER;
+
+        Map<Integer, Set<LocalDate>> daysByHour = new HashMap<>();
+        Map<Integer, Long> countByHour = new HashMap<>();
+
+        jdbcTemplate.query(sql, (rs) -> {
+            LocalTime time = rs.getTime("start_time").toLocalTime();
+            LocalDate date = rs.getDate("booking_date").toLocalDate();
+            int hour = time.getHour();
+            daysByHour.computeIfAbsent(hour, k -> new HashSet<>()).add(date);
+            countByHour.merge(hour, 1L, Long::sum);
+        }, equipmentId, startDate, endDate);
 
         List<SlotOccupancy> slots = new ArrayList<>();
-        Map<Integer, Long> slotMap = new java.util.HashMap<>();
-        Map<Integer, Long> countMap = new java.util.HashMap<>();
-
-        jdbcTemplate.query(sql, (rs, rowNum) -> {
-            int hour = rs.getInt("hour");
-            slotMap.put(hour, rs.getLong("days_booked"));
-            countMap.put(hour, rs.getLong("booking_count"));
-            return null;
-        }, equipmentId, startDate, endDate, OPERATING_DAY_START_HOUR, OPERATING_DAY_END_HOUR);
-
         for (int h = OPERATING_DAY_START_HOUR; h < OPERATING_DAY_END_HOUR; h++) {
-            long daysBooked = slotMap.getOrDefault(h, 0L);
-            long bookingCount = countMap.getOrDefault(h, 0L);
+            long daysBooked = daysByHour.getOrDefault(h, Collections.emptySet()).size();
+            long bookingCount = countByHour.getOrDefault(h, 0L);
             double occupancy = operatingDays > 0 ? Math.round((double) daysBooked / operatingDays * 10000.0) / 100.0 : 0;
-            String label = String.format("%02d:00-%02d:00", h, h + 1);
             slots.add(SlotOccupancy.builder()
                     .hour(h)
-                    .label(label)
+                    .label(String.format("%02d:00-%02d:00", h, h + 1))
                     .occupancyPercent(occupancy)
                     .bookingCount(bookingCount)
                     .daysBooked(daysBooked)
@@ -191,9 +200,27 @@ public class UtilizationIntelligenceService {
         return Math.round(totalFreq / equipmentUtils.size() * 100.0) / 100.0;
     }
 
+    private Map<Long, Long> loadDepartmentBookedHours(LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT l.department_id, b.start_time, b.end_time " +
+                "FROM bookings b INNER JOIN equipment e ON b.equipment_id = e.id " +
+                "INNER JOIN laboratories l ON e.laboratory_id = l.id " +
+                "WHERE b.booking_date BETWEEN ? AND ? " +
+                "AND b.booking_status IN " + BOOKING_STATUS_FILTER;
+        Map<Long, Long> hoursMap = new HashMap<>();
+        jdbcTemplate.query(sql, (rs) -> {
+            Long deptId = rs.getLong("department_id");
+            LocalTime st = rs.getTime("start_time").toLocalTime();
+            LocalTime et = rs.getTime("end_time").toLocalTime();
+            long mins = Duration.between(st, et).toMinutes();
+            if (mins < 0) mins += 24 * 60;
+            hoursMap.merge(deptId, mins / 60, Long::sum);
+        }, startDate, endDate);
+        return hoursMap;
+    }
+
     private List<DepartmentUtilization> buildDepartmentUtilizations(Long institutionId, Long departmentId,
-                                                                     LocalDate startDate, LocalDate endDate,
-                                                                     long operatingDays) {
+                                                                      LocalDate startDate, LocalDate endDate,
+                                                                      long operatingDays) {
         String whereClause;
         Object[] params;
 
@@ -210,8 +237,7 @@ public class UtilizationIntelligenceService {
 
         String sql = "SELECT d.id as department_id, d.department_name, " +
                 "COUNT(DISTINCT e.id) as total_equipment, " +
-                "COUNT(DISTINCT b.id) as total_bookings, " +
-                "COALESCE(SUM(DISTINCT 0) + 0, 0) as placeholder " +
+                "COUNT(DISTINCT b.id) as total_bookings " +
                 "FROM departments d " +
                 "LEFT JOIN laboratories l ON l.department_id = d.id " +
                 "LEFT JOIN equipment e ON e.laboratory_id = l.id " +
@@ -232,14 +258,14 @@ public class UtilizationIntelligenceService {
             fullParams = new Object[]{startDate, endDate};
         }
 
+        Map<Long, Long> deptBookedHours = loadDepartmentBookedHours(startDate, endDate);
+
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             Long deptId = rs.getLong("department_id");
             long totalEquipment = rs.getLong("total_equipment");
             long totalBookings = rs.getLong("total_bookings");
-
-            long[] hours = getDepartmentBookedAndAvailableHours(deptId, startDate, endDate, operatingDays);
-            long bookedHours = hours[0];
-            long availableHours = hours[1];
+            long bookedHours = deptBookedHours.getOrDefault(deptId, 0L);
+            long availableHours = totalEquipment * DEFAULT_MAX_DAILY_HOURS * operatingDays;
             double rate = availableHours > 0 ? Math.round((double) bookedHours / availableHours * 10000.0) / 100.0 : 0;
 
             return DepartmentUtilization.builder()
@@ -252,21 +278,6 @@ public class UtilizationIntelligenceService {
                     .utilizationRate(rate)
                     .build();
         }, fullParams);
-    }
-
-    private long[] getDepartmentBookedAndAvailableHours(Long departmentId, LocalDate startDate, LocalDate endDate, long operatingDays) {
-        String sql = "SELECT COALESCE(SUM(" + timeDiffSecs("b.end_time", "b.start_time") + " / 3600), 0) as booked, " +
-                "COALESCE(SUM(COALESCE(e.max_booking_hours, " + DEFAULT_MAX_DAILY_HOURS + ") * " + operatingDays + "), 0) as available " +
-                "FROM equipment e " +
-                "INNER JOIN laboratories l ON e.laboratory_id = l.id " +
-                "LEFT JOIN bookings b ON b.equipment_id = e.id " +
-                "AND b.booking_date BETWEEN ? AND ? " +
-                "AND b.booking_status IN " + BOOKING_STATUS_FILTER + " " +
-                "WHERE l.department_id = ?";
-
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> new long[]{
-                rs.getLong("booked"), rs.getLong("available")
-        }, startDate, endDate, departmentId);
     }
 
     private List<IdleEquipment> buildIdleEquipment(Long institutionId, Long departmentId, LocalDate startDate) {
@@ -341,71 +352,62 @@ public class UtilizationIntelligenceService {
             baseParams = new Object[]{};
         }
 
-        String peakHourSql = "SELECT " + hourExpr("b.start_time") + " as hour, COUNT(*) as count " +
-                "FROM bookings b " + joinClause +
-                "WHERE b.booking_date BETWEEN ? AND ? " +
-                "AND b.booking_status IN " + BOOKING_STATUS_FILTER + " " + filterClause +
-                "GROUP BY " + hourExpr("b.start_time") + " ORDER BY count DESC LIMIT 1";
-
-        String peakDaySql = "SELECT EXTRACT(DOW FROM b.booking_date) as day_of_week, COUNT(*) as count " +
-                "FROM bookings b " + joinClause +
-                "WHERE b.booking_date BETWEEN ? AND ? " +
-                "AND b.booking_status IN " + BOOKING_STATUS_FILTER + " " + filterClause +
-                "GROUP BY EXTRACT(DOW FROM b.booking_date) ORDER BY count DESC LIMIT 1";
-
-        String hourlySql = "SELECT " + hourExpr("b.start_time") + " as hour, COUNT(*) as count " +
-                "FROM bookings b " + joinClause +
-                "WHERE b.booking_date BETWEEN ? AND ? " +
-                "AND b.booking_status IN " + BOOKING_STATUS_FILTER + " " + filterClause +
-                "GROUP BY " + hourExpr("b.start_time") + " ORDER BY hour";
-
-        String peakHour = "N/A";
-        long peakBookings = 0;
-        try {
-            Object[] peakHourParams = buildParams(startDate, endDate, baseParams);
-            List<Map<String, Object>> results = jdbcTemplate.queryForList(peakHourSql, peakHourParams);
-            if (!results.isEmpty()) {
-                int hour = ((Number) results.get(0).get("hour")).intValue();
-                peakBookings = ((Number) results.get(0).get("count")).longValue();
-                peakHour = String.format("%02d:00 - %02d:59", hour, hour);
-            }
-        } catch (Exception e) {
-            log.warn("Could not determine peak hour: {}", e.getMessage());
+        Object[] params;
+        if (institutionId != null || departmentId != null) {
+            params = new Object[baseParams.length + 2];
+            params[0] = startDate;
+            params[1] = endDate;
+            System.arraycopy(baseParams, 0, params, 2, baseParams.length);
+        } else {
+            params = new Object[]{startDate, endDate};
         }
 
         String peakDay = "N/A";
-        try {
-            Object[] peakDayParams = buildParams(startDate, endDate, baseParams);
-            List<Map<String, Object>> results = jdbcTemplate.queryForList(peakDaySql, peakDayParams);
-            if (!results.isEmpty()) {
-                int dayOfWeek = ((Number) results.get(0).get("day_of_week")).intValue();
-                String[] days = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-                peakDay = days[dayOfWeek % 7];
-            }
-        } catch (Exception e) {
-            log.warn("Could not determine peak day: {}", e.getMessage());
-        }
-
+        String peakHour = "N/A";
+        long peakBookings = 0;
         List<HourlyDistribution> hourlyDistribution = new ArrayList<>();
+
         try {
-            Object[] hourlyParams = buildParams(startDate, endDate, baseParams);
-            List<Map<String, Object>> hourlyResults = jdbcTemplate.queryForList(hourlySql, hourlyParams);
-            long[] hourCounts = new long[24];
-            for (Map<String, Object> row : hourlyResults) {
-                int h = ((Number) row.get("hour")).intValue();
-                hourCounts[h] = ((Number) row.get("count")).longValue();
+            String rawSql = "SELECT b.start_time, b.booking_date FROM bookings b " + joinClause +
+                    "WHERE b.booking_date BETWEEN ? AND ? " +
+                    "AND b.booking_status IN " + BOOKING_STATUS_FILTER + " " + filterClause;
+
+            Map<Integer, Long> hourCounts = new HashMap<>();
+            Map<Integer, Long> dayCounts = new HashMap<>();
+
+            jdbcTemplate.query(rawSql, (rs) -> {
+                LocalTime time = rs.getTime("start_time").toLocalTime();
+                LocalDate date = rs.getDate("booking_date").toLocalDate();
+                hourCounts.merge(time.getHour(), 1L, Long::sum);
+                int dow = date.getDayOfWeek().getValue() % 7;
+                dayCounts.merge(dow, 1L, Long::sum);
+            }, params);
+
+            Map.Entry<Integer, Long> peakHourEntry = hourCounts.entrySet().stream()
+                    .max(Map.Entry.comparingByValue()).orElse(null);
+            if (peakHourEntry != null) {
+                peakBookings = peakHourEntry.getValue();
+                peakHour = String.format("%02d:00 - %02d:59", peakHourEntry.getKey(), peakHourEntry.getKey());
             }
-            long maxCount = java.util.Arrays.stream(hourCounts).max().orElse(1);
+
+            Map.Entry<Integer, Long> peakDayEntry = dayCounts.entrySet().stream()
+                    .max(Map.Entry.comparingByValue()).orElse(null);
+            if (peakDayEntry != null) {
+                String[] days = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+                peakDay = days[peakDayEntry.getKey() % 7];
+            }
+
             for (int h = OPERATING_DAY_START_HOUR; h < OPERATING_DAY_END_HOUR; h++) {
-                double occupancy = operatingDays > 0 ? Math.round((double) hourCounts[h] / operatingDays * 10000.0) / 100.0 : 0;
+                long count = hourCounts.getOrDefault(h, 0L);
+                double occupancy = operatingDays > 0 ? Math.round((double) count / operatingDays * 10000.0) / 100.0 : 0;
                 hourlyDistribution.add(HourlyDistribution.builder()
                         .hour(h)
-                        .bookingCount(hourCounts[h])
+                        .bookingCount(count)
                         .occupancyPercent(occupancy)
                         .build());
             }
         } catch (Exception e) {
-            log.warn("Could not build hourly distribution: {}", e.getMessage());
+            log.warn("Could not build peak usage info: {}", e.getMessage());
         }
 
         return PeakUsageInfo.builder()
@@ -414,14 +416,6 @@ public class UtilizationIntelligenceService {
                 .peakBookings(peakBookings)
                 .hourlyDistribution(hourlyDistribution)
                 .build();
-    }
-
-    private Object[] buildParams(LocalDate startDate, LocalDate endDate, Object[] existing) {
-        Object[] result = new Object[existing.length + 2];
-        result[0] = startDate;
-        result[1] = endDate;
-        System.arraycopy(existing, 0, result, 2, existing.length);
-        return result;
     }
 
     private long countWeekdays(LocalDate start, LocalDate end) {
@@ -435,16 +429,5 @@ public class UtilizationIntelligenceService {
             current = current.plusDays(1);
         }
         return count;
-    }
-
-    private static String hourExpr(String col) {
-        return "CAST(SUBSTRING(CAST(" + col + " AS VARCHAR) FROM 1 FOR 2) AS INTEGER)";
-    }
-
-    private static String timeDiffSecs(String endCol, String startCol) {
-        String h = "CAST(SUBSTRING(CAST(%s AS VARCHAR) FROM 1 FOR 2) AS INTEGER)";
-        String m = "CAST(SUBSTRING(CAST(%s AS VARCHAR) FROM 4 FOR 2) AS INTEGER)";
-        return "((" + String.format(h, endCol) + " * 3600 + " + String.format(m, endCol) + " * 60)" +
-               " - (" + String.format(h, startCol) + " * 3600 + " + String.format(m, startCol) + " * 60))";
     }
 }

@@ -4,6 +4,7 @@ import com.lrplatform.model.entity.NotificationRetryQueue;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -20,6 +21,7 @@ public interface NotificationRetryQueueRepository extends JpaRepository<Notifica
     Long countPending();
 
     @Modifying
+    @Transactional
     @Query("UPDATE NotificationRetryQueue r SET r.status = 'EXPIRED' WHERE r.status = 'PENDING' AND r.retryCount >= r.maxRetries")
     int markExpiredRetries();
 }

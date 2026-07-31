@@ -30,8 +30,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.equipment.laboratory.department.id = :departmentId")
     Long countByEquipmentLaboratoryDepartmentId(@Param("departmentId") Long departmentId);
 
-    @Query(value = "SELECT COALESCE(SUM(EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600), 0) FROM bookings b WHERE b.booking_status = 'COMPLETED' AND EXTRACT(MONTH FROM b.booking_date) = :month AND EXTRACT(YEAR FROM b.booking_date) = :year", nativeQuery = true)
-    Long sumCompletedBookingHoursByMonth(@Param("month") int month, @Param("year") int year);
+    @Query(value = "SELECT start_time, end_time FROM bookings WHERE booking_status = 'COMPLETED' AND EXTRACT(MONTH FROM booking_date) = :month AND EXTRACT(YEAR FROM booking_date) = :year", nativeQuery = true)
+    List<Object[]> findCompletedBookingTimesByMonth(@Param("month") int month, @Param("year") int year);
 
     @Query("SELECT b FROM Booking b WHERE b.equipment.id = :equipmentId " +
            "AND b.bookingDate = :date " +

@@ -16,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -163,9 +165,16 @@ public class AnalyticsService {
 
         for (int i = 5; i >= 0; i--) {
             YearMonth month = now.minusMonths(i);
-            long usedHours;
+            long usedHours = 0;
             try {
-                usedHours = bookingRepository.sumCompletedBookingHoursByMonth(month.getMonthValue(), month.getYear());
+                List<Object[]> times = bookingRepository.findCompletedBookingTimesByMonth(month.getMonthValue(), month.getYear());
+                for (Object[] row : times) {
+                    LocalTime st = ((java.sql.Time) row[0]).toLocalTime();
+                    LocalTime et = ((java.sql.Time) row[1]).toLocalTime();
+                    long mins = Duration.between(st, et).toMinutes();
+                    if (mins < 0) mins += 24 * 60;
+                    usedHours += mins / 60;
+                }
             } catch (Exception e) {
                 usedHours = 0;
             }
