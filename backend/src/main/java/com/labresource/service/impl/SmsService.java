@@ -12,12 +12,12 @@ import org.springframework.web.client.RestClient;
 /**
  * SMS delivery through the Twilio REST API.
  *
- * <p>Called directly over HTTP rather than through the Twilio SDK: the Messages endpoint is a
- * form POST behind HTTP basic auth, so the SDK would add a dependency without adding capability.
+ * <p>Called over plain HTTP rather than through the Twilio SDK: the Messages endpoint is a form
+ * POST behind basic auth, so the SDK would add a dependency without adding capability.
  *
- * <p>Follows the same contract as {@link EmailService} — when credentials are absent the message
- * is logged instead of sent, so booking and maintenance flows stay demonstrable without a paid
- * Twilio account, and a delivery failure never propagates into the caller's transaction.
+ * <p>Same contract as {@link EmailService} — with credentials absent the message is logged
+ * instead of sent, so flows stay demonstrable without a paid account, and failures never
+ * propagate into the caller's transaction.
  */
 @Service
 @Slf4j

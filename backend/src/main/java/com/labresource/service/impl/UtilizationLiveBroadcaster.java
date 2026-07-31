@@ -14,12 +14,10 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Turns booking status changes into live dashboard updates — the "real-time" half of real-time
- * utilization monitoring, which previously only refreshed when a user reloaded the page.
+ * Turns booking status changes into live dashboard updates.
  *
- * Bound to {@link TransactionPhase#AFTER_COMMIT} so a dashboard is never told about a transition
- * that then rolls back. The trade is a small delay versus announcing something untrue, which for a
- * monitoring view is the wrong way round.
+ * <p>Bound to {@link TransactionPhase#AFTER_COMMIT} so a dashboard is never told about a
+ * transition that then rolls back.
  */
 @Component
 @RequiredArgsConstructor
@@ -27,9 +25,8 @@ import java.util.Set;
 public class UtilizationLiveBroadcaster {
 
     /**
-     * Only transitions that move the utilization needle are worth a push. PENDING creation does
-     * not: an unapproved request occupies no capacity, and broadcasting it would make the live
-     * figures disagree with the summary endpoint, which counts only confirmed usage.
+     * PENDING is excluded: an unapproved request occupies no capacity, so broadcasting it would
+     * make the live figures disagree with the summary endpoint, which counts confirmed usage only.
      */
     private static final Set<String> BROADCAST_STATUSES =
             Set.of("CONFIRMED", "IN_USE", "COMPLETED", "CANCELLED", "REJECTED", "NO_SHOW");
@@ -54,13 +51,9 @@ public class UtilizationLiveBroadcaster {
         socketHandler.broadcast("UTILIZATION_CHANGED", payload);
     }
 
-    /**
-     * Fallback for events published outside a transaction. Without this, a status change made from
-     * a non-transactional path would silently never reach any dashboard.
-     */
+    /** Fallback for events published outside a transaction, which AFTER_COMMIT never sees. */
     @EventListener
     public void onBookingStatusChangedWithoutTransaction(BookingStatusChangedEvent event) {
-        // TransactionalEventListener already handled it if a transaction was active
         if (org.springframework.transaction.support.TransactionSynchronizationManager
                 .isActualTransactionActive()) {
             return;

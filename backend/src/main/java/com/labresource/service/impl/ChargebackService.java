@@ -31,22 +31,13 @@ import java.util.Set;
 /**
  * Posts internal chargeback lines against departmental budgets.
  *
- * <p>Two events generate a charge:
- * <ul>
- *   <li><b>Usage</b> — a booking reaching COMPLETED. Priced at the equipment's hourly rate for
- *       the booked duration and charged to the <em>booking user's</em> department, which is what
- *       distinguishes a chargeback from a cost report: a Chemistry researcher running a
- *       Physics-owned instrument spends Chemistry's budget.</li>
- *   <li><b>Maintenance</b> — a work order reaching COMPLETED with a recorded cost. Charged to the
- *       department that <em>owns</em> the equipment, because upkeep of an asset follows the asset,
- *       not whoever happened to use it last.</li>
- * </ul>
+ * <p>Usage charges (booking COMPLETED) go to the <em>booking user's</em> department; maintenance
+ * charges (work order COMPLETED with a cost) go to the department that <em>owns</em> the
+ * equipment. Upkeep follows the asset, consumption follows the consumer.
  *
- * <p>Every posting is idempotent through the unique constraints on {@code booking_id} and
- * {@code maintenance_request_id}: replaying an event or re-running a backfill cannot double-charge.
- *
- * <p>Failures here are logged and swallowed. Billing is a downstream concern — a chargeback that
- * cannot be posted must never roll back the booking or the completed work order that caused it.
+ * <p>Postings are idempotent via the unique constraints on {@code booking_id} and
+ * {@code maintenance_request_id}. Failures are logged and swallowed so billing can never roll
+ * back the booking or work order that triggered it.
  */
 @Service
 @RequiredArgsConstructor
@@ -70,10 +61,7 @@ public class ChargebackService {
     // Usage charges
     // ------------------------------------------------------------------
 
-    /**
-     * REQUIRES_NEW so a failure to post the charge cannot mark the booking transaction
-     * rollback-only, matching how BookingUsageEventListener treats usage recording.
-     */
+    /** REQUIRES_NEW so a failed posting cannot mark the booking transaction rollback-only. */
     @EventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onBookingStatusChanged(BookingStatusChangedEvent event) {
@@ -89,8 +77,7 @@ public class ChargebackService {
     }
 
     void postUsageCharge(Long bookingId) {
-        // Cheap guard before loading anything. The unique constraint is the real defence;
-        // this just keeps the common replay case off the error path.
+        // Cheap guard; the unique constraint is the real defence against double-charging.
         if (departmentChargeRepository.existsByBooking_BookingId(bookingId)) {
             return;
         }
@@ -109,10 +96,9 @@ public class ChargebackService {
             return;
         }
 
+        // Free-to-use equipment is a valid configuration, not an error.
         BigDecimal rate = equipment.getHourlyRate();
         if (rate == null || rate.signum() <= 0) {
-            // Free-to-use equipment is a legitimate configuration, not an error. Posting a
-            // zero-rupee line would only add noise to the ledger.
             return;
         }
 
@@ -148,13 +134,10 @@ public class ChargebackService {
     // ------------------------------------------------------------------
 
     /**
-     * Called directly by MaintenanceServiceImpl on completion. There is no maintenance
-     * status event to listen to, and introducing one purely for this would be more
-     * machinery than the coupling it removes.
+     * Called directly by MaintenanceServiceImpl on completion.
      *
-     * <p>Takes an id rather than the entity on purpose: this runs in its own transaction, so a
-     * passed-in instance would arrive detached and every lazy association on it — equipment,
-     * department — would be a coin flip. Reloading here keeps it managed.
+     * <p>Takes an id rather than the entity because this runs in its own transaction: a
+     * passed-in instance would arrive detached and its lazy associations would be unreliable.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void postMaintenanceCharge(Long requestId) {
@@ -172,9 +155,9 @@ public class ChargebackService {
                 return;
             }
 
+            // Work orders are routinely closed without a cost figure.
             BigDecimal cost = request.getCost();
             if (cost == null || cost.signum() <= 0) {
-                // Work orders are routinely closed without a cost figure. Nothing to charge.
                 return;
             }
 
@@ -213,11 +196,8 @@ public class ChargebackService {
     // ------------------------------------------------------------------
 
     /**
-     * Warns the department's leadership once spend crosses 80% and again at 100% of budget.
-     *
-     * <p>The alert fires only when this charge is the one that carried the total across a
-     * threshold, so a department that stays over budget is not re-notified on every booking.
-     * Departments with no budget on record are silently skipped — there is nothing to breach.
+     * Warns department leadership at 80% and again at 100% of budget. Departments with no
+     * budget on record are skipped — there is nothing to breach.
      */
     private void checkBudgetThreshold(Department department) {
         BigDecimal budget = department.getAnnualBudget();
@@ -259,9 +239,8 @@ public class ChargebackService {
                 exceeded ? "Further usage is now unbudgeted."
                          : "Review upcoming bookings and maintenance spend.");
 
+        // Exceeding the budget escalates to SMS and push; the 80% warning stays in-app + email.
         for (AppUser recipient : recipients) {
-            // Exceeding a budget is an escalation, not an FYI: it goes out over SMS and push
-            // as well. The 80% warning stays on the quieter in-app + email path.
             if (exceeded) {
                 notificationService.notifyUrgent(recipient, "BILLING", title, message, "/dashboard/billing");
             } else {

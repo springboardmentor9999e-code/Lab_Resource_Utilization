@@ -17,23 +17,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * API Gateway rate limiting (spec: API Gateway &amp; Security Layer).
+ * API Gateway rate limiting — an in-memory token bucket per caller, in two tiers.
  *
- * A token bucket per caller, held in memory. Two tiers, because the threat models differ:
+ * <p>/api/auth/** gets a much smaller bucket: those endpoints are unauthenticated and worth
+ * brute-forcing. Everything else gets a bucket sized for normal dashboard use, where one page
+ * load legitimately fires several parallel requests.
  *
- *   AUTH tier  (/api/auth/**)  — small bucket. These endpoints are unauthenticated and are the
- *                               ones worth brute-forcing (login, OTP verification), so they get a
- *                               much tighter budget than the rest of the API.
- *   API tier   (everything else) — larger bucket sized for normal dashboard use, where a single
- *                               page load legitimately fires a handful of parallel requests.
- *
- * Callers are keyed by client IP rather than username: this filter deliberately runs BEFORE
- * {@link JwtAuthenticationFilter}, so that a flood of requests carrying no (or a bogus) token is
- * rejected before it costs us any JWT parsing or database lookups.
- *
- * In-memory means the budget is per-instance and resets on restart. That is the right trade for a
- * single-node deployment; running several replicas behind a load balancer would want the buckets
- * moved into the Redis instance the architecture already specifies.
+ * <p>Keyed by client IP, not username, because this runs before {@link JwtAuthenticationFilter}
+ * — a flood carrying no valid token is rejected before it costs any JWT parsing or DB lookups.
+ * Buckets are per-instance; multiple replicas would need them moved to Redis.
  */
 @Component
 @Order(2) // immediately after RequestLoggingFilter, and ahead of the Spring Security chain
@@ -111,10 +103,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         return request.getRemoteAddr();
     }
 
-    /**
-     * Drops buckets nobody has touched recently. Run on a request counter rather than a scheduled
-     * task so an idle server does no work at all.
-     */
+    /** Drops idle buckets. Driven by a request counter so an idle server does no work at all. */
     private void sweepIfDue() {
         if (++requestsSinceSweep < EVICTION_SWEEP_EVERY) {
             return;
@@ -125,9 +114,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Token bucket refilling continuously at {@code limit} tokens per minute.
-     * Continuous refill (rather than a fixed window) avoids the burst-at-the-boundary problem
-     * where a caller spends a full window's budget at 0:59 and another at 1:01.
+     * Token bucket refilling continuously at {@code limit} tokens per minute. Continuous refill
+     * avoids the fixed-window burst where a caller spends a full budget at 0:59 and again at 1:01.
      */
     private static final class Bucket {
         private double tokens;

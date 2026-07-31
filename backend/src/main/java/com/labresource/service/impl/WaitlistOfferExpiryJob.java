@@ -7,12 +7,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Releases waitlist offers whose claim window has lapsed and passes each slot to the next person
- * in line.
+ * Releases waitlist offers whose claim window has lapsed and passes each slot to the next in line.
  *
- * Runs every 15 minutes rather than daily: an offer window is measured in hours, so a once-a-day
- * sweep would leave a slot idle for most of a day after its claim ran out — which is the very
- * stall this job exists to prevent.
+ * <p>Every 15 minutes rather than daily: offer windows are measured in hours, so a daily sweep
+ * would leave a freed slot idle for most of a day — the exact stall this job prevents.
  */
 @Component
 @RequiredArgsConstructor
@@ -29,7 +27,7 @@ public class WaitlistOfferExpiryJob {
                 log.info("Waitlist sweep: released {} lapsed offer(s) to the next in line", released);
             }
         } catch (Exception ex) {
-            // A failed sweep must not kill the scheduler thread — the next run will retry
+            // A failed sweep must not kill the scheduler thread; the next run retries
             log.error("Waitlist offer expiry sweep failed: {}", ex.getMessage(), ex);
         }
     }

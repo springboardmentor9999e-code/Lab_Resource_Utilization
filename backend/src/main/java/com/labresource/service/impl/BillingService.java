@@ -150,10 +150,8 @@ public class BillingService {
                         .filter(deptEntity -> deptEntity.getName().equalsIgnoreCase(d))
                         .findFirst().orElse(null);
 
-                // Null when the department has no budget on record. Do not substitute a
-                // figure here: an invented budget produces an invented utilization
-                // percentage, and a report that looks authoritative while being fictional
-                // is worse than one that says the number is missing.
+                // Null when no budget is on record. Substituting a figure here would produce an
+                // invented utilization percentage that reads as authoritative.
                 m.put("departmentId", dEnt != null ? dEnt.getDepartmentId() : null);
                 m.put("annualBudget", dEnt != null ? dEnt.getAnnualBudget() : null);
                 return m;

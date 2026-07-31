@@ -84,9 +84,27 @@ cd e:/lab-resource-platform/backend
 
 Backend runs at **http://localhost:8080**
 
-**Seeded accounts** (for testing):
-- **Admin:** username `admin` / password `admin123`
-- **Student:** username `student` / password `student123`
+**First-run account.** No sample labs, equipment or bookings are seeded — you enter your
+own. On an empty database the backend creates exactly three rows, because the schema
+cannot work without them (`app_user.institution_id` and `department_id` are `NOT NULL`,
+and only an existing admin can grant roles):
+
+- one institution, one department, and one admin — username `admin` / password `admin123`
+
+Name them yours *before* the first run via the `app.bootstrap.*` properties in
+`backend/src/main/resources/application.properties` (or the matching `BOOTSTRAP_*`
+environment variables). Each is created only when its table is empty, so renaming from
+the UI afterwards is permanent. Change the admin password from Profile → Change Password.
+
+**Starting over.** To wipe every row and build the system up yourself, run the reset tool
+from the project root and restart the backend:
+
+```bash
+psql -U postgres -d lab_resource_db -f database/tools/reset_operational_data.sql
+```
+
+It preserves only the `role` table. It lives in `database/tools/` rather than `database/`
+because Docker Compose auto-runs everything in `database/` on first start.
 
 ### 5. Start the Frontend
 
@@ -126,16 +144,72 @@ docker compose down -v
 
 ---
 
+## 🚀 Production deployment (Docker + cloud)
+
+Full step-by-step guide: **[DEPLOYMENT.md](DEPLOYMENT.md)** — AWS EC2, Azure VM, Azure
+Container Apps, TLS, backups, CD wiring and a troubleshooting table.
+
+The short version. On any Docker host — an EC2 instance, an Azure VM, or a droplet:
+
+```bash
+git clone https://github.com/badalsingh25/lab-resource-platform.git
+cd lab-resource-platform
+cp .env.prod.example .env && chmod 600 .env
+nano .env                    # POSTGRES_PASSWORD, JWT_SECRET, BOOTSTRAP_ADMIN_PASSWORD
+docker compose -f docker-compose.prod.yml up -d
+```
+
+`docker-compose.prod.yml` differs from the dev stack above in ways that matter once the
+host has a public address:
+
+- **Only Nginx is published.** Postgres and the API get no host ports, so a port scan of
+  the VM finds one open service instead of three.
+- **Secrets are mandatory** (`${VAR:?}`) — compose refuses to start rather than falling
+  back to a development default.
+- **Health checks + `restart: always`**, so the stack comes back after a reboot and the
+  CD job can tell a slow start from a failed one.
+- **Log rotation**, so a long-running VM can't fill its disk with container logs.
+
+Images are built and pushed to GHCR by `.github/workflows/deploy.yml` on every push to
+`main`, tagged both `latest` and the commit SHA:
+
+- `ghcr.io/badalsingh25/lab-resource-platform-backend:latest`
+- `ghcr.io/badalsingh25/lab-resource-platform-frontend:latest`
+
+That workflow then SSHes into the cloud host and rolls the stack onto the new SHA, once
+the `DEPLOY_*` secrets are configured. Without them it reports "skipped" and passes.
+
+The production profile (`application-prod.properties`, activated by compose) differs from
+local dev in two ways that matter:
+
+1. **Secrets have no fallbacks.** `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`
+   and `BOOTSTRAP_ADMIN_PASSWORD` are required — a missing one stops startup rather than
+   silently booting with the dev value committed to this repo. Generate a real signing
+   key with `openssl rand -base64 48`.
+2. **`ddl-auto=validate`.** Production schema comes from the numbered scripts in
+   `database/`, applied in order. Hibernate only confirms the entities and tables agree
+   and refuses to start if they don't, so an entity change that arrives without its
+   migration fails the deploy instead of quietly altering a table holding real data.
+
+Apply the migrations to a fresh production database before the first boot:
+
+```bash
+for f in database/[0-9]*.sql; do psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"; done
+```
+
+---
+
 ## 🧪 Testing
 
-**Backend** — 81 JUnit 5 + Mockito tests (service rules + web-slice RBAC):
+**Backend** — 128 JUnit 5 + Mockito tests (service rules + web-slice RBAC), including a
+Spring context smoke test that parses every `@Query` at startup:
 
 ```bash
 cd backend
 ./mvnw test
 ```
 
-**Frontend** — 21 Vitest + React Testing Library tests (interceptor, auth service,
+**Frontend** — 26 Vitest + React Testing Library tests (interceptor, auth service,
 routing guard, UI components):
 
 ```bash
@@ -273,16 +347,21 @@ lab-resource-platform/
 │   │   └── utils/           # Helpers (permissions, etc.)
 │   ├── .env                 # Environment vars (not committed)
 │   └── package.json
-├── database/                # SQL schema + migrations (01 → 12, run in order)
+├── database/                # SQL schema + migrations (01 → 17, run in order)
 │   ├── 01_schema_auth_organization.sql
 │   ├── 02_schema_labs_equipment.sql
 │   ├── 03_schema_booking.sql
 │   ├── 04_seed_data.sql
-│   └── ... (05–12: OTP/OAuth, waitlist, utilization, sharing, maintenance, billing)
-├── docker-compose.yml       # Full-stack orchestration
+│   ├── ... (05–17: OTP/OAuth, waitlist, utilization, sharing, maintenance, billing)
+│   ├── EER_DIAGRAM.md       # Full entity-relationship diagram (25 tables)
+│   └── tools/               # Dev utilities — not auto-run by Docker initdb
+├── docker-compose.yml       # Local dev stack (all ports published)
+├── docker-compose.prod.yml  # Production stack (only Nginx published)
+├── .env.prod.example        # Production env template
+├── DEPLOYMENT.md            # Docker + cloud deployment (AWS / Azure)
 ├── DOCUMENTATION.md         # Architecture, API reference, schema
 ├── PRESENTATION.md          # Demo walkthrough script
-└── .github/workflows/       # CI (tests) + Docker build
+└── .github/workflows/       # ci.yml (tests) + deploy.yml (build, push, deploy)
 ```
 
 ---
@@ -349,7 +428,32 @@ The backend exposes RESTful APIs at `http://localhost:8080/api`:
 
 ### Bookings, Utilization, Sharing, Maintenance, Billing, Notifications, Analytics
 All modules are implemented and functional. See **[DOCUMENTATION.md](DOCUMENTATION.md)**
-for the complete endpoint reference, database schema, and architecture overview.
+for the complete endpoint reference and architecture overview.
+
+---
+
+## 🗄️ Database schema
+
+![EER diagram](database/eer-diagram-4k.png)
+
+25 tables across 8 subsystems, 272 columns, 53 foreign keys.
+
+| | |
+|---|---|
+| [database/eer-diagram-4k.png](database/eer-diagram-4k.png) | 3840 × 2160 raster — print/slide quality |
+| [database/eer-diagram.svg](database/eer-diagram.svg) | vector source, scales without loss |
+| [database/EER_DIAGRAM.md](database/EER_DIAGRAM.md) | Mermaid diagrams + a 48-row cardinality table with every FK column and delete rule |
+
+The image is generated from a schema model in
+[database/tools/generate_eer_diagram.mjs](database/tools/generate_eer_diagram.mjs), so
+column lists, keys and relationship counts are computed rather than drawn by hand:
+
+```bash
+node database/tools/generate_eer_diagram.mjs     # → eer-diagram.svg (+ .html wrapper)
+```
+
+Rasterize the SVG with headless Chrome (`--window-size=3840,2160`), or ImageMagick — the
+exact commands are in the script header.
 
 ---
 

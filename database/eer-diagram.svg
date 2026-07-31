@@ -1,0 +1,1106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160" font-family="Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif">
+<defs>
+     <linearGradient id="titleBg" x1="0" y1="0" x2="1" y2="0">
+       <stop offset="0" stop-color="#0B1220"/><stop offset="1" stop-color="#1E293B"/>
+     </linearGradient>
+     <filter id="cardShadow" x="-6%" y="-6%" width="112%" height="112%">
+       <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.14"/>
+     </filter>
+   </defs>
+<rect x="0" y="0" width="3840" height="2160" fill="#F1F5F9"/>
+<rect x="0" y="0" width="3840" height="118" fill="url(#titleBg)"/>
+<text x="40" y="52" font-size="40" font-weight="700" fill="#FFFFFF" letter-spacing="1.4">LAB RESOURCE UTILIZATION PLATFORM</text>
+<text x="40" y="90" font-size="20" font-weight="400" fill="#94A3B8">Enhanced Entity–Relationship (EER) Diagram · PostgreSQL 17 · 25 tables · 53 foreign keys</text>
+<text x="3800" y="52" font-size="22" font-weight="600" fill="#E2E8F0" text-anchor="end" letter-spacing="1.2">8 FUNCTIONAL SUBSYSTEMS</text>
+<text x="3800" y="88" font-size="17" font-weight="400" fill="#94A3B8" text-anchor="end">Source of truth: database/01–17_*.sql  ·  See database/EER_DIAGRAM.md</text>
+<g><path d="M 634 250 C 680 250, 680 606, 634 606" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="243" x2="643" y2="257" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 634 606 L 649 598 M 634 606 L 649 606 M 634 606 L 649 614" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 250 C 680 250, 680 914, 634 914" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="243" x2="643" y2="257" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 634 914 L 649 906 M 634 914 L 649 914 M 634 914 L 649 922" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 582 C 680 582, 680 938, 634 938" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="575" x2="643" y2="589" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 634 938 L 649 930 M 634 938 L 649 938 M 634 938 L 649 946" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 680 890, 608 462, 654 462" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 654 462 L 639 454 M 654 462 L 639 462 M 654 462 L 639 470" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 1234 250 C 1280 250, 1280 486, 1234 486" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="1243" y1="243" x2="1243" y2="257" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 1234 486 L 1249 478 M 1234 486 L 1249 486 M 1234 486 L 1249 494" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 680 890, 608 626, 654 626" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 654 626 L 639 618 M 654 626 L 639 626 M 654 626 L 639 634" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 680 890, 608 838, 654 838" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 654 838 L 639 830 M 654 838 L 639 838 M 654 838 L 639 846" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 582 C 934 582, 1584 370, 1884 370" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="575" x2="643" y2="589" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 1884 370 L 1869 362 M 1884 370 L 1869 370 M 1884 370 L 1869 378" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 250 C 934 250, 1584 394, 1884 394" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="243" x2="643" y2="257" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 1884 394 L 1869 386 M 1884 394 L 1869 394 M 1884 394 L 1869 402" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 1884 250 C 1838 250, 1910 730, 1864 730" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.5"/><line x1="1875" y1="243" x2="1875" y2="257" stroke="#0E7490" stroke-width="2.4" opacity="0.85"/><path d="M 1864 730 L 1879 722 M 1864 730 L 1879 730 M 1864 730 L 1879 738" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.9"/><path d="M 634 582 C 907 582, 1011 754, 1284 754" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="575" x2="643" y2="589" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 1284 754 L 1269 746 M 1284 754 L 1269 754 M 1284 754 L 1269 762" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 250 C 907 250, 1011 778, 1284 778" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="243" x2="643" y2="257" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 1284 778 L 1269 770 M 1284 778 L 1269 778 M 1284 778 L 1269 786" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 1864 250 C 1910 250, 1838 582, 1884 582" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.5"/><line x1="1873" y1="243" x2="1873" y2="257" stroke="#0E7490" stroke-width="2.4" opacity="0.85"/><path d="M 1884 582 L 1869 574 M 1884 582 L 1869 582 M 1884 582 L 1869 590" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.9"/><path d="M 1864 250 C 1910 250, 1838 818, 1884 818" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.5"/><line x1="1873" y1="243" x2="1873" y2="257" stroke="#0E7490" stroke-width="2.4" opacity="0.85"/><path d="M 1884 818 L 1869 810 M 1884 818 L 1869 818 M 1884 818 L 1869 826" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 934 890, 2214 274, 2514 274" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 2514 274 L 2499 266 M 2514 274 L 2499 274 M 2514 274 L 2499 282" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 1864 250 C 2137 250, 2241 298, 2514 298" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.5"/><line x1="1873" y1="243" x2="1873" y2="257" stroke="#0E7490" stroke-width="2.4" opacity="0.85"/><path d="M 2514 298 L 2499 290 M 2514 298 L 2499 298 M 2514 298 L 2499 306" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.9"/><path d="M 3094 794 C 3140 794, 3140 322, 3094 322" fill="none" stroke="#1D4ED8" stroke-width="2.2" opacity="0.5"/><line x1="3103" y1="787" x2="3103" y2="801" stroke="#1D4ED8" stroke-width="2.4" opacity="0.85"/><path d="M 3094 322 L 3109 314 M 3094 322 L 3109 322 M 3094 322 L 3109 330" fill="none" stroke="#1D4ED8" stroke-width="2.2" opacity="0.9"/><path d="M 3094 250 C 3140 250, 3140 582, 3094 582" fill="none" stroke="#1D4ED8" stroke-width="2.2" opacity="0.5"/><line x1="3103" y1="243" x2="3103" y2="257" stroke="#1D4ED8" stroke-width="2.4" opacity="0.85"/><path d="M 3094 582 L 3109 574 M 3094 582 L 3109 582 M 3094 582 L 3109 590" fill="none" stroke="#1D4ED8" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 934 890, 2214 818, 2514 818" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 2514 818 L 2499 810 M 2514 818 L 2499 818 M 2514 818 L 2499 826" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 1864 250 C 2137 250, 2241 842, 2514 842" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.5"/><line x1="1873" y1="243" x2="1873" y2="257" stroke="#0E7490" stroke-width="2.4" opacity="0.85"/><path d="M 2514 842 L 2499 834 M 2514 842 L 2499 842 M 2514 842 L 2499 850" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.9"/><path d="M 1864 250 C 2137 250, 2241 1174, 2514 1174" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.5"/><line x1="1873" y1="243" x2="1873" y2="257" stroke="#0E7490" stroke-width="2.4" opacity="0.85"/><path d="M 2514 1174 L 2499 1166 M 2514 1174 L 2499 1174 M 2514 1174 L 2499 1182" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 934 890, 2214 1198, 2514 1198" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 2514 1198 L 2499 1190 M 2514 1198 L 2499 1198 M 2514 1198 L 2499 1206" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 1864 250 C 2164 250, 2844 274, 3144 274" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.5"/><line x1="1873" y1="243" x2="1873" y2="257" stroke="#0E7490" stroke-width="2.4" opacity="0.85"/><path d="M 3144 274 L 3129 266 M 3144 274 L 3129 274 M 3144 274 L 3129 282" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.9"/><path d="M 3094 250 C 3140 250, 3098 298, 3144 298" fill="none" stroke="#1D4ED8" stroke-width="2.2" opacity="0.5"/><line x1="3103" y1="243" x2="3103" y2="257" stroke="#1D4ED8" stroke-width="2.4" opacity="0.85"/><path d="M 3144 298 L 3129 290 M 3144 298 L 3129 298 M 3144 298 L 3129 306" fill="none" stroke="#1D4ED8" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 934 890, 2844 322, 3144 322" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 3144 322 L 3129 314 M 3144 322 L 3129 322 M 3144 322 L 3129 330" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 1284 250 C 1011 250, 907 1566, 634 1566" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.5"/><line x1="1275" y1="243" x2="1275" y2="257" stroke="#0E7490" stroke-width="2.4" opacity="0.85"/><path d="M 634 1566 L 649 1558 M 634 1566 L 649 1566 M 634 1566 L 649 1574" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 680 890, 680 1590, 634 1590" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 634 1590 L 649 1582 M 634 1590 L 649 1590 M 634 1590 L 649 1598" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 680 890, 680 1614, 634 1614" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 634 1614 L 649 1606 M 634 1614 L 649 1614 M 634 1614 L 649 1622" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 1284 250 C 1238 250, 1280 1566, 1234 1566" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.5"/><line x1="1275" y1="243" x2="1275" y2="257" stroke="#0E7490" stroke-width="2.4" opacity="0.85"/><path d="M 1234 1566 L 1249 1558 M 1234 1566 L 1249 1566 M 1234 1566 L 1249 1574" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 680 890, 608 1590, 654 1590" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 654 1590 L 639 1582 M 654 1590 L 639 1590 M 654 1590 L 639 1598" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 1864 250 C 1910 250, 1880 1566, 1834 1566" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.5"/><line x1="1873" y1="243" x2="1873" y2="257" stroke="#0E7490" stroke-width="2.4" opacity="0.85"/><path d="M 1834 1566 L 1849 1558 M 1834 1566 L 1849 1566 M 1834 1566 L 1849 1574" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 894.4 890, 993.6 1710, 1254 1710" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 1254 1710 L 1239 1702 M 1254 1710 L 1239 1710 M 1254 1710 L 1239 1718" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 250 C 934 250, 2184 1566, 2484 1566" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="243" x2="643" y2="257" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 2484 1566 L 2469 1558 M 2484 1566 L 2469 1566 M 2484 1566 L 2469 1574" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 250 C 934 250, 2184 1590, 2484 1590" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="243" x2="643" y2="257" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 2484 1590 L 2469 1582 M 2484 1590 L 2469 1590 M 2484 1590 L 2469 1598" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 934 890, 2184 1806, 2484 1806" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 2484 1806 L 2469 1798 M 2484 1806 L 2469 1806 M 2484 1806 L 2469 1814" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 934 890, 2184 1830, 2484 1830" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 2484 1830 L 2469 1822 M 2484 1830 L 2469 1830 M 2484 1830 L 2469 1838" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 1864 250 C 1910 250, 1838 1566, 1884 1566" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.5"/><line x1="1873" y1="243" x2="1873" y2="257" stroke="#0E7490" stroke-width="2.4" opacity="0.85"/><path d="M 1884 1566 L 1869 1558 M 1884 1566 L 1869 1566 M 1884 1566 L 1869 1574" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.9"/><path d="M 634 250 C 934 250, 1584 1590, 1884 1590" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="243" x2="643" y2="257" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 1884 1590 L 1869 1582 M 1884 1590 L 1869 1590 M 1884 1590 L 1869 1598" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 250 C 934 250, 1584 1614, 1884 1614" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="243" x2="643" y2="257" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 1884 1614 L 1869 1606 M 1884 1614 L 1869 1614 M 1884 1614 L 1869 1622" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 2484 1542 C 2438 1542, 2510 1638, 2464 1638" fill="none" stroke="#BE185D" stroke-width="2.2" opacity="0.5"/><line x1="2475" y1="1535" x2="2475" y2="1549" stroke="#BE185D" stroke-width="2.4" opacity="0.85"/><path d="M 2464 1638 L 2479 1630 M 2464 1638 L 2479 1638 M 2464 1638 L 2479 1646" fill="none" stroke="#BE185D" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 934 890, 1584 1662, 1884 1662" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 1884 1662 L 1869 1654 M 1884 1662 L 1869 1662 M 1884 1662 L 1869 1670" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 934 890, 1584 1686, 1884 1686" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 1884 1686 L 1869 1678 M 1884 1686 L 1869 1686 M 1884 1686 L 1869 1694" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 2464 1542 C 2724.4 1542, 2823.6 1590, 3084 1590" fill="none" stroke="#BE185D" stroke-width="2.2" opacity="0.5"/><line x1="2473" y1="1535" x2="2473" y2="1549" stroke="#BE185D" stroke-width="2.4" opacity="0.85"/><line x1="3075" y1="1583" x2="3075" y2="1597" stroke="#BE185D" stroke-width="2.4" opacity="0.85"/><path d="M 634 250 C 934 250, 2784 1614, 3084 1614" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="243" x2="643" y2="257" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 3084 1614 L 3069 1606 M 3084 1614 L 3069 1614 M 3084 1614 L 3069 1622" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 250 C 934 250, 2784 1638, 3084 1638" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="243" x2="643" y2="257" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 3084 1638 L 3069 1630 M 3084 1638 L 3069 1638 M 3084 1638 L 3069 1646" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 934 890, 2784 1806, 3084 1806" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 3084 1806 L 3069 1798 M 3084 1806 L 3069 1806 M 3084 1806 L 3069 1814" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 582 C 934 582, 2844 588, 3144 588" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="575" x2="643" y2="589" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 3144 588 L 3129 580 M 3144 588 L 3129 588 M 3144 588 L 3129 596" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 1864 250 C 2164 250, 2844 612, 3144 612" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.5"/><line x1="1873" y1="243" x2="1873" y2="257" stroke="#0E7490" stroke-width="2.4" opacity="0.85"/><path d="M 3144 612 L 3129 604 M 3144 612 L 3129 612 M 3144 612 L 3129 620" fill="none" stroke="#0E7490" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 934 890, 2844 636, 3144 636" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 3144 636 L 3129 628 M 3144 636 L 3129 636 M 3144 636 L 3129 644" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 3094 250 C 3140 250, 3098 660, 3144 660" fill="none" stroke="#1D4ED8" stroke-width="2.2" opacity="0.5"/><line x1="3103" y1="243" x2="3103" y2="257" stroke="#1D4ED8" stroke-width="2.4" opacity="0.85"/><line x1="3135" y1="653" x2="3135" y2="667" stroke="#1D4ED8" stroke-width="2.4" opacity="0.85"/><path d="M 634 1542 C 934 1542, 2844 684, 3144 684" fill="none" stroke="#B45309" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="1535" x2="643" y2="1549" stroke="#B45309" stroke-width="2.4" opacity="0.85"/><line x1="3135" y1="677" x2="3135" y2="691" stroke="#B45309" stroke-width="2.4" opacity="0.85"/><path d="M 634 890 C 934 890, 2844 998, 3144 998" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 3144 998 L 3129 990 M 3144 998 L 3129 998 M 3144 998 L 3129 1006" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/><path d="M 634 890 C 934 890, 2844 1258, 3144 1258" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.5"/><line x1="643" y1="883" x2="643" y2="897" stroke="#7C3AED" stroke-width="2.4" opacity="0.85"/><path d="M 3144 1258 L 3129 1250 M 3144 1258 L 3129 1258 M 3144 1258 L 3129 1266" fill="none" stroke="#7C3AED" stroke-width="2.2" opacity="0.9"/></g>
+<rect x="40" y="158" width="1208" height="1196" rx="14" fill="#F5F1FE" stroke="#7C3AED" stroke-width="2.4"/>
+<rect x="40" y="158" width="1208" height="4" rx="2" fill="#7C3AED"/>
+<circle cx="66" cy="180" r="13" fill="#7C3AED"/>
+<text x="66" y="186" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+<text x="88" y="186" font-size="20" font-weight="700" fill="#7C3AED" letter-spacing="0.8">AUTHENTICATION &amp; ORGANIZATION</text>
+<text x="1234" y="186" font-size="15" font-weight="600" fill="#7C3AED" text-anchor="end">7 tables</text>
+<rect x="1270" y="158" width="1208" height="860" rx="14" fill="#EDF9FC" stroke="#0E7490" stroke-width="2.4"/>
+<rect x="1270" y="158" width="1208" height="4" rx="2" fill="#0E7490"/>
+<circle cx="1296" cy="180" r="13" fill="#0E7490"/>
+<text x="1296" y="186" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+<text x="1318" y="186" font-size="20" font-weight="700" fill="#0E7490" letter-spacing="0.8">LABS, EQUIPMENT &amp; INVENTORY</text>
+<text x="2464" y="186" font-size="15" font-weight="600" fill="#0E7490" text-anchor="end">4 tables</text>
+<rect x="2500" y="158" width="608" height="1264" rx="14" fill="#EEF3FE" stroke="#1D4ED8" stroke-width="2.4"/>
+<rect x="2500" y="158" width="608" height="4" rx="2" fill="#1D4ED8"/>
+<circle cx="2526" cy="180" r="13" fill="#1D4ED8"/>
+<text x="2526" y="186" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+<text x="2548" y="186" font-size="20" font-weight="700" fill="#1D4ED8" letter-spacing="0.8">BOOKING &amp; SCHEDULING</text>
+<text x="3094" y="186" font-size="15" font-weight="600" fill="#1D4ED8" text-anchor="end">4 tables</text>
+<rect x="3130" y="158" width="608" height="292" rx="14" fill="#ECFAF4" stroke="#047857" stroke-width="2.4"/>
+<rect x="3130" y="158" width="608" height="4" rx="2" fill="#047857"/>
+<circle cx="3156" cy="180" r="13" fill="#047857"/>
+<text x="3156" y="186" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
+<text x="3178" y="186" font-size="20" font-weight="700" fill="#047857" letter-spacing="0.8">UTILIZATION MONITORING</text>
+<text x="3724" y="186" font-size="15" font-weight="600" fill="#047857" text-anchor="end">1 table</text>
+<rect x="3130" y="472" width="608" height="388" rx="14" fill="#F4FAEA" stroke="#4D7C0F" stroke-width="2.4"/>
+<rect x="3130" y="472" width="608" height="4" rx="2" fill="#4D7C0F"/>
+<circle cx="3156" cy="494" r="13" fill="#4D7C0F"/>
+<text x="3156" y="500" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">5</text>
+<text x="3178" y="500" font-size="20" font-weight="700" fill="#4D7C0F" letter-spacing="0.8">BILLING &amp; CHARGEBACK</text>
+<text x="3724" y="500" font-size="15" font-weight="600" fill="#4D7C0F" text-anchor="end">1 table</text>
+<rect x="3130" y="882" width="608" height="504" rx="14" fill="#EFEFFE" stroke="#4338CA" stroke-width="2.4"/>
+<rect x="3130" y="882" width="608" height="4" rx="2" fill="#4338CA"/>
+<circle cx="3156" cy="904" r="13" fill="#4338CA"/>
+<text x="3156" y="910" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">6</text>
+<text x="3178" y="910" font-size="20" font-weight="700" fill="#4338CA" letter-spacing="0.8">NOTIFICATIONS &amp; ALERTS</text>
+<text x="3724" y="910" font-size="15" font-weight="600" fill="#4338CA" text-anchor="end">2 tables</text>
+<rect x="40" y="1450" width="1808" height="508" rx="14" fill="#FEF6EA" stroke="#B45309" stroke-width="2.4"/>
+<rect x="40" y="1450" width="1808" height="4" rx="2" fill="#B45309"/>
+<circle cx="66" cy="1472" r="13" fill="#B45309"/>
+<text x="66" y="1478" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">7</text>
+<text x="88" y="1478" font-size="20" font-weight="700" fill="#B45309" letter-spacing="0.8">MAINTENANCE &amp; CALIBRATION</text>
+<text x="1834" y="1478" font-size="15" font-weight="600" fill="#B45309" text-anchor="end">3 tables</text>
+<rect x="1870" y="1450" width="1808" height="532" rx="14" fill="#FDEFF5" stroke="#BE185D" stroke-width="2.4"/>
+<rect x="1870" y="1450" width="1808" height="4" rx="2" fill="#BE185D"/>
+<circle cx="1896" cy="1472" r="13" fill="#BE185D"/>
+<text x="1896" y="1478" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle">8</text>
+<text x="1918" y="1478" font-size="20" font-weight="700" fill="#BE185D" letter-spacing="0.8">INTER-INSTITUTION RESOURCE SHARING</text>
+<text x="3664" y="1478" font-size="15" font-weight="600" fill="#BE185D" text-anchor="end">3 tables</text>
+<rect x="54" y="196" width="580" height="312" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 54 206 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#7C3AED"/>
+<text x="70" y="226" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">institution</text>
+<text x="620" y="226" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">11</text>
+<rect x="66" y="242" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="79.5" y="254" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="126" y="255" font-size="16" font-weight="700" fill="#0F172A">institution_id</text>
+<text x="352" y="255" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="55" y="262" width="578" height="24" fill="#F8FAFC"/>
+<rect x="66" y="266" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="79.5" y="278" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="126" y="279" font-size="16" font-weight="400" fill="#1E293B">name</text>
+<text x="352" y="279" font-size="14" font-weight="400" fill="#64748B">VARCHAR(150)</text>
+<rect x="66" y="290" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="79.5" y="302" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="126" y="303" font-size="16" font-weight="400" fill="#1E293B">code</text>
+<text x="352" y="303" font-size="14" font-weight="400" fill="#64748B">VARCHAR(30)</text>
+<rect x="55" y="310" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="327" font-size="16" font-weight="400" fill="#1E293B">email</text>
+<text x="352" y="327" font-size="14" font-weight="400" fill="#64748B">VARCHAR(150)</text>
+<text x="126" y="351" font-size="16" font-weight="400" fill="#1E293B">phone</text>
+<text x="352" y="351" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<rect x="55" y="358" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="375" font-size="16" font-weight="400" fill="#1E293B">address</text>
+<text x="352" y="375" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<text x="126" y="399" font-size="16" font-weight="400" fill="#1E293B">website</text>
+<text x="352" y="399" font-size="14" font-weight="400" fill="#64748B">VARCHAR(150)</text>
+<rect x="55" y="406" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="423" font-size="16" font-weight="400" fill="#1E293B">is_active</text>
+<text x="352" y="423" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<text x="126" y="447" font-size="16" font-weight="400" fill="#1E293B">utilization_target_percent</text>
+<text x="352" y="447" font-size="14" font-weight="400" fill="#64748B">DOUBLE</text>
+<rect x="55" y="454" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="471" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="352" y="471" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<text x="126" y="495" font-size="16" font-weight="400" fill="#1E293B">updated_at</text>
+<text x="352" y="495" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="54" y="528" width="580" height="288" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 54 538 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#7C3AED"/>
+<text x="70" y="558" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">department</text>
+<text x="620" y="558" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">10</text>
+<rect x="66" y="574" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="79.5" y="586" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="126" y="587" font-size="16" font-weight="700" fill="#0F172A">department_id</text>
+<text x="352" y="587" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="55" y="594" width="578" height="24" fill="#F8FAFC"/>
+<rect x="66" y="598" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="79.5" y="610" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="126" y="611" font-size="16" font-weight="400" fill="#1E293B">institution_id</text>
+<text x="352" y="611" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="622" y="611" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ institution</text>
+<text x="126" y="635" font-size="16" font-weight="400" fill="#1E293B">name</text>
+<text x="352" y="635" font-size="14" font-weight="400" fill="#64748B">VARCHAR(150)</text>
+<rect x="55" y="642" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="659" font-size="16" font-weight="400" fill="#1E293B">code</text>
+<text x="352" y="659" font-size="14" font-weight="400" fill="#64748B">VARCHAR(30)</text>
+<text x="126" y="683" font-size="16" font-weight="400" fill="#1E293B">description</text>
+<text x="352" y="683" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<rect x="55" y="690" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="707" font-size="16" font-weight="400" fill="#1E293B">is_active</text>
+<text x="352" y="707" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<text x="126" y="731" font-size="16" font-weight="400" fill="#1E293B">annual_budget</text>
+<text x="352" y="731" font-size="14" font-weight="400" fill="#64748B">DECIMAL(14,2)</text>
+<rect x="55" y="738" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="755" font-size="16" font-weight="400" fill="#1E293B">utilization_target_percent</text>
+<text x="352" y="755" font-size="14" font-weight="400" fill="#64748B">DOUBLE</text>
+<text x="126" y="779" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="352" y="779" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="55" y="786" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="803" font-size="16" font-weight="400" fill="#1E293B">updated_at</text>
+<text x="352" y="803" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="54" y="836" width="580" height="504" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 54 846 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#7C3AED"/>
+<text x="70" y="866" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">app_user</text>
+<text x="620" y="866" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">19</text>
+<rect x="66" y="882" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="79.5" y="894" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="126" y="895" font-size="16" font-weight="700" fill="#0F172A">user_id</text>
+<text x="352" y="895" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="55" y="902" width="578" height="24" fill="#F8FAFC"/>
+<rect x="66" y="906" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="79.5" y="918" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="126" y="919" font-size="16" font-weight="400" fill="#1E293B">institution_id</text>
+<text x="352" y="919" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="622" y="919" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ institution</text>
+<rect x="66" y="930" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="79.5" y="942" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="126" y="943" font-size="16" font-weight="400" fill="#1E293B">department_id</text>
+<text x="352" y="943" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="622" y="943" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ department</text>
+<rect x="55" y="950" width="578" height="24" fill="#F8FAFC"/>
+<rect x="66" y="954" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="79.5" y="966" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="126" y="967" font-size="16" font-weight="400" fill="#1E293B">username</text>
+<text x="352" y="967" font-size="14" font-weight="400" fill="#64748B">VARCHAR(50)</text>
+<rect x="66" y="978" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="79.5" y="990" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="126" y="991" font-size="16" font-weight="400" fill="#1E293B">email</text>
+<text x="352" y="991" font-size="14" font-weight="400" fill="#64748B">VARCHAR(150)</text>
+<rect x="55" y="998" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1015" font-size="16" font-weight="400" fill="#1E293B">password</text>
+<text x="352" y="1015" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<text x="126" y="1039" font-size="16" font-weight="400" fill="#1E293B">first_name</text>
+<text x="352" y="1039" font-size="14" font-weight="400" fill="#64748B">VARCHAR(50)</text>
+<rect x="55" y="1046" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1063" font-size="16" font-weight="400" fill="#1E293B">last_name</text>
+<text x="352" y="1063" font-size="14" font-weight="400" fill="#64748B">VARCHAR(50)</text>
+<text x="126" y="1087" font-size="16" font-weight="400" fill="#1E293B">phone</text>
+<text x="352" y="1087" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<rect x="55" y="1094" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1111" font-size="16" font-weight="400" fill="#1E293B">gender</text>
+<text x="352" y="1111" font-size="14" font-weight="400" fill="#64748B">VARCHAR(10)</text>
+<text x="126" y="1135" font-size="16" font-weight="400" fill="#1E293B">status</text>
+<text x="352" y="1135" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<rect x="55" y="1142" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1159" font-size="16" font-weight="400" fill="#1E293B">auth_provider</text>
+<text x="352" y="1159" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<text x="126" y="1183" font-size="16" font-weight="400" fill="#1E293B">is_active</text>
+<text x="352" y="1183" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<rect x="55" y="1190" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1207" font-size="16" font-weight="400" fill="#1E293B">is_verified</text>
+<text x="352" y="1207" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<text x="126" y="1231" font-size="16" font-weight="400" fill="#1E293B">sms_notifications_enabled</text>
+<text x="352" y="1231" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<rect x="55" y="1238" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1255" font-size="16" font-weight="400" fill="#1E293B">push_notifications_enabled</text>
+<text x="352" y="1255" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<text x="126" y="1279" font-size="16" font-weight="400" fill="#1E293B">last_login_at</text>
+<text x="352" y="1279" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="55" y="1286" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1303" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="352" y="1303" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<text x="126" y="1327" font-size="16" font-weight="400" fill="#1E293B">updated_at</text>
+<text x="352" y="1327" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="654" y="196" width="580" height="192" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 654 206 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#7C3AED"/>
+<text x="670" y="226" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">role</text>
+<text x="1220" y="226" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">6</text>
+<rect x="666" y="242" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="679.5" y="254" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="726" y="255" font-size="16" font-weight="700" fill="#0F172A">role_id</text>
+<text x="952" y="255" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="655" y="262" width="578" height="24" fill="#F8FAFC"/>
+<rect x="666" y="266" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="679.5" y="278" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="726" y="279" font-size="16" font-weight="400" fill="#1E293B">role_name</text>
+<text x="952" y="279" font-size="14" font-weight="400" fill="#64748B">VARCHAR(50)</text>
+<text x="726" y="303" font-size="16" font-weight="400" fill="#1E293B">description</text>
+<text x="952" y="303" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<rect x="655" y="310" width="578" height="24" fill="#F8FAFC"/>
+<text x="726" y="327" font-size="16" font-weight="400" fill="#1E293B">is_system_role</text>
+<text x="952" y="327" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<text x="726" y="351" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="952" y="351" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="655" y="358" width="578" height="24" fill="#F8FAFC"/>
+<text x="726" y="375" font-size="16" font-weight="400" fill="#1E293B">updated_at</text>
+<text x="952" y="375" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="654" y="408" width="580" height="120" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 654 418 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#7C3AED"/>
+<text x="670" y="438" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">user_role</text>
+<text x="1220" y="438" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">3</text>
+<rect x="666" y="454" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="679.5" y="466" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<rect x="696" y="454" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="709.5" y="466" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="726" y="467" font-size="16" font-weight="700" fill="#0F172A">user_id</text>
+<text x="952" y="467" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="1222" y="467" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="655" y="474" width="578" height="24" fill="#F8FAFC"/>
+<rect x="666" y="478" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="679.5" y="490" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<rect x="696" y="478" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="709.5" y="490" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="726" y="491" font-size="16" font-weight="700" fill="#0F172A">role_id</text>
+<text x="952" y="491" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="1222" y="491" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ role</text>
+<text x="726" y="515" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="952" y="515" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="654" y="548" width="580" height="192" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 654 558 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#7C3AED"/>
+<text x="670" y="578" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">refresh_token</text>
+<text x="1220" y="578" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">6</text>
+<rect x="666" y="594" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="679.5" y="606" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="726" y="607" font-size="16" font-weight="700" fill="#0F172A">token_id</text>
+<text x="952" y="607" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="655" y="614" width="578" height="24" fill="#F8FAFC"/>
+<rect x="666" y="618" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="679.5" y="630" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="726" y="631" font-size="16" font-weight="400" fill="#1E293B">user_id</text>
+<text x="952" y="631" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="1222" y="631" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="666" y="642" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="679.5" y="654" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="726" y="655" font-size="16" font-weight="400" fill="#1E293B">token</text>
+<text x="952" y="655" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<rect x="655" y="662" width="578" height="24" fill="#F8FAFC"/>
+<text x="726" y="679" font-size="16" font-weight="400" fill="#1E293B">expires_at</text>
+<text x="952" y="679" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<text x="726" y="703" font-size="16" font-weight="400" fill="#1E293B">revoked</text>
+<text x="952" y="703" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<rect x="655" y="710" width="578" height="24" fill="#F8FAFC"/>
+<text x="726" y="727" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="952" y="727" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="654" y="760" width="580" height="264" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 654 770 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#7C3AED"/>
+<text x="670" y="790" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">password_reset_token</text>
+<text x="1220" y="790" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">9</text>
+<rect x="666" y="806" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="679.5" y="818" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="726" y="819" font-size="16" font-weight="700" fill="#0F172A">token_id</text>
+<text x="952" y="819" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="655" y="826" width="578" height="24" fill="#F8FAFC"/>
+<rect x="666" y="830" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="679.5" y="842" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="726" y="843" font-size="16" font-weight="400" fill="#1E293B">user_id</text>
+<text x="952" y="843" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="1222" y="843" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="666" y="854" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="679.5" y="866" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="726" y="867" font-size="16" font-weight="400" fill="#1E293B">token</text>
+<text x="952" y="867" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<rect x="655" y="874" width="578" height="24" fill="#F8FAFC"/>
+<text x="726" y="891" font-size="16" font-weight="400" fill="#1E293B">otp</text>
+<text x="952" y="891" font-size="14" font-weight="400" fill="#64748B">VARCHAR(10)</text>
+<text x="726" y="915" font-size="16" font-weight="400" fill="#1E293B">otp_verified</text>
+<text x="952" y="915" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<rect x="655" y="922" width="578" height="24" fill="#F8FAFC"/>
+<text x="726" y="939" font-size="16" font-weight="400" fill="#1E293B">attempts</text>
+<text x="952" y="939" font-size="14" font-weight="400" fill="#64748B">INTEGER</text>
+<text x="726" y="963" font-size="16" font-weight="400" fill="#1E293B">expires_at</text>
+<text x="952" y="963" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="655" y="970" width="578" height="24" fill="#F8FAFC"/>
+<text x="726" y="987" font-size="16" font-weight="400" fill="#1E293B">is_used</text>
+<text x="952" y="987" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<text x="726" y="1011" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="952" y="1011" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="1284" y="196" width="580" height="648" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 1284 206 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#0E7490"/>
+<text x="1300" y="226" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">equipment</text>
+<text x="1850" y="226" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">25</text>
+<rect x="1296" y="242" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="1309.5" y="254" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="1356" y="255" font-size="16" font-weight="700" fill="#0F172A">equipment_id</text>
+<text x="1582" y="255" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="1285" y="262" width="578" height="24" fill="#F8FAFC"/>
+<text x="1356" y="279" font-size="16" font-weight="400" fill="#1E293B">equipment_name</text>
+<text x="1582" y="279" font-size="14" font-weight="400" fill="#64748B">VARCHAR(150)</text>
+<rect x="1296" y="290" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="1309.5" y="302" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="1356" y="303" font-size="16" font-weight="400" fill="#1E293B">equipment_code</text>
+<text x="1582" y="303" font-size="14" font-weight="400" fill="#64748B">VARCHAR(50)</text>
+<rect x="1285" y="310" width="578" height="24" fill="#F8FAFC"/>
+<text x="1356" y="327" font-size="16" font-weight="400" fill="#1E293B">category</text>
+<text x="1582" y="327" font-size="14" font-weight="400" fill="#64748B">VARCHAR(80)</text>
+<text x="1356" y="351" font-size="16" font-weight="400" fill="#1E293B">manufacturer</text>
+<text x="1582" y="351" font-size="14" font-weight="400" fill="#64748B">VARCHAR(120)</text>
+<rect x="1285" y="358" width="578" height="24" fill="#F8FAFC"/>
+<text x="1356" y="375" font-size="16" font-weight="400" fill="#1E293B">model</text>
+<text x="1582" y="375" font-size="14" font-weight="400" fill="#64748B">VARCHAR(120)</text>
+<text x="1356" y="399" font-size="16" font-weight="400" fill="#1E293B">serial_number</text>
+<text x="1582" y="399" font-size="14" font-weight="400" fill="#64748B">VARCHAR(120)</text>
+<rect x="1285" y="406" width="578" height="24" fill="#F8FAFC"/>
+<text x="1356" y="423" font-size="16" font-weight="400" fill="#1E293B">purchase_date</text>
+<text x="1582" y="423" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<text x="1356" y="447" font-size="16" font-weight="400" fill="#1E293B">warranty_expiry</text>
+<text x="1582" y="447" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<rect x="1285" y="454" width="578" height="24" fill="#F8FAFC"/>
+<text x="1356" y="471" font-size="16" font-weight="400" fill="#1E293B">vendor</text>
+<text x="1582" y="471" font-size="14" font-weight="400" fill="#64748B">VARCHAR(150)</text>
+<text x="1356" y="495" font-size="16" font-weight="400" fill="#1E293B">cost</text>
+<text x="1582" y="495" font-size="14" font-weight="400" fill="#64748B">DECIMAL(14,2)</text>
+<rect x="1285" y="502" width="578" height="24" fill="#F8FAFC"/>
+<text x="1356" y="519" font-size="16" font-weight="400" fill="#1E293B">hourly_rate</text>
+<text x="1582" y="519" font-size="14" font-weight="400" fill="#64748B">DECIMAL(10,2)</text>
+<text x="1356" y="543" font-size="16" font-weight="400" fill="#1E293B">status</text>
+<text x="1582" y="543" font-size="14" font-weight="400" fill="#64748B">VARCHAR(30)</text>
+<rect x="1285" y="550" width="578" height="24" fill="#F8FAFC"/>
+<text x="1356" y="567" font-size="16" font-weight="400" fill="#1E293B">current_location</text>
+<text x="1582" y="567" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<text x="1356" y="591" font-size="16" font-weight="400" fill="#1E293B">description</text>
+<text x="1582" y="591" font-size="14" font-weight="400" fill="#64748B">TEXT</text>
+<rect x="1285" y="598" width="578" height="24" fill="#F8FAFC"/>
+<text x="1356" y="615" font-size="16" font-weight="400" fill="#1E293B">specifications</text>
+<text x="1582" y="615" font-size="14" font-weight="400" fill="#64748B">TEXT</text>
+<text x="1356" y="639" font-size="16" font-weight="400" fill="#1E293B">tags</text>
+<text x="1582" y="639" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<rect x="1285" y="646" width="578" height="24" fill="#F8FAFC"/>
+<text x="1356" y="663" font-size="16" font-weight="400" fill="#1E293B">qr_code</text>
+<text x="1582" y="663" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<text x="1356" y="687" font-size="16" font-weight="400" fill="#1E293B">rfid_tag</text>
+<text x="1582" y="687" font-size="14" font-weight="400" fill="#64748B">VARCHAR(120)</text>
+<rect x="1285" y="694" width="578" height="24" fill="#F8FAFC"/>
+<text x="1356" y="711" font-size="16" font-weight="400" fill="#1E293B">is_shareable</text>
+<text x="1582" y="711" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<rect x="1296" y="722" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1309.5" y="734" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1356" y="735" font-size="16" font-weight="400" fill="#1E293B">lab_id</text>
+<text x="1582" y="735" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="1852" y="735" font-size="13" font-weight="600" fill="#0E7490" text-anchor="end">→ lab</text>
+<rect x="1285" y="742" width="578" height="24" fill="#F8FAFC"/>
+<rect x="1296" y="746" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1309.5" y="758" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1356" y="759" font-size="16" font-weight="400" fill="#1E293B">department_id</text>
+<text x="1582" y="759" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="1852" y="759" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ department</text>
+<rect x="1296" y="770" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1309.5" y="782" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1356" y="783" font-size="16" font-weight="400" fill="#1E293B">institution_id</text>
+<text x="1582" y="783" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="1852" y="783" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ institution</text>
+<rect x="1285" y="790" width="578" height="24" fill="#F8FAFC"/>
+<text x="1356" y="807" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="1582" y="807" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<text x="1356" y="831" font-size="16" font-weight="400" fill="#1E293B">updated_at</text>
+<text x="1582" y="831" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="1884" y="196" width="580" height="288" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 1884 206 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#0E7490"/>
+<text x="1900" y="226" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">lab</text>
+<text x="2450" y="226" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">10</text>
+<rect x="1896" y="242" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="1909.5" y="254" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="1956" y="255" font-size="16" font-weight="700" fill="#0F172A">lab_id</text>
+<text x="2182" y="255" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="1885" y="262" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="279" font-size="16" font-weight="400" fill="#1E293B">name</text>
+<text x="2182" y="279" font-size="14" font-weight="400" fill="#64748B">VARCHAR(150)</text>
+<rect x="1896" y="290" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="1909.5" y="302" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="1956" y="303" font-size="16" font-weight="400" fill="#1E293B">code</text>
+<text x="2182" y="303" font-size="14" font-weight="400" fill="#64748B">VARCHAR(30)</text>
+<rect x="1885" y="310" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="327" font-size="16" font-weight="400" fill="#1E293B">capacity</text>
+<text x="2182" y="327" font-size="14" font-weight="400" fill="#64748B">INTEGER</text>
+<text x="1956" y="351" font-size="16" font-weight="400" fill="#1E293B">location</text>
+<text x="2182" y="351" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<rect x="1885" y="358" width="578" height="24" fill="#F8FAFC"/>
+<rect x="1896" y="362" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1909.5" y="374" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1956" y="375" font-size="16" font-weight="400" fill="#1E293B">department_id</text>
+<text x="2182" y="375" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="2452" y="375" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ department</text>
+<rect x="1896" y="386" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1909.5" y="398" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1956" y="399" font-size="16" font-weight="400" fill="#1E293B">institution_id</text>
+<text x="2182" y="399" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="2452" y="399" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ institution</text>
+<rect x="1885" y="406" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="423" font-size="16" font-weight="400" fill="#1E293B">is_active</text>
+<text x="2182" y="423" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<text x="1956" y="447" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="2182" y="447" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="1885" y="454" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="471" font-size="16" font-weight="400" fill="#1E293B">updated_at</text>
+<text x="2182" y="471" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="1884" y="504" width="580" height="216" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 1884 514 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#0E7490"/>
+<text x="1900" y="534" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">equipment_image</text>
+<text x="2450" y="534" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">7</text>
+<rect x="1896" y="550" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="1909.5" y="562" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="1956" y="563" font-size="16" font-weight="700" fill="#0F172A">image_id</text>
+<text x="2182" y="563" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="1885" y="570" width="578" height="24" fill="#F8FAFC"/>
+<rect x="1896" y="574" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1909.5" y="586" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1956" y="587" font-size="16" font-weight="400" fill="#1E293B">equipment_id</text>
+<text x="2182" y="587" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="2452" y="587" font-size="13" font-weight="600" fill="#0E7490" text-anchor="end">→ equipment</text>
+<text x="1956" y="611" font-size="16" font-weight="400" fill="#1E293B">image_url</text>
+<text x="2182" y="611" font-size="14" font-weight="400" fill="#64748B">VARCHAR(500)</text>
+<rect x="1885" y="618" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="635" font-size="16" font-weight="400" fill="#1E293B">file_name</text>
+<text x="2182" y="635" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<text x="1956" y="659" font-size="16" font-weight="400" fill="#1E293B">is_primary</text>
+<text x="2182" y="659" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<rect x="1885" y="666" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="683" font-size="16" font-weight="400" fill="#1E293B">uploaded_by</text>
+<text x="2182" y="683" font-size="14" font-weight="400" fill="#64748B">VARCHAR(50)</text>
+<text x="1956" y="707" font-size="16" font-weight="400" fill="#1E293B">uploaded_at</text>
+<text x="2182" y="707" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="1884" y="740" width="580" height="264" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 1884 750 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#0E7490"/>
+<text x="1900" y="770" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">equipment_document</text>
+<text x="2450" y="770" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">9</text>
+<rect x="1896" y="786" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="1909.5" y="798" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="1956" y="799" font-size="16" font-weight="700" fill="#0F172A">document_id</text>
+<text x="2182" y="799" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="1885" y="806" width="578" height="24" fill="#F8FAFC"/>
+<rect x="1896" y="810" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1909.5" y="822" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1956" y="823" font-size="16" font-weight="400" fill="#1E293B">equipment_id</text>
+<text x="2182" y="823" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="2452" y="823" font-size="13" font-weight="600" fill="#0E7490" text-anchor="end">→ equipment</text>
+<text x="1956" y="847" font-size="16" font-weight="400" fill="#1E293B">document_type</text>
+<text x="2182" y="847" font-size="14" font-weight="400" fill="#64748B">VARCHAR(50)</text>
+<rect x="1885" y="854" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="871" font-size="16" font-weight="400" fill="#1E293B">title</text>
+<text x="2182" y="871" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<text x="1956" y="895" font-size="16" font-weight="400" fill="#1E293B">file_url</text>
+<text x="2182" y="895" font-size="14" font-weight="400" fill="#64748B">VARCHAR(500)</text>
+<rect x="1885" y="902" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="919" font-size="16" font-weight="400" fill="#1E293B">file_name</text>
+<text x="2182" y="919" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<text x="1956" y="943" font-size="16" font-weight="400" fill="#1E293B">file_size</text>
+<text x="2182" y="943" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<rect x="1885" y="950" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="967" font-size="16" font-weight="400" fill="#1E293B">uploaded_by</text>
+<text x="2182" y="967" font-size="14" font-weight="400" fill="#64748B">VARCHAR(50)</text>
+<text x="1956" y="991" font-size="16" font-weight="400" fill="#1E293B">uploaded_at</text>
+<text x="2182" y="991" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="2514" y="196" width="580" height="288" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 2514 206 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#1D4ED8"/>
+<text x="2530" y="226" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">booking</text>
+<text x="3080" y="226" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">10</text>
+<rect x="2526" y="242" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="2539.5" y="254" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="2586" y="255" font-size="16" font-weight="700" fill="#0F172A">booking_id</text>
+<text x="2812" y="255" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="2515" y="262" width="578" height="24" fill="#F8FAFC"/>
+<rect x="2526" y="266" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="2539.5" y="278" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="2586" y="279" font-size="16" font-weight="400" fill="#1E293B">user_id</text>
+<text x="2812" y="279" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3082" y="279" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="2526" y="290" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="2539.5" y="302" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="2586" y="303" font-size="16" font-weight="400" fill="#1E293B">equipment_id</text>
+<text x="2812" y="303" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3082" y="303" font-size="13" font-weight="600" fill="#0E7490" text-anchor="end">→ equipment</text>
+<rect x="2515" y="310" width="578" height="24" fill="#F8FAFC"/>
+<rect x="2526" y="314" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="2539.5" y="326" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="2586" y="327" font-size="16" font-weight="400" fill="#1E293B">recurring_id</text>
+<text x="2812" y="327" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3082" y="327" font-size="13" font-weight="600" fill="#1D4ED8" text-anchor="end">→ recurring_booking</text>
+<text x="2586" y="351" font-size="16" font-weight="400" fill="#1E293B">booking_date</text>
+<text x="2812" y="351" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<rect x="2515" y="358" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="375" font-size="16" font-weight="400" fill="#1E293B">start_time</text>
+<text x="2812" y="375" font-size="14" font-weight="400" fill="#64748B">TIME</text>
+<text x="2586" y="399" font-size="16" font-weight="400" fill="#1E293B">end_time</text>
+<text x="2812" y="399" font-size="14" font-weight="400" fill="#64748B">TIME</text>
+<rect x="2515" y="406" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="423" font-size="16" font-weight="400" fill="#1E293B">status</text>
+<text x="2812" y="423" font-size="14" font-weight="400" fill="#64748B">VARCHAR(30)</text>
+<text x="2586" y="447" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="2812" y="447" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="2515" y="454" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="471" font-size="16" font-weight="400" fill="#1E293B">updated_at</text>
+<text x="2812" y="471" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="2514" y="504" width="580" height="216" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 2514 514 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#1D4ED8"/>
+<text x="2530" y="534" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">booking_history</text>
+<text x="3080" y="534" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">7</text>
+<rect x="2526" y="550" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="2539.5" y="562" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="2586" y="563" font-size="16" font-weight="700" fill="#0F172A">history_id</text>
+<text x="2812" y="563" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="2515" y="570" width="578" height="24" fill="#F8FAFC"/>
+<rect x="2526" y="574" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="2539.5" y="586" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="2586" y="587" font-size="16" font-weight="400" fill="#1E293B">booking_id</text>
+<text x="2812" y="587" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3082" y="587" font-size="13" font-weight="600" fill="#1D4ED8" text-anchor="end">→ booking</text>
+<text x="2586" y="611" font-size="16" font-weight="400" fill="#1E293B">old_status</text>
+<text x="2812" y="611" font-size="14" font-weight="400" fill="#64748B">VARCHAR(30)</text>
+<rect x="2515" y="618" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="635" font-size="16" font-weight="400" fill="#1E293B">new_status</text>
+<text x="2812" y="635" font-size="14" font-weight="400" fill="#64748B">VARCHAR(30)</text>
+<text x="2586" y="659" font-size="16" font-weight="400" fill="#1E293B">changed_by</text>
+<text x="2812" y="659" font-size="14" font-weight="400" fill="#64748B">VARCHAR(50)</text>
+<rect x="2515" y="666" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="683" font-size="16" font-weight="400" fill="#1E293B">remarks</text>
+<text x="2812" y="683" font-size="14" font-weight="400" fill="#64748B">VARCHAR(500)</text>
+<text x="2586" y="707" font-size="16" font-weight="400" fill="#1E293B">changed_at</text>
+<text x="2812" y="707" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="2514" y="740" width="580" height="336" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 2514 750 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#1D4ED8"/>
+<text x="2530" y="770" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">recurring_booking</text>
+<text x="3080" y="770" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">12</text>
+<rect x="2526" y="786" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="2539.5" y="798" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="2586" y="799" font-size="16" font-weight="700" fill="#0F172A">recurring_id</text>
+<text x="2812" y="799" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="2515" y="806" width="578" height="24" fill="#F8FAFC"/>
+<rect x="2526" y="810" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="2539.5" y="822" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="2586" y="823" font-size="16" font-weight="400" fill="#1E293B">user_id</text>
+<text x="2812" y="823" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3082" y="823" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="2526" y="834" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="2539.5" y="846" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="2586" y="847" font-size="16" font-weight="400" fill="#1E293B">equipment_id</text>
+<text x="2812" y="847" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3082" y="847" font-size="13" font-weight="600" fill="#0E7490" text-anchor="end">→ equipment</text>
+<rect x="2515" y="854" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="871" font-size="16" font-weight="400" fill="#1E293B">frequency</text>
+<text x="2812" y="871" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<text x="2586" y="895" font-size="16" font-weight="400" fill="#1E293B">start_date</text>
+<text x="2812" y="895" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<rect x="2515" y="902" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="919" font-size="16" font-weight="400" fill="#1E293B">end_date</text>
+<text x="2812" y="919" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<text x="2586" y="943" font-size="16" font-weight="400" fill="#1E293B">start_time</text>
+<text x="2812" y="943" font-size="14" font-weight="400" fill="#64748B">TIME</text>
+<rect x="2515" y="950" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="967" font-size="16" font-weight="400" fill="#1E293B">end_time</text>
+<text x="2812" y="967" font-size="14" font-weight="400" fill="#64748B">TIME</text>
+<text x="2586" y="991" font-size="16" font-weight="400" fill="#1E293B">status</text>
+<text x="2812" y="991" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<rect x="2515" y="998" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="1015" font-size="16" font-weight="400" fill="#1E293B">occurrences_created</text>
+<text x="2812" y="1015" font-size="14" font-weight="400" fill="#64748B">INTEGER</text>
+<text x="2586" y="1039" font-size="16" font-weight="400" fill="#1E293B">occurrences_skipped</text>
+<text x="2812" y="1039" font-size="14" font-weight="400" fill="#64748B">INTEGER</text>
+<rect x="2515" y="1046" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="1063" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="2812" y="1063" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="2514" y="1096" width="580" height="312" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 2514 1106 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#1D4ED8"/>
+<text x="2530" y="1126" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">waitlist</text>
+<text x="3080" y="1126" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">11</text>
+<rect x="2526" y="1142" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="2539.5" y="1154" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="2586" y="1155" font-size="16" font-weight="700" fill="#0F172A">waitlist_id</text>
+<text x="2812" y="1155" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="2515" y="1162" width="578" height="24" fill="#F8FAFC"/>
+<rect x="2526" y="1166" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="2539.5" y="1178" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="2586" y="1179" font-size="16" font-weight="400" fill="#1E293B">equipment_id</text>
+<text x="2812" y="1179" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3082" y="1179" font-size="13" font-weight="600" fill="#0E7490" text-anchor="end">→ equipment</text>
+<rect x="2526" y="1190" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="2539.5" y="1202" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="2586" y="1203" font-size="16" font-weight="400" fill="#1E293B">user_id</text>
+<text x="2812" y="1203" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3082" y="1203" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="2515" y="1210" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="1227" font-size="16" font-weight="400" fill="#1E293B">requested_date</text>
+<text x="2812" y="1227" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<text x="2586" y="1251" font-size="16" font-weight="400" fill="#1E293B">start_time</text>
+<text x="2812" y="1251" font-size="14" font-weight="400" fill="#64748B">TIME</text>
+<rect x="2515" y="1258" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="1275" font-size="16" font-weight="400" fill="#1E293B">end_time</text>
+<text x="2812" y="1275" font-size="14" font-weight="400" fill="#64748B">TIME</text>
+<text x="2586" y="1299" font-size="16" font-weight="400" fill="#1E293B">priority</text>
+<text x="2812" y="1299" font-size="14" font-weight="400" fill="#64748B">INTEGER</text>
+<rect x="2515" y="1306" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="1323" font-size="16" font-weight="400" fill="#1E293B">status</text>
+<text x="2812" y="1323" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<text x="2586" y="1347" font-size="16" font-weight="400" fill="#1E293B">requested_at</text>
+<text x="2812" y="1347" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="2515" y="1354" width="578" height="24" fill="#F8FAFC"/>
+<text x="2586" y="1371" font-size="16" font-weight="400" fill="#1E293B">notified_at</text>
+<text x="2812" y="1371" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<text x="2586" y="1395" font-size="16" font-weight="400" fill="#1E293B">offer_expires_at</text>
+<text x="2812" y="1395" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="3144" y="196" width="580" height="240" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 3144 206 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#047857"/>
+<text x="3160" y="226" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">equipment_usage</text>
+<text x="3710" y="226" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">8</text>
+<rect x="3156" y="242" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="3169.5" y="254" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="3216" y="255" font-size="16" font-weight="700" fill="#0F172A">usage_id</text>
+<text x="3442" y="255" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="3145" y="262" width="578" height="24" fill="#F8FAFC"/>
+<rect x="3156" y="266" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3169.5" y="278" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="3216" y="279" font-size="16" font-weight="400" fill="#1E293B">equipment_id</text>
+<text x="3442" y="279" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3712" y="279" font-size="13" font-weight="600" fill="#0E7490" text-anchor="end">→ equipment</text>
+<rect x="3156" y="290" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3169.5" y="302" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="3216" y="303" font-size="16" font-weight="400" fill="#1E293B">booking_id</text>
+<text x="3442" y="303" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3712" y="303" font-size="13" font-weight="600" fill="#1D4ED8" text-anchor="end">→ booking</text>
+<rect x="3145" y="310" width="578" height="24" fill="#F8FAFC"/>
+<rect x="3156" y="314" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3169.5" y="326" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="3216" y="327" font-size="16" font-weight="400" fill="#1E293B">user_id</text>
+<text x="3442" y="327" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3712" y="327" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<text x="3216" y="351" font-size="16" font-weight="400" fill="#1E293B">start_time</text>
+<text x="3442" y="351" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="3145" y="358" width="578" height="24" fill="#F8FAFC"/>
+<text x="3216" y="375" font-size="16" font-weight="400" fill="#1E293B">end_time</text>
+<text x="3442" y="375" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<text x="3216" y="399" font-size="16" font-weight="400" fill="#1E293B">usage_duration_min</text>
+<text x="3442" y="399" font-size="14" font-weight="400" fill="#64748B">INTEGER</text>
+<rect x="3145" y="406" width="578" height="24" fill="#F8FAFC"/>
+<text x="3216" y="423" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="3442" y="423" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="3144" y="510" width="580" height="336" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 3144 520 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#4D7C0F"/>
+<text x="3160" y="540" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">department_charge</text>
+<text x="3710" y="540" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">12</text>
+<rect x="3156" y="556" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="3169.5" y="568" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="3216" y="569" font-size="16" font-weight="700" fill="#0F172A">charge_id</text>
+<text x="3442" y="569" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="3145" y="576" width="578" height="24" fill="#F8FAFC"/>
+<rect x="3156" y="580" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3169.5" y="592" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="3216" y="593" font-size="16" font-weight="400" fill="#1E293B">department_id</text>
+<text x="3442" y="593" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3712" y="593" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ department</text>
+<rect x="3156" y="604" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3169.5" y="616" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="3216" y="617" font-size="16" font-weight="400" fill="#1E293B">equipment_id</text>
+<text x="3442" y="617" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3712" y="617" font-size="13" font-weight="600" fill="#0E7490" text-anchor="end">→ equipment</text>
+<rect x="3145" y="624" width="578" height="24" fill="#F8FAFC"/>
+<rect x="3156" y="628" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3169.5" y="640" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="3216" y="641" font-size="16" font-weight="400" fill="#1E293B">user_id</text>
+<text x="3442" y="641" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3712" y="641" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="3156" y="652" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3169.5" y="664" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<rect x="3186" y="652" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="3199.5" y="664" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="3216" y="665" font-size="16" font-weight="400" fill="#1E293B">booking_id</text>
+<text x="3442" y="665" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3712" y="665" font-size="13" font-weight="600" fill="#1D4ED8" text-anchor="end">→ booking</text>
+<rect x="3145" y="672" width="578" height="24" fill="#F8FAFC"/>
+<rect x="3156" y="676" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3169.5" y="688" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<rect x="3186" y="676" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="3199.5" y="688" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="3216" y="689" font-size="16" font-weight="400" fill="#1E293B">maintenance_request_id</text>
+<text x="3442" y="689" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3712" y="689" font-size="13" font-weight="600" fill="#B45309" text-anchor="end">→ maintenance_request</text>
+<text x="3216" y="713" font-size="16" font-weight="400" fill="#1E293B">charge_type</text>
+<text x="3442" y="713" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<rect x="3145" y="720" width="578" height="24" fill="#F8FAFC"/>
+<text x="3216" y="737" font-size="16" font-weight="400" fill="#1E293B">amount</text>
+<text x="3442" y="737" font-size="14" font-weight="400" fill="#64748B">DECIMAL(12,2)</text>
+<text x="3216" y="761" font-size="16" font-weight="400" fill="#1E293B">hours</text>
+<text x="3442" y="761" font-size="14" font-weight="400" fill="#64748B">DECIMAL(8,2)</text>
+<rect x="3145" y="768" width="578" height="24" fill="#F8FAFC"/>
+<text x="3216" y="785" font-size="16" font-weight="400" fill="#1E293B">charge_date</text>
+<text x="3442" y="785" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<text x="3216" y="809" font-size="16" font-weight="400" fill="#1E293B">description</text>
+<text x="3442" y="809" font-size="14" font-weight="400" fill="#64748B">VARCHAR(500)</text>
+<rect x="3145" y="816" width="578" height="24" fill="#F8FAFC"/>
+<text x="3216" y="833" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="3442" y="833" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="3144" y="920" width="580" height="240" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 3144 930 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#4338CA"/>
+<text x="3160" y="950" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">notification</text>
+<text x="3710" y="950" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">8</text>
+<rect x="3156" y="966" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="3169.5" y="978" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="3216" y="979" font-size="16" font-weight="700" fill="#0F172A">notification_id</text>
+<text x="3442" y="979" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="3145" y="986" width="578" height="24" fill="#F8FAFC"/>
+<rect x="3156" y="990" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3169.5" y="1002" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="3216" y="1003" font-size="16" font-weight="400" fill="#1E293B">user_id</text>
+<text x="3442" y="1003" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3712" y="1003" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<text x="3216" y="1027" font-size="16" font-weight="400" fill="#1E293B">type</text>
+<text x="3442" y="1027" font-size="14" font-weight="400" fill="#64748B">VARCHAR(40)</text>
+<rect x="3145" y="1034" width="578" height="24" fill="#F8FAFC"/>
+<text x="3216" y="1051" font-size="16" font-weight="400" fill="#1E293B">title</text>
+<text x="3442" y="1051" font-size="14" font-weight="400" fill="#64748B">VARCHAR(200)</text>
+<text x="3216" y="1075" font-size="16" font-weight="400" fill="#1E293B">message</text>
+<text x="3442" y="1075" font-size="14" font-weight="400" fill="#64748B">VARCHAR(1000)</text>
+<rect x="3145" y="1082" width="578" height="24" fill="#F8FAFC"/>
+<text x="3216" y="1099" font-size="16" font-weight="400" fill="#1E293B">link</text>
+<text x="3442" y="1099" font-size="14" font-weight="400" fill="#64748B">VARCHAR(255)</text>
+<text x="3216" y="1123" font-size="16" font-weight="400" fill="#1E293B">is_read</text>
+<text x="3442" y="1123" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<rect x="3145" y="1130" width="578" height="24" fill="#F8FAFC"/>
+<text x="3216" y="1147" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="3442" y="1147" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="3144" y="1180" width="580" height="192" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 3144 1190 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#4338CA"/>
+<text x="3160" y="1210" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">user_device_token</text>
+<text x="3710" y="1210" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">6</text>
+<rect x="3156" y="1226" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="3169.5" y="1238" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="3216" y="1239" font-size="16" font-weight="700" fill="#0F172A">device_token_id</text>
+<text x="3442" y="1239" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="3145" y="1246" width="578" height="24" fill="#F8FAFC"/>
+<rect x="3156" y="1250" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3169.5" y="1262" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="3216" y="1263" font-size="16" font-weight="400" fill="#1E293B">user_id</text>
+<text x="3442" y="1263" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3712" y="1263" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="3156" y="1274" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="3169.5" y="1286" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="3216" y="1287" font-size="16" font-weight="400" fill="#1E293B">token</text>
+<text x="3442" y="1287" font-size="14" font-weight="400" fill="#64748B">VARCHAR(512)</text>
+<rect x="3145" y="1294" width="578" height="24" fill="#F8FAFC"/>
+<text x="3216" y="1311" font-size="16" font-weight="400" fill="#1E293B">platform</text>
+<text x="3442" y="1311" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<text x="3216" y="1335" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="3442" y="1335" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="3145" y="1342" width="578" height="24" fill="#F8FAFC"/>
+<text x="3216" y="1359" font-size="16" font-weight="400" fill="#1E293B">last_seen_at</text>
+<text x="3442" y="1359" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="54" y="1488" width="580" height="456" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 54 1498 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#B45309"/>
+<text x="70" y="1518" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">maintenance_request</text>
+<text x="620" y="1518" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">17</text>
+<rect x="66" y="1534" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="79.5" y="1546" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="126" y="1547" font-size="16" font-weight="700" fill="#0F172A">request_id</text>
+<text x="352" y="1547" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="55" y="1554" width="578" height="24" fill="#F8FAFC"/>
+<rect x="66" y="1558" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="79.5" y="1570" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="126" y="1571" font-size="16" font-weight="400" fill="#1E293B">equipment_id</text>
+<text x="352" y="1571" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="622" y="1571" font-size="13" font-weight="600" fill="#0E7490" text-anchor="end">→ equipment</text>
+<rect x="66" y="1582" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="79.5" y="1594" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="126" y="1595" font-size="16" font-weight="400" fill="#1E293B">requested_by</text>
+<text x="352" y="1595" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="622" y="1595" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="55" y="1602" width="578" height="24" fill="#F8FAFC"/>
+<rect x="66" y="1606" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="79.5" y="1618" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="126" y="1619" font-size="16" font-weight="400" fill="#1E293B">assigned_to</text>
+<text x="352" y="1619" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="622" y="1619" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<text x="126" y="1643" font-size="16" font-weight="400" fill="#1E293B">type</text>
+<text x="352" y="1643" font-size="14" font-weight="400" fill="#64748B">VARCHAR(30)</text>
+<rect x="55" y="1650" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1667" font-size="16" font-weight="400" fill="#1E293B">priority</text>
+<text x="352" y="1667" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<text x="126" y="1691" font-size="16" font-weight="400" fill="#1E293B">title</text>
+<text x="352" y="1691" font-size="14" font-weight="400" fill="#64748B">VARCHAR(200)</text>
+<rect x="55" y="1698" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1715" font-size="16" font-weight="400" fill="#1E293B">description</text>
+<text x="352" y="1715" font-size="14" font-weight="400" fill="#64748B">TEXT</text>
+<text x="126" y="1739" font-size="16" font-weight="400" fill="#1E293B">status</text>
+<text x="352" y="1739" font-size="14" font-weight="400" fill="#64748B">VARCHAR(30)</text>
+<rect x="55" y="1746" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1763" font-size="16" font-weight="400" fill="#1E293B">scheduled_date</text>
+<text x="352" y="1763" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<text x="126" y="1787" font-size="16" font-weight="400" fill="#1E293B">started_at</text>
+<text x="352" y="1787" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="55" y="1794" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1811" font-size="16" font-weight="400" fill="#1E293B">completed_at</text>
+<text x="352" y="1811" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<text x="126" y="1835" font-size="16" font-weight="400" fill="#1E293B">downtime_minutes</text>
+<text x="352" y="1835" font-size="14" font-weight="400" fill="#64748B">INTEGER</text>
+<rect x="55" y="1842" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1859" font-size="16" font-weight="400" fill="#1E293B">resolution_notes</text>
+<text x="352" y="1859" font-size="14" font-weight="400" fill="#64748B">TEXT</text>
+<text x="126" y="1883" font-size="16" font-weight="400" fill="#1E293B">cost</text>
+<text x="352" y="1883" font-size="14" font-weight="400" fill="#64748B">DECIMAL(12,2)</text>
+<rect x="55" y="1890" width="578" height="24" fill="#F8FAFC"/>
+<text x="126" y="1907" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="352" y="1907" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<text x="126" y="1931" font-size="16" font-weight="400" fill="#1E293B">updated_at</text>
+<text x="352" y="1931" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="654" y="1488" width="580" height="288" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 654 1498 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#B45309"/>
+<text x="670" y="1518" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">maintenance_schedule</text>
+<text x="1220" y="1518" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">10</text>
+<rect x="666" y="1534" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="679.5" y="1546" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="726" y="1547" font-size="16" font-weight="700" fill="#0F172A">schedule_id</text>
+<text x="952" y="1547" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="655" y="1554" width="578" height="24" fill="#F8FAFC"/>
+<rect x="666" y="1558" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="679.5" y="1570" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="726" y="1571" font-size="16" font-weight="400" fill="#1E293B">equipment_id</text>
+<text x="952" y="1571" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="1222" y="1571" font-size="13" font-weight="600" fill="#0E7490" text-anchor="end">→ equipment</text>
+<rect x="666" y="1582" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="679.5" y="1594" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="726" y="1595" font-size="16" font-weight="400" fill="#1E293B">created_by</text>
+<text x="952" y="1595" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="1222" y="1595" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="655" y="1602" width="578" height="24" fill="#F8FAFC"/>
+<text x="726" y="1619" font-size="16" font-weight="400" fill="#1E293B">maintenance_type</text>
+<text x="952" y="1619" font-size="14" font-weight="400" fill="#64748B">VARCHAR(30)</text>
+<text x="726" y="1643" font-size="16" font-weight="400" fill="#1E293B">interval_days</text>
+<text x="952" y="1643" font-size="14" font-weight="400" fill="#64748B">INTEGER</text>
+<rect x="655" y="1650" width="578" height="24" fill="#F8FAFC"/>
+<text x="726" y="1667" font-size="16" font-weight="400" fill="#1E293B">next_due_date</text>
+<text x="952" y="1667" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<text x="726" y="1691" font-size="16" font-weight="400" fill="#1E293B">last_generated_date</text>
+<text x="952" y="1691" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<rect x="655" y="1698" width="578" height="24" fill="#F8FAFC"/>
+<text x="726" y="1715" font-size="16" font-weight="400" fill="#1E293B">notes</text>
+<text x="952" y="1715" font-size="14" font-weight="400" fill="#64748B">VARCHAR(500)</text>
+<text x="726" y="1739" font-size="16" font-weight="400" fill="#1E293B">active</text>
+<text x="952" y="1739" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<rect x="655" y="1746" width="578" height="24" fill="#F8FAFC"/>
+<text x="726" y="1763" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="952" y="1763" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="1254" y="1488" width="580" height="288" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 1254 1498 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#B45309"/>
+<text x="1270" y="1518" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">equipment_calibration</text>
+<text x="1820" y="1518" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">10</text>
+<rect x="1266" y="1534" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="1279.5" y="1546" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="1326" y="1547" font-size="16" font-weight="700" fill="#0F172A">calibration_id</text>
+<text x="1552" y="1547" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="1255" y="1554" width="578" height="24" fill="#F8FAFC"/>
+<rect x="1266" y="1558" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1279.5" y="1570" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1326" y="1571" font-size="16" font-weight="400" fill="#1E293B">equipment_id</text>
+<text x="1552" y="1571" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="1822" y="1571" font-size="13" font-weight="600" fill="#0E7490" text-anchor="end">→ equipment</text>
+<text x="1326" y="1595" font-size="16" font-weight="400" fill="#1E293B">calibration_date</text>
+<text x="1552" y="1595" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<rect x="1255" y="1602" width="578" height="24" fill="#F8FAFC"/>
+<text x="1326" y="1619" font-size="16" font-weight="400" fill="#1E293B">next_due_date</text>
+<text x="1552" y="1619" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<text x="1326" y="1643" font-size="16" font-weight="400" fill="#1E293B">certificate_number</text>
+<text x="1552" y="1643" font-size="14" font-weight="400" fill="#64748B">VARCHAR(100)</text>
+<rect x="1255" y="1650" width="578" height="24" fill="#F8FAFC"/>
+<text x="1326" y="1667" font-size="16" font-weight="400" fill="#1E293B">calibrated_by</text>
+<text x="1552" y="1667" font-size="14" font-weight="400" fill="#64748B">VARCHAR(150)</text>
+<text x="1326" y="1691" font-size="16" font-weight="400" fill="#1E293B">remarks</text>
+<text x="1552" y="1691" font-size="14" font-weight="400" fill="#64748B">VARCHAR(500)</text>
+<rect x="1255" y="1698" width="578" height="24" fill="#F8FAFC"/>
+<rect x="1266" y="1702" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1279.5" y="1714" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1326" y="1715" font-size="16" font-weight="400" fill="#1E293B">created_by</text>
+<text x="1552" y="1715" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="1822" y="1715" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<text x="1326" y="1739" font-size="16" font-weight="400" fill="#1E293B">reminder_sent</text>
+<text x="1552" y="1739" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<rect x="1255" y="1746" width="578" height="24" fill="#F8FAFC"/>
+<text x="1326" y="1763" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="1552" y="1763" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="1884" y="1488" width="580" height="480" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 1884 1498 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#BE185D"/>
+<text x="1900" y="1518" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">sharing_request</text>
+<text x="2450" y="1518" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">18</text>
+<rect x="1896" y="1534" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="1909.5" y="1546" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="1956" y="1547" font-size="16" font-weight="700" fill="#0F172A">sharing_request_id</text>
+<text x="2182" y="1547" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="1885" y="1554" width="578" height="24" fill="#F8FAFC"/>
+<rect x="1896" y="1558" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1909.5" y="1570" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1956" y="1571" font-size="16" font-weight="400" fill="#1E293B">equipment_id</text>
+<text x="2182" y="1571" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="2452" y="1571" font-size="13" font-weight="600" fill="#0E7490" text-anchor="end">→ equipment</text>
+<rect x="1896" y="1582" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1909.5" y="1594" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1956" y="1595" font-size="16" font-weight="400" fill="#1E293B">from_institution_id</text>
+<text x="2182" y="1595" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="2452" y="1595" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ institution</text>
+<rect x="1885" y="1602" width="578" height="24" fill="#F8FAFC"/>
+<rect x="1896" y="1606" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1909.5" y="1618" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1956" y="1619" font-size="16" font-weight="400" fill="#1E293B">to_institution_id</text>
+<text x="2182" y="1619" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="2452" y="1619" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ institution</text>
+<rect x="1896" y="1630" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1909.5" y="1642" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1956" y="1643" font-size="16" font-weight="400" fill="#1E293B">agreement_id</text>
+<text x="2182" y="1643" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="2452" y="1643" font-size="13" font-weight="600" fill="#BE185D" text-anchor="end">→ sharing_agreement</text>
+<rect x="1885" y="1650" width="578" height="24" fill="#F8FAFC"/>
+<rect x="1896" y="1654" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1909.5" y="1666" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1956" y="1667" font-size="16" font-weight="400" fill="#1E293B">requested_by</text>
+<text x="2182" y="1667" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="2452" y="1667" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="1896" y="1678" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="1909.5" y="1690" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="1956" y="1691" font-size="16" font-weight="400" fill="#1E293B">approved_by</text>
+<text x="2182" y="1691" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="2452" y="1691" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="1885" y="1698" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="1715" font-size="16" font-weight="400" fill="#1E293B">purpose</text>
+<text x="2182" y="1715" font-size="14" font-weight="400" fill="#64748B">VARCHAR(500)</text>
+<text x="1956" y="1739" font-size="16" font-weight="400" fill="#1E293B">requested_date</text>
+<text x="2182" y="1739" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<rect x="1885" y="1746" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="1763" font-size="16" font-weight="400" fill="#1E293B">start_time</text>
+<text x="2182" y="1763" font-size="14" font-weight="400" fill="#64748B">TIME</text>
+<text x="1956" y="1787" font-size="16" font-weight="400" fill="#1E293B">end_time</text>
+<text x="2182" y="1787" font-size="14" font-weight="400" fill="#64748B">TIME</text>
+<rect x="1885" y="1794" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="1811" font-size="16" font-weight="400" fill="#1E293B">status</text>
+<text x="2182" y="1811" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<text x="1956" y="1835" font-size="16" font-weight="400" fill="#1E293B">hourly_rate</text>
+<text x="2182" y="1835" font-size="14" font-weight="400" fill="#64748B">DECIMAL(10,2)</text>
+<rect x="1885" y="1842" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="1859" font-size="16" font-weight="400" fill="#1E293B">discount_percent</text>
+<text x="2182" y="1859" font-size="14" font-weight="400" fill="#64748B">DECIMAL(5,2)</text>
+<text x="1956" y="1883" font-size="16" font-weight="400" fill="#1E293B">estimated_fee</text>
+<text x="2182" y="1883" font-size="14" font-weight="400" fill="#64748B">DECIMAL(12,2)</text>
+<rect x="1885" y="1890" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="1907" font-size="16" font-weight="400" fill="#1E293B">remarks</text>
+<text x="2182" y="1907" font-size="14" font-weight="400" fill="#64748B">VARCHAR(500)</text>
+<text x="1956" y="1931" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="2182" y="1931" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="1885" y="1938" width="578" height="24" fill="#F8FAFC"/>
+<text x="1956" y="1955" font-size="16" font-weight="400" fill="#1E293B">updated_at</text>
+<text x="2182" y="1955" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="2484" y="1488" width="580" height="408" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 2484 1498 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#BE185D"/>
+<text x="2500" y="1518" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">sharing_agreement</text>
+<text x="3050" y="1518" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">15</text>
+<rect x="2496" y="1534" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="2509.5" y="1546" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="2556" y="1547" font-size="16" font-weight="700" fill="#0F172A">agreement_id</text>
+<text x="2782" y="1547" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="2485" y="1554" width="578" height="24" fill="#F8FAFC"/>
+<rect x="2496" y="1558" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="2509.5" y="1570" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="2556" y="1571" font-size="16" font-weight="400" fill="#1E293B">from_institution_id</text>
+<text x="2782" y="1571" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3052" y="1571" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ institution</text>
+<rect x="2496" y="1582" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="2509.5" y="1594" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="2556" y="1595" font-size="16" font-weight="400" fill="#1E293B">to_institution_id</text>
+<text x="2782" y="1595" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3052" y="1595" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ institution</text>
+<rect x="2485" y="1602" width="578" height="24" fill="#F8FAFC"/>
+<text x="2556" y="1619" font-size="16" font-weight="400" fill="#1E293B">title</text>
+<text x="2782" y="1619" font-size="14" font-weight="400" fill="#64748B">VARCHAR(200)</text>
+<text x="2556" y="1643" font-size="16" font-weight="400" fill="#1E293B">status</text>
+<text x="2782" y="1643" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<rect x="2485" y="1650" width="578" height="24" fill="#F8FAFC"/>
+<text x="2556" y="1667" font-size="16" font-weight="400" fill="#1E293B">start_date</text>
+<text x="2782" y="1667" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<text x="2556" y="1691" font-size="16" font-weight="400" fill="#1E293B">end_date</text>
+<text x="2782" y="1691" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<rect x="2485" y="1698" width="578" height="24" fill="#F8FAFC"/>
+<text x="2556" y="1715" font-size="16" font-weight="400" fill="#1E293B">discount_percent</text>
+<text x="2782" y="1715" font-size="14" font-weight="400" fill="#64748B">DECIMAL(5,2)</text>
+<text x="2556" y="1739" font-size="16" font-weight="400" fill="#1E293B">max_hours_per_month</text>
+<text x="2782" y="1739" font-size="14" font-weight="400" fill="#64748B">INTEGER</text>
+<rect x="2485" y="1746" width="578" height="24" fill="#F8FAFC"/>
+<text x="2556" y="1763" font-size="16" font-weight="400" fill="#1E293B">auto_approve</text>
+<text x="2782" y="1763" font-size="14" font-weight="400" fill="#64748B">BOOLEAN</text>
+<text x="2556" y="1787" font-size="16" font-weight="400" fill="#1E293B">terms</text>
+<text x="2782" y="1787" font-size="14" font-weight="400" fill="#64748B">TEXT</text>
+<rect x="2485" y="1794" width="578" height="24" fill="#F8FAFC"/>
+<rect x="2496" y="1798" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="2509.5" y="1810" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="2556" y="1811" font-size="16" font-weight="400" fill="#1E293B">created_by</text>
+<text x="2782" y="1811" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3052" y="1811" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="2496" y="1822" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="2509.5" y="1834" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="2556" y="1835" font-size="16" font-weight="400" fill="#1E293B">approved_by</text>
+<text x="2782" y="1835" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3052" y="1835" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<rect x="2485" y="1842" width="578" height="24" fill="#F8FAFC"/>
+<text x="2556" y="1859" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="2782" y="1859" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<text x="2556" y="1883" font-size="16" font-weight="400" fill="#1E293B">updated_at</text>
+<text x="2782" y="1883" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="3084" y="1488" width="580" height="360" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.4"/>
+<path d="M 3084 1498 a 10 10 0 0 1 10 -10 h 560 a 10 10 0 0 1 10 10 v 32 h -580 Z" fill="#BE185D"/>
+<text x="3100" y="1518" font-size="20" font-weight="700" fill="#FFFFFF" letter-spacing="0.4">invoice</text>
+<text x="3650" y="1518" font-size="16" font-weight="600" fill="#FFFFFF" text-anchor="end">13</text>
+<rect x="3096" y="1534" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="3109.5" y="1546" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="3156" y="1547" font-size="16" font-weight="700" fill="#0F172A">invoice_id</text>
+<text x="3382" y="1547" font-size="14" font-weight="400" fill="#64748B">BIGSERIAL</text>
+<rect x="3085" y="1554" width="578" height="24" fill="#F8FAFC"/>
+<rect x="3096" y="1558" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="3109.5" y="1570" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="3156" y="1571" font-size="16" font-weight="400" fill="#1E293B">invoice_number</text>
+<text x="3382" y="1571" font-size="14" font-weight="400" fill="#64748B">VARCHAR(40)</text>
+<rect x="3096" y="1582" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3109.5" y="1594" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<rect x="3126" y="1582" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="3139.5" y="1594" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="3156" y="1595" font-size="16" font-weight="400" fill="#1E293B">sharing_request_id</text>
+<text x="3382" y="1595" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3652" y="1595" font-size="13" font-weight="600" fill="#BE185D" text-anchor="end">→ sharing_request</text>
+<rect x="3085" y="1602" width="578" height="24" fill="#F8FAFC"/>
+<rect x="3096" y="1606" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3109.5" y="1618" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="3156" y="1619" font-size="16" font-weight="400" fill="#1E293B">from_institution_id</text>
+<text x="3382" y="1619" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3652" y="1619" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ institution</text>
+<rect x="3096" y="1630" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3109.5" y="1642" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="3156" y="1643" font-size="16" font-weight="400" fill="#1E293B">to_institution_id</text>
+<text x="3382" y="1643" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3652" y="1643" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ institution</text>
+<rect x="3085" y="1650" width="578" height="24" fill="#F8FAFC"/>
+<text x="3156" y="1667" font-size="16" font-weight="400" fill="#1E293B">amount</text>
+<text x="3382" y="1667" font-size="14" font-weight="400" fill="#64748B">DECIMAL(12,2)</text>
+<text x="3156" y="1691" font-size="16" font-weight="400" fill="#1E293B">status</text>
+<text x="3382" y="1691" font-size="14" font-weight="400" fill="#64748B">VARCHAR(20)</text>
+<rect x="3085" y="1698" width="578" height="24" fill="#F8FAFC"/>
+<text x="3156" y="1715" font-size="16" font-weight="400" fill="#1E293B">issued_date</text>
+<text x="3382" y="1715" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<text x="3156" y="1739" font-size="16" font-weight="400" fill="#1E293B">due_date</text>
+<text x="3382" y="1739" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<rect x="3085" y="1746" width="578" height="24" fill="#F8FAFC"/>
+<text x="3156" y="1763" font-size="16" font-weight="400" fill="#1E293B">paid_date</text>
+<text x="3382" y="1763" font-size="14" font-weight="400" fill="#64748B">DATE</text>
+<text x="3156" y="1787" font-size="16" font-weight="400" fill="#1E293B">description</text>
+<text x="3382" y="1787" font-size="14" font-weight="400" fill="#64748B">VARCHAR(500)</text>
+<rect x="3085" y="1794" width="578" height="24" fill="#F8FAFC"/>
+<rect x="3096" y="1798" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="3109.5" y="1810" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="3156" y="1811" font-size="16" font-weight="400" fill="#1E293B">created_by</text>
+<text x="3382" y="1811" font-size="14" font-weight="400" fill="#64748B">BIGINT</text>
+<text x="3652" y="1811" font-size="13" font-weight="600" fill="#7C3AED" text-anchor="end">→ app_user</text>
+<text x="3156" y="1835" font-size="16" font-weight="400" fill="#1E293B">created_at</text>
+<text x="3382" y="1835" font-size="14" font-weight="400" fill="#64748B">TIMESTAMP</text>
+<rect x="40" y="2002" width="3760" height="118" rx="14" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+<text x="64" y="2032" font-size="16" font-weight="700" fill="#0F172A" letter-spacing="1">NOTATION</text>
+<rect x="64" y="2046" width="27" height="16" rx="4" fill="#F59E0B"/>
+<text x="77.5" y="2059" font-size="11" font-weight="700" fill="#3D2606" text-anchor="middle">PK</text>
+<text x="102" y="2059" font-size="15" font-weight="400" fill="#334155">Primary key</text>
+<rect x="64" y="2072" width="27" height="16" rx="4" fill="#3B82F6"/>
+<text x="77.5" y="2085" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">FK</text>
+<text x="102" y="2085" font-size="15" font-weight="400" fill="#334155">Foreign key</text>
+<rect x="64" y="2098" width="27" height="16" rx="4" fill="#64748B"/>
+<text x="77.5" y="2111" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">UK</text>
+<text x="102" y="2111" font-size="15" font-weight="400" fill="#334155">Unique</text>
+<text x="274" y="2032" font-size="16" font-weight="700" fill="#0F172A" letter-spacing="1">CARDINALITY</text>
+<line x1="274" y1="2054" x2="328" y2="2054" stroke="#475569" stroke-width="2.2"/>
+<line x1="282" y1="2047" x2="282" y2="2061" stroke="#475569" stroke-width="2.4"/>
+<path d="M 328 2054 L 314 2046 M 328 2054 L 314 2054 M 328 2054 L 314 2062" fill="none" stroke="#475569" stroke-width="2.2"/>
+<text x="340" y="2059" font-size="15" font-weight="400" fill="#334155">one-to-many (crow’s foot at the many end)</text>
+<line x1="274" y1="2080" x2="328" y2="2080" stroke="#475569" stroke-width="2.2"/>
+<line x1="282" y1="2073" x2="282" y2="2087" stroke="#475569" stroke-width="2.4"/>
+<line x1="320" y1="2073" x2="320" y2="2087" stroke="#475569" stroke-width="2.4"/>
+<text x="340" y="2085" font-size="15" font-weight="400" fill="#334155">one-to-one — child FK carries a UNIQUE</text>
+<text x="744" y="2032" font-size="16" font-weight="700" fill="#0F172A" letter-spacing="1">EER CONSTRUCTS IN THIS SCHEMA</text>
+<text x="744" y="2058" font-size="15" font-weight="400" fill="#334155">• M:N resolved by association entity — app_user ↔ role via user_role (composite PK).</text>
+<text x="744" y="2084" font-size="15" font-weight="400" fill="#334155">• Weak entities, ON DELETE CASCADE — equipment_image, equipment_document, booking_history, notification, user_device_token.</text>
+<text x="744" y="2110" font-size="15" font-weight="400" fill="#334155">• Recursive / dual role — sharing_request, sharing_agreement and invoice each reference institution twice (from_ and to_).</text>
+<text x="2074" y="2032" font-size="16" font-weight="700" fill="#0F172A" letter-spacing="1">INTEGRITY RULES</text>
+<text x="2074" y="2058" font-size="15" font-weight="400" fill="#334155">• department_charge.booking_id / .maintenance_request_id are UNIQUE — the database, not the code, makes chargeback idempotent.</text>
+<text x="2074" y="2084" font-size="15" font-weight="400" fill="#334155">• sharing_agreement CHECKs: distinct parties, discount 0–100, start_date ≤ end_date.</text>
+<text x="2074" y="2110" font-size="15" font-weight="400" fill="#334155">• Optional money and target columns are NULL by design, never 0 — &quot;not set&quot; must not read as &quot;zero&quot;.</text>
+</svg>

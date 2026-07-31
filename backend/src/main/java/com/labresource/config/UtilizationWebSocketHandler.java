@@ -17,13 +17,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
 /**
  * Broadcasts live utilization events to connected dashboards.
  *
- * A plain text handler rather than STOMP/SockJS on purpose: the traffic here is strictly one-way
- * server-to-client notification, so the extra protocol layers (and the client libraries they drag
- * in) would buy nothing. The browser's native WebSocket is enough.
+ * <p>Plain text rather than STOMP/SockJS: the traffic is strictly one-way server-to-client, so
+ * the extra protocol layers would buy nothing over the browser's native WebSocket.
  *
- * Payloads are deliberately small — an event saying *what* changed, not a whole recomputed summary.
- * Recomputing and pushing the full utilization picture on every booking transition would put real
- * query load on the database for every connected tab; instead clients debounce and refetch.
+ * <p>Payloads say only <em>what</em> changed. Pushing a recomputed summary on every transition
+ * would put query load on the database for every connected tab; clients debounce and refetch.
  */
 @Component
 @RequiredArgsConstructor
@@ -32,10 +30,7 @@ public class UtilizationWebSocketHandler extends TextWebSocketHandler {
 
     private final ObjectMapper objectMapper;
 
-    /**
-     * Copy-on-write because the read path (broadcast) massively outnumbers connect/disconnect,
-     * and it lets us iterate without holding a lock while doing socket I/O.
-     */
+    /** Copy-on-write: broadcasts vastly outnumber connects, and iteration needs no lock. */
     private final Set<WebSocketSession> sessions = new CopyOnWriteArraySet<>();
 
     @Override
@@ -59,10 +54,8 @@ public class UtilizationWebSocketHandler extends TextWebSocketHandler {
     }
 
     /**
-     * Fans an event out to every connected client.
-     *
-     * Never throws: a dashboard failing to receive a nudge must not roll back the booking
-     * transaction that triggered it.
+     * Fans an event out to every connected client. Never throws — a dashboard missing a nudge
+     * must not roll back the booking transaction that triggered it.
      */
     public void broadcast(String eventType, Map<String, Object> payload) {
         if (sessions.isEmpty()) {

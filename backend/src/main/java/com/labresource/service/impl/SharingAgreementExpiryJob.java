@@ -14,10 +14,9 @@ import java.util.List;
 /**
  * Retires sharing agreements once their end date has passed.
  *
- * The lookup that resolves an agreement for a request already filters on the date range, so an
- * expired agreement stops granting terms the moment it lapses — this job exists so the *status*
- * reflects reality too, and admins are not left reading "ACTIVE" against an agreement that ended
- * last month.
+ * <p>Agreement resolution already filters on the date range, so terms stop applying the moment
+ * one lapses. This job keeps the <em>status</em> honest, so nobody reads "ACTIVE" against an
+ * agreement that ended last month.
  */
 @Component
 @RequiredArgsConstructor

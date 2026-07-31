@@ -1,17 +1,12 @@
-// Live utilization feed over the browser's native WebSocket.
+// Live utilization feed over the browser's native WebSocket — the backend socket is plain text
+// and one-way, so no STOMP/SockJS client is needed.
 //
-// No STOMP/SockJS client here on purpose: the backend exposes a plain text socket because the
-// traffic is one-way server-to-client, so the native API is sufficient and adds nothing to the
-// bundle.
-//
-// The server sends small "something changed" events rather than recomputed figures, so subscribers
-// are expected to refetch. `debounceMs` exists because a burst of status changes (approving a batch
-// of bookings, cancelling a recurring series) would otherwise trigger a refetch per event.
+// Events say only that something changed, so subscribers refetch. debounceMs coalesces bursts
+// (approving a batch of bookings, cancelling a recurring series) into a single refetch.
 
 const SOCKET_PATH = '/ws/utilization';
 
-// Reconnect with backoff, capped — a backend restart should reconnect quickly, but a socket the
-// server is refusing must not turn into a hot loop.
+// Capped backoff: reconnect quickly after a restart, but never hot-loop against a refusing server.
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 30000;
 
@@ -21,7 +16,7 @@ const socketUrl = (token) => {
   const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
   let origin;
   try {
-    // API base may be absolute ("http://host:8080/api") or a relative proxy path ("/api")
+    // May be absolute ("http://host:8080/api") or a relative proxy path ("/api")
     origin = apiBase.startsWith('http') ? new URL(apiBase).origin : window.location.origin;
   } catch {
     origin = window.location.origin;

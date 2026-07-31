@@ -208,8 +208,8 @@ public class MaintenanceServiceImpl implements MaintenanceService {
                             + equipment.getEquipmentName() + " has been completed.",
                     "/dashboard/maintenance");
 
-            // Bill the repair to the owning department's budget. Runs in its own transaction
-            // and swallows its own failures, so a billing problem cannot undo the completion.
+            // Bills the owning department. Own transaction, own error handling — a billing
+            // failure cannot undo the completion.
             chargebackService.postMaintenanceCharge(saved.getRequestId());
         }
 

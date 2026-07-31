@@ -21,16 +21,14 @@ import java.util.stream.Collectors;
  *
  * <p>Three escalation levels:
  * <ul>
- *   <li>{@link #notifyInApp} — the bell only. Background/FYI events.
+ *   <li>{@link #notifyInApp} — bell only, for FYI events.
  *   <li>{@link #notify} — bell + email. The default.
- *   <li>{@link #notifyUrgent} — bell + email + SMS + push. Reserved for alerts that lose their
- *       value if they are not seen within hours: a waitlist claim that expires, a booking that
- *       starts tomorrow, a work order landing on a technician, an overdue calibration.
+ *   <li>{@link #notifyUrgent} — bell + email + SMS + push, for alerts that lose their value if
+ *       not seen within hours (expiring waitlist claim, tomorrow's booking, overdue calibration).
  * </ul>
  *
- * <p>SMS and push are opt-out per user, and every channel is best-effort — a delivery failure
- * is logged, never thrown, because a notification must not roll back the business transaction
- * that triggered it.
+ * <p>SMS and push are opt-out per user. Every channel is best-effort: a delivery failure is
+ * logged, never thrown, so a notification cannot roll back the transaction that triggered it.
  */
 @Service
 @RequiredArgsConstructor
@@ -66,10 +64,7 @@ public class NotificationService {
         sendEmail(user, title, message);
     }
 
-    /**
-     * In-app + email + SMS + push, with the SMS text derived from the title and message.
-     * Prefer the overload below when the full message is too long to read on a lock screen.
-     */
+    /** SMS text derived from title + message. Use the overload when that reads badly on a phone. */
     @Transactional
     public void notifyUrgent(AppUser user, String type, String title, String message, String link) {
         notifyUrgent(user, type, title, message, link, title + ": " + message);
@@ -78,9 +73,8 @@ public class NotificationService {
     /**
      * In-app + email + SMS + push.
      *
-     * @param smsText compact wording for SMS and the push body. SMS is billed per segment and a
-     *                push body is truncated by the OS, so the long-form {@code message} written
-     *                for the bell and email is usually the wrong text to reuse here.
+     * @param smsText compact wording for SMS and the push body — SMS bills per segment and the
+     *                OS truncates push bodies, so the long-form {@code message} rarely suits both
      */
     @Transactional
     public void notifyUrgent(AppUser user, String type, String title, String message,

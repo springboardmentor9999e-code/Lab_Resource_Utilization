@@ -1,0 +1,151 @@
+# ============================================================
+# Lab Resource Utilization Platform — Production stack
+#
+#   cp .env.prod.example .env
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Runs on any Docker host: AWS EC2, Azure VM, GCP Compute Engine,
+# a DigitalOcean droplet, or an on-prem server. See DEPLOYMENT.md.
+#
+# Differences from docker-compose.yml (the local dev stack):
+#   - Postgres and the backend publish NO host ports; only Nginx is
+#     reachable from outside. The API is served same-origin at /api.
+#   - The backend runs with SPRING_PROFILES_ACTIVE=prod, so Hibernate
+#     validates the schema instead of altering it.
+#   - Every secret is required (${VAR:?}) — compose refuses to start
+#     rather than silently falling back to a development default.
+#   - Health checks + restart:always so the host survives a reboot.
+#   - Log rotation, so a long-running VM cannot fill its disk.
+# ============================================================
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  # ----------------------------------------------------------
+  # PostgreSQL — internal only, never published to the host
+  # ----------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: lab-resource-db
+    restart: always
+    logging: *default-logging
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lab_resource_db}
+      POSTGRES_USER: "${POSTGRES_USER:?POSTGRES_USER is required}"
+      # Generate with: openssl rand -base64 24
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Runs 01..17_*.sql alphabetically on the FIRST start only (empty volume).
+      # On an existing volume Postgres skips this entirely, so redeploys are safe.
+      - ./database:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-lab_resource_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [lab-net]
+
+  # ----------------------------------------------------------
+  # Spring Boot API — internal only, reached through Nginx
+  # ----------------------------------------------------------
+  backend:
+    # Pulled from GHCR by default (pushed by .github/workflows/deploy.yml).
+    # Add --build to compose to build from source on the host instead.
+    image: ghcr.io/${IMAGE_PREFIX:-badalsingh25/lab-resource-platform}-backend:${IMAGE_TAG:-latest}
+    build: ./backend
+    container_name: lab-resource-backend
+    restart: always
+    logging: *default-logging
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-lab_resource_db}
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+
+      # Generate with: openssl rand -base64 48
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required}"
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      # Generate with: openssl rand -base64 18
+      BOOTSTRAP_ADMIN_PASSWORD: "${BOOTSTRAP_ADMIN_PASSWORD:?BOOTSTRAP_ADMIN_PASSWORD is required}"
+
+      # Nginx proxies /api on the same origin, so the browser never makes a
+      # cross-origin call. This list only matters if you point a separate
+      # frontend host at this API.
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+
+      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_FROM: ${MAIL_FROM:-no-reply@labresource.com}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+
+      SMS_ENABLED: ${SMS_ENABLED:-false}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
+
+      PUSH_ENABLED: ${PUSH_ENABLED:-false}
+      FIREBASE_CREDENTIALS: ${FIREBASE_CREDENTIALS:-}
+
+      UPLOAD_DIR: /app/uploads
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=70.0}
+    volumes:
+      - uploads:/app/uploads
+      # Firebase service-account key, if push notifications are enabled.
+      # Create ./secrets/firebase.json on the host and set
+      # FIREBASE_CREDENTIALS=/app/secrets/firebase.json
+      - ./secrets:/app/secrets:ro
+    healthcheck:
+      # busybox wget — the JRE Alpine image has no curl.
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+    networks: [lab-net]
+
+  # ----------------------------------------------------------
+  # Nginx — serves the React build and reverse-proxies the API.
+  # The only container exposed to the internet.
+  # ----------------------------------------------------------
+  frontend:
+    image: ghcr.io/${IMAGE_PREFIX:-badalsingh25/lab-resource-platform}-frontend:${IMAGE_TAG:-latest}
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    container_name: lab-resource-frontend
+    restart: always
+    logging: *default-logging
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks: [lab-net]
+
+volumes:
+  pgdata:
+  uploads:
+
+networks:
+  lab-net:
+    driver: bridge
