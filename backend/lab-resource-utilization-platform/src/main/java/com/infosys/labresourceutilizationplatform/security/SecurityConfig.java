@@ -39,21 +39,13 @@ public class SecurityConfig {
                         // Authentication
                         // =========================
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/profile/**").authenticated()
 
                         // =========================
                         // =========================
                         // Institution APIs
                         // =========================
-                        .requestMatchers(HttpMethod.GET, "/api/institutions", "/api/institutions/**")
-                        .hasAnyAuthority(
-                                "SYSTEM_ADMIN",
-                                "INSTITUTION_ADMIN",
-                                "DEPARTMENT_HEAD",
-                                "LAB_MANAGER",
-                                "LAB_TECHNICIAN",
-                                "RESEARCHER",
-                                "STUDENT"
-                        )
+                        .requestMatchers(HttpMethod.GET, "/api/institutions", "/api/institutions/**").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/institutions", "/api/institutions/**")
                         .hasAnyAuthority("SYSTEM_ADMIN", "INSTITUTION_ADMIN")
@@ -67,16 +59,7 @@ public class SecurityConfig {
                         // =========================
                         // Department APIs
                         // =========================
-                        .requestMatchers(HttpMethod.GET, "/api/departments", "/api/departments/**")
-                        .hasAnyAuthority(
-                                "SYSTEM_ADMIN",
-                                "INSTITUTION_ADMIN",
-                                "DEPARTMENT_HEAD",
-                                "LAB_MANAGER",
-                                "LAB_TECHNICIAN",
-                                "RESEARCHER",
-                                "STUDENT"
-                        )
+                        .requestMatchers(HttpMethod.GET, "/api/departments", "/api/departments/**").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/departments", "/api/departments/**")
                         .hasAnyAuthority("SYSTEM_ADMIN", "INSTITUTION_ADMIN")

@@ -11,6 +11,7 @@ import Laboratories from "./components/laboratory/Laboratories";
 import Equipment from "./components/equipment/Equipment";
 import MyBookings from "./components/booking/MyBookings";
 import Bookings from "./components/booking/Bookings";
+import Profile from "./components/profile/Profile";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
         <Route path="/equipment" element={<Equipment />} />
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/bookings" element={<Bookings />} />
+        <Route path="/profile" element={<Profile />} />
 
       </Routes>
     </BrowserRouter>

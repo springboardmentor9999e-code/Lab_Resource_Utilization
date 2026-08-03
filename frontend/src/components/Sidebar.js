@@ -46,20 +46,23 @@ function Sidebar() {
             { name: "Dashboard", path: "/manager-dashboard", icon: <FaHome /> },
             { name: "Equipment", path: "/equipment", icon: <FaLaptop /> },
             { name: "Bookings", path: "/bookings", icon: <FaClipboardList /> },
-            { name: "Reports", path: "/reports", icon: <FaChartBar /> }
+            { name: "Reports", path: "/reports", icon: <FaChartBar /> },
+            { name: "Profile", path: "/profile", icon: <FaUser /> }
         ],
 
         LAB_TECHNICIAN: [
             { name: "Dashboard", path: "/technician-dashboard", icon: <FaHome /> },
             { name: "Equipment", path: "/equipment", icon: <FaLaptop /> },
-            { name: "Maintenance", path: "/maintenance", icon: <FaTools /> }
+            { name: "Maintenance", path: "/maintenance", icon: <FaTools /> },
+            { name: "Profile", path: "/profile", icon: <FaUser /> }
         ],
 
         DEPARTMENT_HEAD: [
             { name: "Dashboard", path: "/department-dashboard", icon: <FaHome /> },
             { name: "Laboratories", path: "/laboratories", icon: <FaUniversity /> },
             { name: "Equipment", path: "/equipment", icon: <FaLaptop /> },
-            { name: "Reports", path: "/reports", icon: <FaChartBar /> }
+            { name: "Reports", path: "/reports", icon: <FaChartBar /> },
+            { name: "Profile", path: "/profile", icon: <FaUser /> }
         ],
 
         INSTITUTION_ADMIN: [
@@ -68,14 +71,16 @@ function Sidebar() {
             { name: "Laboratories", path: "/laboratories", icon: <FaUniversity /> },
             { name: "Equipment", path: "/equipment", icon: <FaLaptop /> },
             { name: "Bookings", path: "/bookings", icon: <FaClipboardList /> },
-            { name: "Reports", path: "/reports", icon: <FaChartBar /> }
+            { name: "Reports", path: "/reports", icon: <FaChartBar /> },
+            { name: "Profile", path: "/profile", icon: <FaUser /> }
         ],
 
         SYSTEM_ADMIN: [
             { name: "Dashboard", path: "/system-dashboard", icon: <FaHome /> },
             { name: "Institutions", path: "/institutions", icon: <FaUniversity /> },
             { name: "Users", path: "/users", icon: <FaUsers /> },
-            { name: "Reports", path: "/reports", icon: <FaChartBar /> }
+            { name: "Reports", path: "/reports", icon: <FaChartBar /> },
+            { name: "Profile", path: "/profile", icon: <FaUser /> }
         ]
 
     };

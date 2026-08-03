@@ -36,6 +36,18 @@ public class User {
     @Column(name = "status")
     private String status;
 
+    @Column(name = "roll_number")
+    private String rollNumber;
+
+    @Column(name = "research_id")
+    private String researchId;
+
+    @Column(name = "registration_date")
+    private java.time.LocalDate registrationDate;
+
+    @Column(name = "profile_photo", columnDefinition = "TEXT")
+    private String profilePhoto;
+
     public User() {
     }
 
@@ -109,5 +121,37 @@ public class User {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getRollNumber() {
+        return rollNumber;
+    }
+
+    public void setRollNumber(String rollNumber) {
+        this.rollNumber = rollNumber;
+    }
+
+    public String getResearchId() {
+        return researchId;
+    }
+
+    public void setResearchId(String researchId) {
+        this.researchId = researchId;
+    }
+
+    public java.time.LocalDate getRegistrationDate() {
+        return registrationDate;
+    }
+
+    public void setRegistrationDate(java.time.LocalDate registrationDate) {
+        this.registrationDate = registrationDate;
+    }
+
+    public String getProfilePhoto() {
+        return profilePhoto;
+    }
+
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
     }
 }

@@ -1,21 +1,32 @@
 package com.infosys.labresourceutilizationplatform.dto;
 
-public class RegisterRequest {
+import java.time.LocalDate;
 
+public class UserProfileDto {
+    private Integer userId;
     private String fullName;
     private String email;
-    private String password;
-    private String confirmPassword;
     private String phone;
-    private String roleName;
     private Integer institutionId;
-    private Integer departmentId;
     private String institutionName;
+    private Integer departmentId;
     private String departmentName;
+    private String roleName;
     private String rollNumber;
     private String researchId;
+    private String status;
+    private LocalDate registrationDate;
+    private String profilePhoto;
 
-    public RegisterRequest() {
+    public UserProfileDto() {
+    }
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
     }
 
     public String getFullName() {
@@ -34,36 +45,12 @@ public class RegisterRequest {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getConfirmPassword() {
-        return confirmPassword;
-    }
-
-    public void setConfirmPassword(String confirmPassword) {
-        this.confirmPassword = confirmPassword;
-    }
-
     public String getPhone() {
         return phone;
     }
 
     public void setPhone(String phone) {
         this.phone = phone;
-    }
-
-    public String getRoleName() {
-        return roleName;
-    }
-
-    public void setRoleName(String roleName) {
-        this.roleName = roleName;
     }
 
     public Integer getInstitutionId() {
@@ -74,14 +61,6 @@ public class RegisterRequest {
         this.institutionId = institutionId;
     }
 
-    public Integer getDepartmentId() {
-        return departmentId;
-    }
-
-    public void setDepartmentId(Integer departmentId) {
-        this.departmentId = departmentId;
-    }
-
     public String getInstitutionName() {
         return institutionName;
     }
@@ -90,12 +69,28 @@ public class RegisterRequest {
         this.institutionName = institutionName;
     }
 
+    public Integer getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Integer departmentId) {
+        this.departmentId = departmentId;
+    }
+
     public String getDepartmentName() {
         return departmentName;
     }
 
     public void setDepartmentName(String departmentName) {
         this.departmentName = departmentName;
+    }
+
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
     }
 
     public String getRollNumber() {
@@ -112,5 +107,29 @@ public class RegisterRequest {
 
     public void setResearchId(String researchId) {
         this.researchId = researchId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDate getRegistrationDate() {
+        return registrationDate;
+    }
+
+    public void setRegistrationDate(LocalDate registrationDate) {
+        this.registrationDate = registrationDate;
+    }
+
+    public String getProfilePhoto() {
+        return profilePhoto;
+    }
+
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
     }
 }
