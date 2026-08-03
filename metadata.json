@@ -1,0 +1,6 @@
+{
+  "name": "Lab Resource Utilization Platform",
+  "description": "A comprehensive multi-role lab resource management platform featuring role-based dashboards, equipment tracking, booking schedules, maintenance tickets, calibration alerts, and department analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
