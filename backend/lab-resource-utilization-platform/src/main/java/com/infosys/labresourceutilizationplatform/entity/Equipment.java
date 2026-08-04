@@ -42,6 +42,9 @@ public class Equipment {
 
     private String documentUrl;
 
+    @Column(name = "cost_per_hour")
+    private Double costPerHour = 0.0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "laboratory_id")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -201,5 +204,13 @@ public class Equipment {
 
     public void setLaboratory(Laboratory laboratory) {
         this.laboratory = laboratory;
+    }
+
+    public Double getCostPerHour() {
+        return costPerHour;
+    }
+
+    public void setCostPerHour(Double costPerHour) {
+        this.costPerHour = costPerHour;
     }
 }

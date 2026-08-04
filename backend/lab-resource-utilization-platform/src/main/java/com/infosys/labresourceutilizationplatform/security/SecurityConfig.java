@@ -40,6 +40,13 @@ public class SecurityConfig {
                         // =========================
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/profile/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/issues").hasAnyAuthority("STUDENT", "RESEARCHER")
+                        .requestMatchers(HttpMethod.GET, "/api/issues").hasAnyAuthority("LAB_TECHNICIAN", "LAB_MANAGER", "SYSTEM_ADMIN", "INSTITUTION_ADMIN", "DEPARTMENT_HEAD", "STUDENT", "RESEARCHER")
+                        .requestMatchers(HttpMethod.PUT, "/api/issues/**").hasAnyAuthority("LAB_TECHNICIAN", "LAB_MANAGER", "SYSTEM_ADMIN", "INSTITUTION_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/preventive").hasAuthority("LAB_MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/preventive").hasAnyAuthority("LAB_TECHNICIAN", "LAB_MANAGER", "DEPARTMENT_HEAD", "INSTITUTION_ADMIN", "SYSTEM_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/preventive/**").hasAuthority("LAB_TECHNICIAN")
+                        .requestMatchers("/api/utilization/**").authenticated()
 
                         // =========================
                         // =========================
@@ -147,6 +154,8 @@ public class SecurityConfig {
                                 "RESEARCHER"
                         )
 
+                        .requestMatchers(HttpMethod.PUT, "/api/bookings/*/cancel").authenticated()
+
                         .requestMatchers(HttpMethod.PUT, "/api/bookings", "/api/bookings/**")
                         .hasAnyAuthority(
                                 "LAB_MANAGER",
@@ -165,8 +174,10 @@ public class SecurityConfig {
                         // =========================
                         // Dashboard/Admin APIs
                         // =========================
-                        .requestMatchers("/api/admin/**")
-                        .hasAuthority("INSTITUTION_ADMIN")
+                        .requestMatchers("/api/admin/pending-users", "/api/admin/approve/**", "/api/admin/reject/**")
+                        .hasAnyAuthority("INSTITUTION_ADMIN", "SYSTEM_ADMIN")
+                        .requestMatchers("/api/admin/users")
+                        .hasAnyAuthority("INSTITUTION_ADMIN", "SYSTEM_ADMIN", "LAB_MANAGER", "DEPARTMENT_HEAD")
 
                         .requestMatchers("/api/student/**")
                         .hasAuthority("STUDENT")

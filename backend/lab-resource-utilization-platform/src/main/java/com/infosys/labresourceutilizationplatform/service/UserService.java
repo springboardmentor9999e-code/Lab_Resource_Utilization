@@ -44,6 +44,10 @@ public class UserService {
         return userRepository.findByStatus("PENDING");
     }
 
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
     public String approveUser(Integer userId) {
 
         User user = userRepository.findById(userId)

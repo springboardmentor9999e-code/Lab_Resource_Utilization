@@ -40,6 +40,9 @@ public class Booking {
     @Column(name = "status", nullable = false, length = 30)
     private String status;
 
+    @Column(name = "duration")
+    private Double duration;
+
     public Booking() {
     }
 
@@ -105,5 +108,13 @@ public class Booking {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Double getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Double duration) {
+        this.duration = duration;
     }
 }

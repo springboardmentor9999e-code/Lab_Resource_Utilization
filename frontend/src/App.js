@@ -12,6 +12,9 @@ import Equipment from "./components/equipment/Equipment";
 import MyBookings from "./components/booking/MyBookings";
 import Bookings from "./components/booking/Bookings";
 import Profile from "./components/profile/Profile";
+import Maintenance from "./components/maintenance/Maintenance";
+import UtilizationCost from "./components/utilization/UtilizationCost";
+import Users from "./components/users/Users";
 
 function App() {
   return (
@@ -35,6 +38,9 @@ function App() {
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/bookings" element={<Bookings />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/maintenance" element={<Maintenance />} />
+        <Route path="/utilization-cost" element={<UtilizationCost />} />
+        <Route path="/users" element={<Users />} />
 
       </Routes>
     </BrowserRouter>

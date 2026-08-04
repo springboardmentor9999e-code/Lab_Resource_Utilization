@@ -20,6 +20,7 @@ import DashboardLayout from "../dashboard/DashboardLayout";
 import BookEquipmentModal from "./BookEquipmentModal";
 
 const Equipment = () => {
+    const role = localStorage.getItem("role");
     const [institutions, setInstitutions] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [laboratories, setLaboratories] = useState([]);
@@ -37,6 +38,11 @@ const Equipment = () => {
     // Documentation Modal state
     const [showDocModal, setShowDocModal] = useState(false);
     const [docModalEquip, setDocModalEquip] = useState(null);
+
+    // Report Issue Modal state
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportEquip, setReportEquip] = useState(null);
+    const [issueDescription, setIssueDescription] = useState("");
 
     // Track image loading errors
     const [imgErrors, setImgErrors] = useState({});
@@ -130,8 +136,40 @@ const Equipment = () => {
         setImgErrors(prev => ({ ...prev, [id]: true }));
     };
 
+    const openReportModal = (item) => {
+        setReportEquip(item);
+        setIssueDescription("");
+        setShowReportModal(true);
+    };
+
+    const handleReportSubmit = async (e) => {
+        e.preventDefault();
+        if (!issueDescription.trim()) {
+            alert("Please enter a description of the issue.");
+            return;
+        }
+        try {
+            const token = localStorage.getItem("token");
+            const headers = { Authorization: `Bearer ${token}` };
+            await axios.post("http://localhost:8080/api/issues", {
+                equipmentId: reportEquip.id,
+                description: issueDescription
+            }, { headers });
+            alert("Issue successfully reported. Equipment status set to Under Maintenance.");
+            setShowReportModal(false);
+            if (selectedLaboratory) {
+                handleLaboratoryChange({ target: { value: selectedLaboratory } });
+            }
+        } catch (error) {
+            console.error("Error reporting issue", error);
+            alert("Failed to submit issue report.");
+        }
+    };
+
     const getEquipmentCurrentStatus = (item) => {
-        if ("Under Maintenance".equalsIgnoreCase(item.status) || "Out of Service".equalsIgnoreCase(item.status)) {
+        if ("Under Maintenance".equalsIgnoreCase(item.status) || 
+            "Out of Service".equalsIgnoreCase(item.status) ||
+            "Retired".equalsIgnoreCase(item.status)) {
             return item.status;
         }
 
@@ -142,25 +180,28 @@ const Equipment = () => {
         const currentTimeStr = String(now.getHours()).padStart(2, '0') + ":" + 
             String(now.getMinutes()).padStart(2, '0'); // HH:MM
 
-        // Find if there is an approved booking running right now
+        // Find if there is an active booking running right now
         const activeBooking = bookingsList.find(b => 
             b.equipment?.id === item.id &&
-            "Approved".equalsIgnoreCase(b.status) &&
+            ("Approved".equalsIgnoreCase(b.status) || "Confirmed".equalsIgnoreCase(b.status) || "In Use".equalsIgnoreCase(b.status)) &&
             b.bookingDate === currentDateStr &&
             b.startTime <= currentTimeStr &&
             b.endTime >= currentTimeStr
         );
 
         if (activeBooking) {
-            return "Using";
+            return "Booked";
         }
-        return "Available";
+        return item.status || "Available";
     };
 
     const getStatusBadge = (status) => {
         if ("Available".equalsIgnoreCase(status)) return <Badge bg="success">Available</Badge>;
-        if ("Using".equalsIgnoreCase(status)) return <Badge bg="danger">Using by other person</Badge>;
-        return <Badge bg="warning">{status}</Badge>;
+        if ("Booked".equalsIgnoreCase(status) || "Using".equalsIgnoreCase(status)) return <Badge bg="danger">Booked</Badge>;
+        if ("Under Maintenance".equalsIgnoreCase(status)) return <Badge bg="warning" text="dark">Under Maintenance</Badge>;
+        if ("Out of Service".equalsIgnoreCase(status)) return <Badge bg="dark">Out of Service</Badge>;
+        if ("Retired".equalsIgnoreCase(status)) return <Badge bg="secondary">Retired</Badge>;
+        return <Badge bg="info">{status}</Badge>;
     };
 
     return (
@@ -273,15 +314,25 @@ const Equipment = () => {
                                                     )}
                                                 </Card.Text>
                                             </div>
-                                            <div className="d-flex gap-2 mt-3">
+                                            <div className="d-flex flex-column gap-2 mt-3">
                                                 <Button
                                                     variant="success"
                                                     className="w-100"
                                                     onClick={() => openBookingModal(item)}
-                                                    disabled={"Under Maintenance".equalsIgnoreCase(currentStatus) || "Out of Service".equalsIgnoreCase(currentStatus)}
+                                                    disabled={"Under Maintenance".equalsIgnoreCase(currentStatus) || "Out of Service".equalsIgnoreCase(currentStatus) || "Retired".equalsIgnoreCase(currentStatus)}
                                                 >
                                                     <FaCalendarAlt className="me-2" /> Book Now
                                                 </Button>
+                                                {("STUDENT".equalsIgnoreCase(role) || "RESEARCHER".equalsIgnoreCase(role)) && (
+                                                    <Button
+                                                        variant="outline-warning"
+                                                        className="w-100"
+                                                        onClick={() => openReportModal(item)}
+                                                        disabled={"Retired".equalsIgnoreCase(currentStatus)}
+                                                    >
+                                                        Report Issue
+                                                    </Button>
+                                                )}
                                             </div>
                                         </Card.Body>
                                     </Card>
@@ -333,6 +384,32 @@ const Equipment = () => {
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowDocModal(false)}>Close</Button>
                 </Modal.Footer>
+            </Modal>
+            {/* Report Issue Modal */}
+            <Modal show={showReportModal} onHide={() => setShowReportModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Report Equipment Issue</Modal.Title>
+                </Modal.Header>
+                <Form onSubmit={handleReportSubmit}>
+                    <Modal.Body>
+                        <h6 className="fw-bold mb-3">Equipment: {reportEquip?.equipmentName}</h6>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Description of Issue</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={4}
+                                placeholder="Describe the issue, malfunction, or error with the equipment in detail..."
+                                value={issueDescription}
+                                onChange={(e) => setIssueDescription(e.target.value)}
+                                required
+                            />
+                        </Form.Group>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => setShowReportModal(false)}>Cancel</Button>
+                        <Button variant="warning" type="submit">Submit Report</Button>
+                    </Modal.Footer>
+                </Form>
             </Modal>
         </DashboardLayout>
     );

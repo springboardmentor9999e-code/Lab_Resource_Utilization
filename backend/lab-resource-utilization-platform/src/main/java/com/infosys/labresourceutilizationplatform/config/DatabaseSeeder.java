@@ -395,6 +395,19 @@ public class DatabaseSeeder implements CommandLineRunner {
         eq.setImageUrl(imageUrl);
         eq.setDocumentUrl(docUrl);
         eq.setLaboratory(lab);
+        
+        Double costPerHour = 25.0; // Default cost per hour
+        if ("Computing".equalsIgnoreCase(category) || "Server".equalsIgnoreCase(category) || name.toLowerCase().contains("gpu") || name.toLowerCase().contains("cluster")) {
+            costPerHour = 75.0;
+        } else if ("Imaging".equalsIgnoreCase(category) || "Microscopy".equalsIgnoreCase(category) || name.toLowerCase().contains("microscope")) {
+            costPerHour = 50.0;
+        } else if ("Spectroscopy".equalsIgnoreCase(category) || name.toLowerCase().contains("spectrometer")) {
+            costPerHour = 100.0;
+        } else if ("Electronics".equalsIgnoreCase(category) || name.toLowerCase().contains("oscilloscope")) {
+            costPerHour = 15.0;
+        }
+        eq.setCostPerHour(costPerHour);
+        
         equipmentRepository.save(eq);
     }
 

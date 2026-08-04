@@ -57,6 +57,19 @@ public class BookingController {
         return ResponseEntity.ok(updatedBooking);
     }
 
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelBooking(@PathVariable Long id, java.security.Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+        try {
+            Booking cancelled = bookingService.cancelBooking(id, principal.getName());
+            return ResponseEntity.ok(cancelled);
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBooking(@PathVariable Long id) {
 

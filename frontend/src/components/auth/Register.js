@@ -439,10 +439,13 @@ function Register({ onRegisterSuccess }) {
                                 });
                             }}
                         >
-                            <option value="STUDENT">Student</option>
-                            <option value="RESEARCHER">Researcher</option>
-                            <option value="LAB_MANAGER">Lab Manager</option>
-                            <option value="INSTITUTION_ADMIN">Institution Admin</option>
+                             <option value="STUDENT">Student</option>
+                             <option value="RESEARCHER">Researcher</option>
+                             <option value="LAB_TECHNICIAN">Lab Technician</option>
+                             <option value="LAB_MANAGER">Lab Manager</option>
+                             <option value="DEPARTMENT_HEAD">Department Head</option>
+                             <option value="INSTITUTION_ADMIN">Institution Administrator</option>
+                             <option value="SYSTEM_ADMIN">System Administrator</option>
                         </select>
                     </div>
                 </div>

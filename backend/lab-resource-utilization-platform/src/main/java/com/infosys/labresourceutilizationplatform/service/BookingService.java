@@ -15,4 +15,6 @@ public interface BookingService {
     Booking updateBooking(Long bookingId, Booking booking);
 
     void deleteBooking(Long bookingId);
+
+    Booking cancelBooking(Long bookingId, String email);
 }

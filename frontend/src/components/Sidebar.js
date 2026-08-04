@@ -8,7 +8,8 @@ import {
     FaUser,
     FaChartBar,
     FaSignOutAlt,
-    FaTools
+    FaTools,
+    FaDollarSign
 } from "react-icons/fa";
 
 import "../App.css";
@@ -31,6 +32,7 @@ function Sidebar() {
             { name: "Laboratories", path: "/laboratories", icon: <FaUniversity /> },
             { name: "Equipment", path: "/equipment", icon: <FaLaptop /> },
             { name: "My Bookings", path: "/my-bookings", icon: <FaClipboardList /> },
+            { name: "Utilization Cost", path: "/utilization-cost", icon: <FaDollarSign /> },
             { name: "Profile", path: "/profile", icon: <FaUser /> }
         ],
 
@@ -39,14 +41,18 @@ function Sidebar() {
             { name: "Laboratories", path: "/laboratories", icon: <FaUniversity /> },
             { name: "Equipment", path: "/equipment", icon: <FaLaptop /> },
             { name: "My Bookings", path: "/my-bookings", icon: <FaClipboardList /> },
+            { name: "Utilization Cost", path: "/utilization-cost", icon: <FaDollarSign /> },
             { name: "Profile", path: "/profile", icon: <FaUser /> }
         ],
 
         LAB_MANAGER: [
             { name: "Dashboard", path: "/manager-dashboard", icon: <FaHome /> },
+            { name: "Users", path: "/users", icon: <FaUsers /> },
             { name: "Equipment", path: "/equipment", icon: <FaLaptop /> },
             { name: "Bookings", path: "/bookings", icon: <FaClipboardList /> },
             { name: "Reports", path: "/reports", icon: <FaChartBar /> },
+            { name: "Maintenance", path: "/maintenance", icon: <FaTools /> },
+            { name: "Utilization Cost", path: "/utilization-cost", icon: <FaDollarSign /> },
             { name: "Profile", path: "/profile", icon: <FaUser /> }
         ],
 
@@ -54,14 +60,18 @@ function Sidebar() {
             { name: "Dashboard", path: "/technician-dashboard", icon: <FaHome /> },
             { name: "Equipment", path: "/equipment", icon: <FaLaptop /> },
             { name: "Maintenance", path: "/maintenance", icon: <FaTools /> },
+            { name: "Utilization Cost", path: "/utilization-cost", icon: <FaDollarSign /> },
             { name: "Profile", path: "/profile", icon: <FaUser /> }
         ],
 
         DEPARTMENT_HEAD: [
             { name: "Dashboard", path: "/department-dashboard", icon: <FaHome /> },
+            { name: "Users", path: "/users", icon: <FaUsers /> },
             { name: "Laboratories", path: "/laboratories", icon: <FaUniversity /> },
             { name: "Equipment", path: "/equipment", icon: <FaLaptop /> },
             { name: "Reports", path: "/reports", icon: <FaChartBar /> },
+            { name: "Maintenance", path: "/maintenance", icon: <FaTools /> },
+            { name: "Utilization Cost", path: "/utilization-cost", icon: <FaDollarSign /> },
             { name: "Profile", path: "/profile", icon: <FaUser /> }
         ],
 
@@ -72,6 +82,8 @@ function Sidebar() {
             { name: "Equipment", path: "/equipment", icon: <FaLaptop /> },
             { name: "Bookings", path: "/bookings", icon: <FaClipboardList /> },
             { name: "Reports", path: "/reports", icon: <FaChartBar /> },
+            { name: "Maintenance", path: "/maintenance", icon: <FaTools /> },
+            { name: "Utilization Cost", path: "/utilization-cost", icon: <FaDollarSign /> },
             { name: "Profile", path: "/profile", icon: <FaUser /> }
         ],
 
@@ -80,6 +92,8 @@ function Sidebar() {
             { name: "Institutions", path: "/institutions", icon: <FaUniversity /> },
             { name: "Users", path: "/users", icon: <FaUsers /> },
             { name: "Reports", path: "/reports", icon: <FaChartBar /> },
+            { name: "Maintenance", path: "/maintenance", icon: <FaTools /> },
+            { name: "Utilization Cost", path: "/utilization-cost", icon: <FaDollarSign /> },
             { name: "Profile", path: "/profile", icon: <FaUser /> }
         ]
 

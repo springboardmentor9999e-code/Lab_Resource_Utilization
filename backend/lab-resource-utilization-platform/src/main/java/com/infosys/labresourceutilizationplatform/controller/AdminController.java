@@ -20,6 +20,11 @@ public class AdminController {
         return userService.getPendingUsers();
     }
 
+    @GetMapping("/users")
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
     @PutMapping("/approve/{userId}")
     public String approveUser(@PathVariable Integer userId) {
         return userService.approveUser(userId);

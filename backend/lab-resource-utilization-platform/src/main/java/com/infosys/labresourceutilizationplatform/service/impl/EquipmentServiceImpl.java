@@ -67,6 +67,7 @@ public class EquipmentServiceImpl implements EquipmentService {
         existingEquipment.setStatus(equipment.getStatus());
         existingEquipment.setImageUrl(equipment.getImageUrl());
         existingEquipment.setDocumentUrl(equipment.getDocumentUrl());
+        existingEquipment.setCostPerHour(equipment.getCostPerHour());
 
         if (equipment.getLaboratory() != null) {
 
