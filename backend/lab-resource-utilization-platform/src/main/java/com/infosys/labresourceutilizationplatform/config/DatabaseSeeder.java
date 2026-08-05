@@ -284,7 +284,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             if (aiLab != null) {
                 createEquipment("NVIDIA Jetson AGX Xavier", "AI/ML Hardware", "High-performance edge computing module for AI-driven applications and model deployment.", "NVIDIA", "AGX-XAVIER-32GB", "NV-AGX-8762341", 5, "https://images.nvidia.com/prod/ethernet/agx-xavier.jpg", "https://developer.nvidia.com/embedded/downloads", aiLab);
                 createEquipment("GPU Server RTX 4090", "Computing Server", "Server containing dual RTX 4090 GPUs for training large deep learning architectures.", "ASUS / NVIDIA", "ESC8000-G4-4090", "AS-RTX-9080765", 2, "https://images.nvidia.com/prod/rtx-4090.jpg", "https://dlcdnets.asus.com/pub/ASUS/Server/ESC8000-G4/Manual/E14819_ESC8000_G4_UM_V2_WEB.pdf", aiLab);
-                createEquipment("Google Coral TPU Pro", "AI Accelerator", "USB accelerator providing hardware acceleration for machine learning models at the edge.", "Google", "Coral-TPU-V2", "GC-TPU-1289382", 8, "https://coral.ai/images/coral-usb.png", "https://coral.ai/docs/accelerator/datasheet", aiLab);
+                createEquipment("Google Coral TPU Pro", "AI Accelerator", "USB accelerator providing hardware acceleration for machine learning models at the edge.", "Google", "Coral-TPU-V2", "GC-TPU-1289382", 8, "/images/equipment/google-coral-tpu-pro.jpg", "https://coral.ai/docs/accelerator/datasheet", aiLab);
             }
 
             // 2. Internet of Things Lab
@@ -368,6 +368,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             createUser("admin@system.com", "admin", "System Admin User", sysAdminRole, null, null, "ACTIVE");
             createUser("pending@infosys.com", "pending", "Pending Registration User", studentRole, cseId, instId, "PENDING");
         }
+        updateExistingEquipmentUrls();
     }
 
     private Role createRole(String name, String desc) {
@@ -422,5 +423,104 @@ public class DatabaseSeeder implements CommandLineRunner {
         user.setInstitutionId(instId);
         user.setStatus(status);
         userRepository.save(user);
+    }
+
+    private void updateExistingEquipmentUrls() {
+        System.out.println("Updating existing equipment image URLs to reliable sources...");
+        List<Equipment> list = equipmentRepository.findAll();
+        for (Equipment eq : list) {
+            String name = eq.getEquipmentName();
+            String newUrl = getReliableImageUrl(name);
+            if (newUrl != null) {
+                eq.setImageUrl(newUrl);
+                equipmentRepository.save(eq);
+            }
+        }
+    }
+
+    private String getReliableImageUrl(String name) {
+        if (name == null) return "/images/equipment/placeholder.jpg";
+        switch (name) {
+            case "NVIDIA Jetson AGX Xavier":
+                return "/images/equipment/nvidia-jetson-agx-xavier.jpg";
+            case "GPU Server RTX 4090":
+                return "/images/equipment/gpu-server-rtx-4090.jpg";
+            case "Google Coral TPU Pro":
+                return "/images/equipment/google-coral-tpu-pro.jpg";
+            case "Arduino Mega Starter Kit":
+                return "/images/equipment/arduino-mega-starter-kit.jpg";
+            case "Raspberry Pi 4 Model B":
+                return "/images/equipment/raspberry-pi-4-model-b.jpg";
+            case "ESP32 LoRa Gateway Kit":
+                return "/images/equipment/esp32-lora-gateway-kit.jpg";
+            case "Dobot Magician Robotic Arm":
+                return "/images/equipment/dobot-magician-robotic-arm.jpg";
+            case "TurtleBot 4 Mobile Robot":
+                return "/images/equipment/turtlebot-4-mobile-robot.jpg";
+            case "Lidar Scanner LD19":
+                return "/images/equipment/lidar-scanner-ld19.jpg";
+            case "Xilinx Artix-7 FPGA Board":
+                return "/images/equipment/xilinx-artix-7-fpga-board.jpg";
+            case "STM32 Discovery Kit":
+                return "/images/equipment/stm32-discovery-kit.jpg";
+            case "Keysight DSO 4-Channel":
+                return "/images/equipment/keysight-dso-4-channel.jpg";
+            case "TI TMS320C6713 DSP Starter":
+                return "/images/equipment/ti-tms320c6713-dsp-starter.jpg";
+            case "Rigol Function Generator":
+                return "/images/equipment/rigol-function-generator.jpg";
+            case "RF Spectrum Analyzer 3GHz":
+                return "/images/equipment/rf-spectrum-analyzer-3ghz.jpg";
+            case "Bernoulli's Theorem Apparatus":
+                return "/images/equipment/bernoullis-theorem-apparatus.jpg";
+            case "Venturi Tube Flow Meter":
+                return "/images/equipment/venturi-tube-flow-meter.jpg";
+            case "Orifice Discharge Apparatus":
+                return "/images/equipment/orifice-discharge-apparatus.jpg";
+            case "Dell Precision 7920 Workstation":
+                return "/images/equipment/dell-precision-7920-workstation.jpg";
+            case "Ultimaker S5 3D Printer":
+                return "/images/equipment/ultimaker-s5-3d-printer.jpg";
+            case "Creality CR-Scan 3D Scanner":
+                return "/images/equipment/creality-cr-scan-3d-scanner.jpg";
+            case "Dell OptiPlex 7090 Desktop":
+                return "/images/equipment/dell-optiplex-7090-desktop.jpg";
+            case "Raspberry Pi 400 Keyboard Kit":
+                return "/images/equipment/raspberry-pi-400-keyboard-kit.jpg";
+            case "Cisco 24-Port Gigabit Switch":
+                return "/images/equipment/cisco-24-port-gigabit-switch.jpg";
+            case "Boston Dynamics Spot Robot":
+                return "/images/equipment/boston-dynamics-spot-robot.jpg";
+            case "KUKA KR 6 Industrial Robot":
+                return "/images/equipment/kuka-kr-6-industrial-robot.jpg";
+            case "Velodyne Puck Lidar VLP-16":
+                return "/images/equipment/velodyne-puck-lidar-vlp-16.jpg";
+                
+            // Civil Engineering mappings
+            case "Total Station":
+                return "/images/equipment/total-station.jpg";
+            case "Auto Level":
+                return "/images/equipment/auto-level.jpg";
+            case "GPS Survey Receiver":
+                return "/images/equipment/gps-survey-receiver.jpg";
+            case "Universal Testing Machine":
+                return "/images/equipment/universal-testing-machine.jpg";
+            case "Compression Testing Machine":
+                return "/images/equipment/compression-testing-machine.jpg";
+            case "Slump Test Apparatus":
+                return "/images/equipment/slump-test-apparatus.jpg";
+
+            default:
+                String[] uniqueBackups = {
+                    "total-station.jpg",
+                    "auto-level.jpg",
+                    "gps-survey-receiver.jpg",
+                    "universal-testing-machine.jpg",
+                    "compression-testing-machine.jpg",
+                    "slump-test-apparatus.jpg"
+                };
+                int index = Math.abs(name.hashCode()) % uniqueBackups.length;
+                return "/images/equipment/" + uniqueBackups[index];
+        }
     }
 }

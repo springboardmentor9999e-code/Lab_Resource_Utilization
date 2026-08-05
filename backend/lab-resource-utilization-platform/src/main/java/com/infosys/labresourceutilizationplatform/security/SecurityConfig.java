@@ -47,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/preventive").hasAnyAuthority("LAB_TECHNICIAN", "LAB_MANAGER", "DEPARTMENT_HEAD", "INSTITUTION_ADMIN", "SYSTEM_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/preventive/**").hasAuthority("LAB_TECHNICIAN")
                         .requestMatchers("/api/utilization/**").authenticated()
+                        .requestMatchers("/api/dashboard/**").authenticated()
 
                         // =========================
                         // =========================

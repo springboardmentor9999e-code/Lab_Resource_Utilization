@@ -52,11 +52,16 @@ public class EquipmentServiceImpl implements EquipmentService {
     @Override
     public Equipment updateEquipment(Long id, Equipment equipment) {
 
+        if (equipmentRepository.existsBySerialNumberAndIdNot(equipment.getSerialNumber(), id)) {
+            throw new RuntimeException("Equipment with this serial number already exists.");
+        }
+
         Equipment existingEquipment = getEquipmentById(id);
 
         existingEquipment.setEquipmentName(equipment.getEquipmentName());
         existingEquipment.setCategory(equipment.getCategory());
         existingEquipment.setDescription(equipment.getDescription());
+        existingEquipment.setSpecifications(equipment.getSpecifications());
         existingEquipment.setManufacturer(equipment.getManufacturer());
         existingEquipment.setModel(equipment.getModel());
         existingEquipment.setSerialNumber(equipment.getSerialNumber());

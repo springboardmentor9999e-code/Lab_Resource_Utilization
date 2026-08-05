@@ -283,8 +283,12 @@ const Equipment = () => {
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="text-center p-3 bg-light rounded-top d-flex align-items-center justify-content-center" style={{ height: "160px", color: "#94a3b8" }}>
-                                                <FaLaptop size={60} />
+                                            <div className="text-center p-3 bg-light rounded-top d-flex align-items-center justify-content-center" style={{ height: "160px" }}>
+                                                <img 
+                                                    src="/images/equipment/placeholder.jpg" 
+                                                    alt="Placeholder" 
+                                                    style={{ maxHeight: "140px", maxWidth: "100%", objectFit: "contain", borderRadius: "4px" }}
+                                                />
                                             </div>
                                         )}
                                         <Card.Body className="d-flex flex-column justify-content-between">
@@ -370,7 +374,13 @@ const Equipment = () => {
                             onError={() => handleImgError(docModalEquip.id)}
                         />
                     ) : (
-                        <div className="text-muted mb-3"><FaLaptop size={80} /></div>
+                        <div className="text-center mb-3">
+                            <img 
+                                src="/images/equipment/placeholder.jpg" 
+                                alt="Placeholder" 
+                                style={{ maxHeight: "200px", maxWidth: "100%", objectFit: "contain", borderRadius: "8px" }}
+                            />
+                        </div>
                     )}
                     <h5 className="fw-bold mb-2">{docModalEquip?.equipmentName}</h5>
                     <p className="text-muted small mb-3">Model: {docModalEquip?.model} | Manufacturer: {docModalEquip?.manufacturer}</p>

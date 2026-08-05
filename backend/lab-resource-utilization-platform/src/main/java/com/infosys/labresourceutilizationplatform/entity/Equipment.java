@@ -45,6 +45,9 @@ public class Equipment {
     @Column(name = "cost_per_hour")
     private Double costPerHour = 0.0;
 
+    @Column(length = 2000)
+    private String specifications;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "laboratory_id")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -212,5 +215,13 @@ public class Equipment {
 
     public void setCostPerHour(Double costPerHour) {
         this.costPerHour = costPerHour;
+    }
+
+    public String getSpecifications() {
+        return specifications;
+    }
+
+    public void setSpecifications(String specifications) {
+        this.specifications = specifications;
     }
 }

@@ -6,35 +6,41 @@ import {
     FaUniversity,
     FaTools,
     FaCheckCircle,
-    FaExclamationTriangle
+    FaChartLine,
+    FaCalendarDay
 } from "react-icons/fa";
+import { Bar } from "react-chartjs-2";
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+} from "chart.js";
 import axios from "axios";
 import DashboardLayout from "./DashboardLayout";
 
+// Register ChartJS components
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
 function LabManagerDashboard() {
-    const [stats, setStats] = useState({
-        totalEquipment: 0,
-        pendingBookings: 0,
-        totalLaboratories: 0,
-        maintenanceEquipment: 0
-    });
+    const [realtimeData, setRealtimeData] = useState(null);
     const [pendingBookingsList, setPendingBookingsList] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchData = async () => {
         try {
             const token = localStorage.getItem("token");
-            
-            // Fetch stats
-            const statsRes = await axios.get("http://localhost:8080/api/dashboard/stats", {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setStats(statsRes.data);
+            const headers = { Authorization: `Bearer ${token}` };
 
-            // Fetch pending bookings
-            const bookingsRes = await axios.get("http://localhost:8080/api/bookings", {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            // 1. Fetch Realtime stats
+            const realtimeRes = await axios.get("http://localhost:8080/api/dashboard/realtime", { headers });
+            setRealtimeData(realtimeRes.data);
+
+            // 2. Fetch pending bookings
+            const bookingsRes = await axios.get("http://localhost:8080/api/bookings", { headers });
             const pending = bookingsRes.data.filter(
                 b => "Pending Approval".equalsIgnoreCase(b.status) || "Pending".equalsIgnoreCase(b.status)
             );
@@ -53,23 +59,46 @@ function LabManagerDashboard() {
     const handleAction = async (booking, action) => {
         try {
             const token = localStorage.getItem("token");
+            const headers = { Authorization: `Bearer ${token}` };
             const updatedBooking = { ...booking, status: action };
             
-            await axios.put(`http://localhost:8080/api/bookings/${booking.bookingId}`, updatedBooking, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await axios.put(`http://localhost:8080/api/bookings/${booking.bookingId}`, updatedBooking, { headers });
             
             alert(`Booking successfully ${action}`);
-            fetchData(); // Reload stats and list
+            fetchData();
         } catch (error) {
             console.error("Error updating booking status", error);
             alert("Failed to update booking status.");
         }
     };
 
+    if (loading || !realtimeData) {
+        return (
+            <DashboardLayout title="Lab Manager Dashboard">
+                <div className="text-center py-5 text-muted">
+                    <h5>Loading dashboard intelligence...</h5>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
+    const chartData = {
+        labels: (realtimeData.equipmentUtilization || []).map(item => item.name),
+        datasets: [
+            {
+                label: "Utilization Rate (%)",
+                data: (realtimeData.equipmentUtilization || []).map(item => item.utilization),
+                backgroundColor: "rgba(75, 192, 192, 0.6)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 1,
+                borderRadius: 5
+            }
+        ]
+    };
+
     return (
         <DashboardLayout title="Lab Manager Dashboard">
-            <Card className="shadow border-0 mb-4">
+            <Card className="shadow border-0 mb-4 bg-light">
                 <Card.Body>
                     <h3>Welcome, {localStorage.getItem("fullName")} 👋</h3>
                     <p className="text-muted mb-0">
@@ -80,94 +109,102 @@ function LabManagerDashboard() {
 
             <Row className="g-4 mb-4">
                 <Col md={3}>
-                    <Card className="shadow text-center">
+                    <Card className="shadow text-center h-100">
                         <Card.Body>
-                            <FaLaptop size={42} className="text-primary mb-3" />
-                            <h2>{stats.totalEquipment}</h2>
-                            <p className="mb-0 text-muted">Total Equipment</p>
+                            <FaLaptop size={36} className="text-primary mb-2" />
+                            <h3>{realtimeData.totalEquipment}</h3>
+                            <p className="mb-0 text-muted small fw-bold">Total Equipment</p>
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={3}>
-                    <Card className="shadow text-center">
+                    <Card className="shadow text-center h-100">
                         <Card.Body>
-                            <FaClipboardList size={42} className="text-success mb-3" />
-                            <h2>{pendingBookingsList.length}</h2>
-                            <p className="mb-0 text-muted">Pending Bookings</p>
+                            <FaCheckCircle size={36} className="text-success mb-2" />
+                            <h3>{realtimeData.availableEquipment}</h3>
+                            <p className="mb-0 text-muted small fw-bold">Available Equipment</p>
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={3}>
-                    <Card className="shadow text-center">
+                    <Card className="shadow text-center h-100">
                         <Card.Body>
-                            <FaUniversity size={42} className="text-warning mb-3" />
-                            <h2>{stats.totalLaboratories}</h2>
-                            <p className="mb-0 text-muted">Laboratories</p>
+                            <FaClipboardList size={36} className="text-info mb-2" />
+                            <h3>{realtimeData.activeBookings}</h3>
+                            <p className="mb-0 text-muted small fw-bold">Active Bookings (In Use)</p>
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={3}>
-                    <Card className="shadow text-center">
+                    <Card className="shadow text-center h-100">
                         <Card.Body>
-                            <FaTools size={42} className="text-danger mb-3" />
-                            <h2>{stats.maintenanceEquipment}</h2>
-                            <p className="mb-0 text-muted">Under Maintenance</p>
+                            <FaTools size={36} className="text-danger mb-2" />
+                            <h3>{realtimeData.equipmentUnderMaintenance}</h3>
+                            <p className="mb-0 text-muted small fw-bold">Under Maintenance</p>
                         </Card.Body>
                     </Card>
                 </Col>
             </Row>
 
-            <Row className="mb-4 g-4">
-                <Col md={6}>
-                    <Card className="shadow h-100">
-                        <Card.Header>
-                            <h5 className="mb-0">Quick Operations</h5>
-                        </Card.Header>
+            <Row className="g-4 mb-4">
+                <Col md={4}>
+                    <Card className="shadow text-center h-100 bg-light">
                         <Card.Body>
-                            <div className="d-grid gap-2">
-                                <Button variant="primary" className="py-2">Manage Lab Catalog</Button>
-                                <Button variant="success" className="py-2">Log Preventive Maintenance</Button>
-                            </div>
+                            <FaClipboardList size={36} className="text-warning mb-2" />
+                            <h3>{realtimeData.pendingBookings}</h3>
+                            <p className="mb-0 text-muted small fw-bold">Pending Bookings</p>
                         </Card.Body>
                     </Card>
                 </Col>
-                <Col md={6}>
-                    <Card className="shadow h-100">
-                        <Card.Header>
-                            <h5 className="mb-0">Equipment Status Summary</h5>
+                <Col md={4}>
+                    <Card className="shadow text-center h-100 bg-light">
+                        <Card.Body>
+                            <FaChartLine size={36} className="text-info mb-2" />
+                            <h3>{realtimeData.utilizationPercentage}%</h3>
+                            <p className="mb-0 text-muted small fw-bold">Utilization Percentage</p>
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col md={4}>
+                    <Card className="shadow text-center h-100 bg-light">
+                        <Card.Body>
+                            <FaCalendarDay size={36} className="text-primary mb-2" />
+                            <h3>{realtimeData.todayBookings}</h3>
+                            <p className="mb-0 text-muted small fw-bold">Today's Bookings</p>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
+
+            <Row className="g-4 mb-4">
+                <Col lg={12}>
+                    <Card className="shadow">
+                        <Card.Header className="bg-transparent border-0 py-3">
+                            <h5 className="mb-0 fw-bold">Equipment Utilization Rate</h5>
                         </Card.Header>
-                        <Card.Body className="d-flex flex-column justify-content-center">
-                            <div className="mb-3 d-flex align-items-center">
-                                <FaCheckCircle className="text-success me-3" size={24} />
-                                <div>
-                                    <h6 className="mb-0">Operational</h6>
-                                    <small className="text-muted">{stats.totalEquipment - stats.maintenanceEquipment} units online</small>
+                        <Card.Body>
+                            {(realtimeData.equipmentUtilization || []).length === 0 ? (
+                                <p className="text-center text-muted py-5 mb-0">No equipment utilization records available.</p>
+                            ) : (
+                                <div style={{ width: "100%", height: "260px" }}>
+                                    <Bar data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />
                                 </div>
-                            </div>
-                            <div className="d-flex align-items-center">
-                                <FaExclamationTriangle className="text-danger me-3" size={24} />
-                                <div>
-                                    <h6 className="mb-0">Under Maintenance</h6>
-                                    <small className="text-muted">{stats.maintenanceEquipment} units offline</small>
-                                </div>
-                            </div>
+                            )}
                         </Card.Body>
                     </Card>
                 </Col>
             </Row>
 
             <Card className="shadow mb-4">
-                <Card.Header>
-                    <h5 className="mb-0">Pending Booking Requests</h5>
+                <Card.Header className="bg-white py-3">
+                    <h5 className="mb-0 fw-bold">Pending Booking Requests</h5>
                 </Card.Header>
-                <Card.Body>
-                    {loading ? (
-                        <p className="text-center text-muted py-3 mb-0">Loading requests...</p>
-                    ) : pendingBookingsList.length === 0 ? (
-                        <p className="text-center text-muted py-3 mb-0">No pending booking requests found.</p>
+                <Card.Body className="p-0">
+                    {pendingBookingsList.length === 0 ? (
+                        <p className="text-center text-muted py-4 mb-0">No pending booking requests found.</p>
                     ) : (
-                        <Table striped hover responsive className="mb-0">
-                            <thead>
+                        <Table striped hover responsive className="mb-0 align-middle">
+                            <thead className="table-light">
                                 <tr>
                                     <th>User</th>
                                     <th>Equipment</th>
@@ -190,21 +227,22 @@ function LabManagerDashboard() {
                                         <td>{b.startTime} - {b.endTime}</td>
                                         <td>{b.purpose || "No purpose provided"}</td>
                                         <td className="text-center">
-                                            <Button
-                                                variant="success"
-                                                size="sm"
-                                                className="me-2"
-                                                onClick={() => handleAction(b, "Approved")}
-                                            >
-                                                Approve
-                                            </Button>
-                                            <Button
-                                                variant="danger"
-                                                size="sm"
-                                                onClick={() => handleAction(b, "Rejected")}
-                                            >
-                                                Reject
-                                            </Button>
+                                            <div className="d-flex gap-2 justify-content-center">
+                                                <Button
+                                                    variant="success"
+                                                    size="sm"
+                                                    onClick={() => handleAction(b, "Approved")}
+                                                >
+                                                    Approve
+                                                </Button>
+                                                <Button
+                                                    variant="danger"
+                                                    size="sm"
+                                                    onClick={() => handleAction(b, "Rejected")}
+                                                >
+                                                    Reject
+                                                </Button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

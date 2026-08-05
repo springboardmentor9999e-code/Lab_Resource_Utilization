@@ -1,39 +1,47 @@
 import React, { useEffect, useState } from "react";
-import { Row, Col, Card, Table, Badge, Form, Button } from "react-bootstrap";
+import { Row, Col, Card, Table, Badge, Form } from "react-bootstrap";
 import {
     FaTools,
-    FaLaptop,
     FaWrench,
     FaCheckCircle,
-    FaExclamationTriangle
+    FaExclamationTriangle,
+    FaCalendarCheck,
+    FaLock
 } from "react-icons/fa";
+import { Bar } from "react-chartjs-2";
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+} from "chart.js";
 import axios from "axios";
 import DashboardLayout from "./DashboardLayout";
 
+// Register ChartJS elements
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
 function LabTechnicianDashboard() {
-    const [stats, setStats] = useState({
-        totalEquipment: 0,
-        availableEquipment: 0,
-        maintenanceEquipment: 0
-    });
+    const [realtimeData, setRealtimeData] = useState(null);
     const [equipmentList, setEquipmentList] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchData = async () => {
         try {
             const token = localStorage.getItem("token");
-            
-            // Get stats
-            const statsRes = await axios.get("http://localhost:8080/api/dashboard/stats", {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setStats(statsRes.data);
+            const headers = { Authorization: `Bearer ${token}` };
 
-            // Get equipment list
-            const equipmentRes = await axios.get("http://localhost:8080/api/equipment", {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            // 1. Fetch Realtime stats
+            const realtimeRes = await axios.get("http://localhost:8080/api/dashboard/realtime", { headers });
+            setRealtimeData(realtimeRes.data);
+
+            // 2. Get equipment list
+            const equipmentRes = await axios.get("http://localhost:8080/api/equipment", { headers });
             setEquipmentList(equipmentRes.data);
+            
             setLoading(false);
         } catch (error) {
             console.error("Error loading technician dashboard", error);
@@ -48,18 +56,16 @@ function LabTechnicianDashboard() {
     const handleStatusChange = async (equipment, newStatus) => {
         try {
             const token = localStorage.getItem("token");
+            const headers = { Authorization: `Bearer ${token}` };
             const updatedEquipment = { ...equipment, status: newStatus };
             
-            // If marked as maintenance, reduce available quantity
             if ("Under Maintenance".equalsIgnoreCase(newStatus) || "Out of Service".equalsIgnoreCase(newStatus)) {
                 updatedEquipment.availableQuantity = 0;
             } else if ("Available".equalsIgnoreCase(newStatus)) {
                 updatedEquipment.availableQuantity = equipment.totalQuantity;
             }
 
-            await axios.put(`http://localhost:8080/api/equipment/${equipment.id}`, updatedEquipment, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await axios.put(`http://localhost:8080/api/equipment/${equipment.id}`, updatedEquipment, { headers });
 
             alert(`Status of ${equipment.equipmentName} updated to ${newStatus}`);
             fetchData();
@@ -75,9 +81,33 @@ function LabTechnicianDashboard() {
         return "danger";
     };
 
+    if (loading || !realtimeData) {
+        return (
+            <DashboardLayout title="Lab Technician Dashboard">
+                <div className="text-center py-5 text-muted">
+                    <h5>Loading dashboard intelligence...</h5>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
+    const chartData = {
+        labels: (realtimeData.equipmentMaintenanceFrequency || []).map(item => item.name),
+        datasets: [
+            {
+                label: "Maintenance Issues Logged",
+                data: (realtimeData.equipmentMaintenanceFrequency || []).map(item => item.value),
+                backgroundColor: "rgba(255, 159, 64, 0.6)",
+                borderColor: "rgba(255, 159, 64, 1)",
+                borderWidth: 1,
+                borderRadius: 5
+            }
+        ]
+    };
+
     return (
         <DashboardLayout title="Lab Technician Dashboard">
-            <Card className="shadow border-0 mb-4">
+            <Card className="shadow border-0 mb-4 bg-light">
                 <Card.Body>
                     <h3>Welcome, {localStorage.getItem("fullName")} 👋</h3>
                     <p className="text-muted mb-0">
@@ -87,117 +117,120 @@ function LabTechnicianDashboard() {
             </Card>
 
             <Row className="g-4 mb-4">
-                <Col md={4}>
-                    <Card className="shadow text-center">
+                <Col md={4} lg={2.4}>
+                    <Card className="shadow text-center h-100">
                         <Card.Body>
-                            <FaLaptop size={42} className="text-primary mb-3" />
-                            <h2>{stats.totalEquipment}</h2>
-                            <p className="mb-0 text-muted">Total Managed Equipment</p>
+                            <FaExclamationTriangle size={36} className="text-danger mb-2" />
+                            <h3>{realtimeData.equipmentUnderMaintenance}</h3>
+                            <p className="mb-0 text-muted small fw-bold">Under Maintenance</p>
                         </Card.Body>
                     </Card>
                 </Col>
-                <Col md={4}>
-                    <Card className="shadow text-center">
+                <Col md={4} lg={2.4}>
+                    <Card className="shadow text-center h-100">
                         <Card.Body>
-                            <FaCheckCircle size={42} className="text-success mb-3" />
-                            <h2>{stats.availableEquipment}</h2>
-                            <p className="mb-0 text-muted">Operational Units</p>
+                            <FaTools size={36} className="text-warning mb-2" />
+                            <h3>{realtimeData.pendingMaintenanceRequests}</h3>
+                            <p className="mb-0 text-muted small fw-bold">Pending Issues</p>
                         </Card.Body>
                     </Card>
                 </Col>
-                <Col md={4}>
-                    <Card className="shadow text-center">
+                <Col md={4} lg={2.4}>
+                    <Card className="shadow text-center h-100">
                         <Card.Body>
-                            <FaExclamationTriangle size={42} className="text-danger mb-3" />
-                            <h2>{stats.maintenanceEquipment}</h2>
-                            <p className="mb-0 text-muted">Under Maintenance / Faulty</p>
+                            <FaWrench size={36} className="text-primary mb-2" />
+                            <h3>{realtimeData.scheduledMaintenance}</h3>
+                            <p className="mb-0 text-muted small fw-bold">Scheduled PMs</p>
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col md={6} lg={2.4}>
+                    <Card className="shadow text-center h-100">
+                        <Card.Body>
+                            <FaCalendarCheck size={36} className="text-success mb-2" />
+                            <h3>{realtimeData.completedMaintenance}</h3>
+                            <p className="mb-0 text-muted small fw-bold">Completed Tasks</p>
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col md={6} lg={2.4}>
+                    <Card className="shadow text-center h-100">
+                        <Card.Body>
+                            <FaLock size={36} className="text-secondary mb-2" />
+                            <h3>{realtimeData.equipmentCurrentlyUnavailable}</h3>
+                            <p className="mb-0 text-muted small fw-bold">Unavailable Units</p>
                         </Card.Body>
                     </Card>
                 </Col>
             </Row>
 
-            <Row className="mb-4 g-4">
-                <Col md={6}>
-                    <Card className="shadow h-100">
-                        <Card.Header>
-                            <h5 className="mb-0">Today's Inspection Schedule</h5>
+            <Row className="g-4 mb-4">
+                <Col lg={12}>
+                    <Card className="shadow">
+                        <Card.Header className="bg-transparent border-0 py-3">
+                            <h5 className="mb-0 fw-bold">Equipment Maintenance Issue Frequency</h5>
                         </Card.Header>
                         <Card.Body>
-                            <p className="mb-2">✔ Run diagnostic self-test on Nvidia Jetson modules</p>
-                            <p className="mb-2">✔ Calibrate IoT sensor kits for Advanced IoT Lab</p>
-                            <p className="mb-2">✔ Check server temperatures in AI Research Lab</p>
-                            <p className="mb-0">✔ Inspect backup power supply for GPU racks</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={6}>
-                    <Card className="shadow h-100">
-                        <Card.Header>
-                            <h5 className="mb-0">Quick Support Channels</h5>
-                        </Card.Header>
-                        <Card.Body className="d-flex flex-column justify-content-between">
-                            <p className="text-muted mb-3">Initiate calibration requests or coordinate system repairs with suppliers.</p>
-                            <div className="d-flex gap-2">
-                                <Button variant="warning" className="w-100"><FaWrench className="me-2" /> Request Calibration</Button>
-                                <Button variant="primary" className="w-100"><FaTools className="me-2" /> Log Support Ticket</Button>
-                            </div>
+                            {(realtimeData.equipmentMaintenanceFrequency || []).length === 0 ? (
+                                <p className="text-center text-muted py-5 mb-0">No maintenance tickets logged yet.</p>
+                            ) : (
+                                <div style={{ width: "100%", height: "260px" }}>
+                                    <Bar data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                                </div>
+                            )}
                         </Card.Body>
                     </Card>
                 </Col>
             </Row>
 
             <Card className="shadow mb-4">
-                <Card.Header>
-                    <h5 className="mb-0">Equipment Status & Lifecycle Log</h5>
+                <Card.Header className="bg-white py-3">
+                    <h5 className="mb-0 fw-bold">Equipment Status & Lifecycle Log</h5>
                 </Card.Header>
-                <Card.Body>
-                    {loading ? (
-                        <p className="text-center text-muted mb-0 py-3">Loading inventory...</p>
-                    ) : (
-                        <Table striped hover responsive className="mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Equipment Name</th>
-                                    <th>Model & Serial</th>
-                                    <th>Laboratory</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
+                <Card.Body className="p-0">
+                    <Table striped hover responsive className="mb-0 align-middle">
+                        <thead className="table-light">
+                            <tr>
+                                <th>Equipment Name</th>
+                                <th>Model & Serial</th>
+                                <th>Laboratory</th>
+                                <th>Status</th>
+                                <th>Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {equipmentList.map((eq) => (
+                                <tr key={eq.id}>
+                                    <td>
+                                        <strong>{eq.equipmentName}</strong>
+                                        <br />
+                                        <small className="text-muted">Category: {eq.category}</small>
+                                    </td>
+                                    <td>
+                                        <span>Mfr: {eq.manufacturer} ({eq.model})</span>
+                                        <br />
+                                        <small className="text-muted">S/N: {eq.serialNumber}</small>
+                                    </td>
+                                    <td>{eq.laboratory ? eq.laboratory.labName : "N/A"}</td>
+                                    <td>
+                                        <Badge bg={getStatusBadge(eq.status)}>{eq.status}</Badge>
+                                    </td>
+                                    <td style={{ minWidth: "180px" }}>
+                                        <Form.Select
+                                            size="sm"
+                                            value={eq.status}
+                                            onChange={(e) => handleStatusChange(eq, e.target.value)}
+                                        >
+                                            <option value="Available">Available</option>
+                                            <option value="Booked">Booked</option>
+                                            <option value="Under Maintenance">Under Maintenance</option>
+                                            <option value="Out of Service">Out of Service</option>
+                                        </Form.Select>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {equipmentList.map((eq) => (
-                                    <tr key={eq.id}>
-                                        <td>
-                                            <strong>{eq.equipmentName}</strong>
-                                            <br />
-                                            <small className="text-muted">Category: {eq.category}</small>
-                                        </td>
-                                        <td>
-                                            <span>Mfr: {eq.manufacturer} ({eq.model})</span>
-                                            <br />
-                                            <small className="text-muted">S/N: {eq.serialNumber}</small>
-                                        </td>
-                                        <td>{eq.laboratory ? eq.laboratory.labName : "N/A"}</td>
-                                        <td>
-                                            <Badge bg={getStatusBadge(eq.status)}>{eq.status}</Badge>
-                                        </td>
-                                        <td style={{ minWidth: "180px" }}>
-                                            <Form.Select
-                                                size="sm"
-                                                value={eq.status}
-                                                onChange={(e) => handleStatusChange(eq, e.target.value)}
-                                            >
-                                                <option value="Available">Available</option>
-                                                <option value="Booked">Booked</option>
-                                                <option value="Under Maintenance">Under Maintenance</option>
-                                                <option value="Out of Service">Out of Service</option>
-                                            </Form.Select>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-                    )}
+                            ))}
+                        </tbody>
+                    </Table>
                 </Card.Body>
             </Card>
         </DashboardLayout>

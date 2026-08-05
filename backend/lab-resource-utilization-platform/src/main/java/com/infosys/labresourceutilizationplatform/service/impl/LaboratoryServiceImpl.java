@@ -22,6 +22,11 @@ public class LaboratoryServiceImpl implements LaboratoryService {
     @Override
     public Laboratory addLaboratory(Laboratory laboratory) {
 
+        if (laboratoryRepository.existsByLabNameAndDepartmentDepartmentId(
+                laboratory.getLabName(), laboratory.getDepartment().getDepartmentId())) {
+            throw new RuntimeException("Laboratory with this name already exists in the department.");
+        }
+
         Department department = departmentRepository.findById(
                 laboratory.getDepartment().getDepartmentId()
         ).orElseThrow(() -> new RuntimeException("Department not found"));
@@ -49,6 +54,11 @@ public class LaboratoryServiceImpl implements LaboratoryService {
 
     @Override
     public Laboratory updateLaboratory(Long id, Laboratory laboratory) {
+
+        if (laboratoryRepository.existsByLabNameAndDepartmentDepartmentIdAndLabIdNot(
+                laboratory.getLabName(), laboratory.getDepartment().getDepartmentId(), id)) {
+            throw new RuntimeException("Laboratory with this name already exists in the department.");
+        }
 
         Laboratory existingLab = getLaboratoryById(id);
 

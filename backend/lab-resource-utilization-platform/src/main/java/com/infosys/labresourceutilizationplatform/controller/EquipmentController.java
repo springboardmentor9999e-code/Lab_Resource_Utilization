@@ -80,4 +80,39 @@ public class EquipmentController {
 
         return ResponseEntity.ok("Equipment deleted successfully.");
     }
+
+    // Upload Equipment Image
+    @PostMapping("/upload")
+    public ResponseEntity<String> uploadEquipmentImage(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("File is empty.");
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+
+            // Generate a unique filename
+            String filename = "upload-" + System.currentTimeMillis() + extension;
+
+            java.io.File targetDir = new java.io.File("d:\\Infosys_virtual_internship\\frontend\\public\\images\\equipment");
+            if (!targetDir.exists()) {
+                targetDir.mkdirs();
+            }
+
+            java.io.File destFile = new java.io.File(targetDir, filename);
+            file.transferTo(destFile);
+
+            String imageUrl = "/images/equipment/" + filename;
+            return ResponseEntity.ok(imageUrl);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error uploading file: " + e.getMessage());
+        }
+    }
 }

@@ -17,6 +17,8 @@ public interface EquipmentRepository extends JpaRepository<Equipment, Long> {
 
     boolean existsBySerialNumber(String serialNumber);
 
+    boolean existsBySerialNumberAndIdNot(String serialNumber, Long id);
+
     List<Equipment> findByEquipmentNameContainingIgnoreCase(String equipmentName);
 
 }
