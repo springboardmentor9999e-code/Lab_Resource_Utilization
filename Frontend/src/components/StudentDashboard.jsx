@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Skeleton from "react-loading-skeleton";
 import { usePermissions } from "../context/PermissionsContext";
 import microscope from "../assets/microscope.png";
+import EquipmentReturnCalendar from "./EquipmentReturnCalendar";
 
 export default function StudentDashboard({ user, onLogout }) {
   const { hasPermission } = usePermissions();
@@ -19,6 +20,10 @@ export default function StudentDashboard({ user, onLogout }) {
   const [bookings, setBookings] = useState([]);
   const [waitlists, setWaitlists] = useState([]);
   const [activeNotifications, setActiveNotifications] = useState([]);
+  const [inAppNotifications, setInAppNotifications] = useState([]);
+  const [notificationFilter, setNotificationFilter] = useState('ALL');
+  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   // Views states
   const [viewedEquipment, setViewedEquipment] = useState(null);
@@ -32,6 +37,8 @@ export default function StudentDashboard({ user, onLogout }) {
   const [toastMessage, setToastMessage] = useState("");
   const [selectedEquipment, setSelectedEquipment] = useState(null); // For booking modal
   const [selectedWaitlistEquipment, setSelectedWaitlistEquipment] = useState(null); // For waitlist join modal
+  const [actionLoading, setActionLoading] = useState({});
+  const setButtonLoading = (key, isLoading) => setActionLoading(prev => ({ ...prev, [key]: isLoading }));
 
   // Form values
   const [bookingPurpose, setBookingPurpose] = useState("");
@@ -126,11 +133,39 @@ export default function StudentDashboard({ user, onLogout }) {
       });
   };
 
+  const fetchInAppNotifications = (filterType = notificationFilter) => {
+    fetch(`http://localhost:8080/api/user-notifications?type=${filterType}`, {
+      headers: getAuthHeaders(),
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        setInAppNotifications(data);
+        const unread = data.filter((n) => !n.isRead).length;
+        setUnreadNotificationCount(unread);
+      })
+      .catch(() => setInAppNotifications([]));
+  };
+
+  const markNotificationRead = (notifId) => {
+    fetch(`http://localhost:8080/api/user-notifications/${notifId}/read`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+    }).then(() => fetchInAppNotifications());
+  };
+
+  const markAllNotificationsRead = () => {
+    fetch("http://localhost:8080/api/user-notifications/read-all", {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+    }).then(() => fetchInAppNotifications());
+  };
+
   useEffect(() => {
     loadEquipment();
     loadBookings();
     loadWaitlists();
     loadActiveNotifications();
+    fetchInAppNotifications();
   }, [user]);
 
   // Poll for live notifications and equipment status every 10 seconds
@@ -138,6 +173,7 @@ export default function StudentDashboard({ user, onLogout }) {
     if (!user) return;
     const interval = setInterval(() => {
       loadActiveNotifications();
+      fetchInAppNotifications();
       loadWaitlists();
       loadEquipment();
     }, 10000);
@@ -179,6 +215,9 @@ export default function StudentDashboard({ user, onLogout }) {
     e.preventDefault();
     if (!selectedEquipment) return;
 
+    const key = `book-confirm-${selectedEquipment.id || selectedEquipment.equipmentId}`;
+    setButtonLoading(key, true);
+
     const payload = {
       equipmentId: selectedEquipment.equipmentId || selectedEquipment.id,
       startTime: `${bookingDate}T${bookingStart}:00Z`,
@@ -206,6 +245,7 @@ export default function StudentDashboard({ user, onLogout }) {
           equipment: selectedEquipment,
           startTime: `${bookingDate}T${bookingStart}:00Z`,
           endTime: `${bookingDate}T${bookingEnd}:00Z`,
+          createdAt: new Date().toISOString(),
           purpose: bookingPurpose || "General Student Lab Research run",
           status: "Pending Approval",
         };
@@ -214,6 +254,9 @@ export default function StudentDashboard({ user, onLogout }) {
           `Booking submitted (mock fallback) for ${selectedEquipment.name}!`,
         );
         setSelectedEquipment(null);
+      })
+      .finally(() => {
+        setButtonLoading(key, false);
       });
   };
 
@@ -224,6 +267,8 @@ export default function StudentDashboard({ user, onLogout }) {
     const startISO = `${waitlistDate}T${waitlistStart}:00Z`;
     const endISO = `${waitlistDate}T${waitlistEnd}:00Z`;
     const eqId = selectedWaitlistEquipment.equipmentId || selectedWaitlistEquipment.id;
+    const key = `waitlist-confirm-${eqId}`;
+    setButtonLoading(key, true);
 
     fetch(`http://localhost:8080/api/waitlist/join?equipmentId=${eqId}&startTime=${startISO}&endTime=${endISO}`, {
       method: "POST",
@@ -243,6 +288,9 @@ export default function StudentDashboard({ user, onLogout }) {
       })
       .catch((err) => {
         triggerToast(err.message || "Failed to join waitlist.");
+      })
+      .finally(() => {
+        setButtonLoading(key, false);
       });
   };
 
@@ -457,13 +505,14 @@ export default function StudentDashboard({ user, onLogout }) {
                   Unavailable
                 </button>
               )}
-
+            {(eq.status!=='Available') &&(
               <button
                 onClick={() => handleJoinWaitlist(eq)}
                 className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 px-6 rounded-xl text-sm tracking-wider transition border text-center"
               >
                 Join Waitlist
               </button>
+              )}
             </div>
           </div>
         </div>
@@ -587,7 +636,7 @@ export default function StudentDashboard({ user, onLogout }) {
           <div>
             <div className="flex items-center">
               <img className="w-[25%] mr-5" src={microscope} alt="logo" />
-              <h1 className="text-2xl font-bold text-primary logo-font leading-none tracking-tight">
+              <h1 className="text-2xl font-bold text-primary logo-font leading-none tracking-tight" onClick={() => setActiveTab("home")}>
                 LabMaintain
               </h1>
             </div>
@@ -622,8 +671,103 @@ export default function StudentDashboard({ user, onLogout }) {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Header Notification Bell Button */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setShowNotificationDropdown(!showNotificationDropdown);
+                fetchInAppNotifications();
+              }}
+              className="relative p-2 rounded-xl text-slate-600 hover:text-cyan-700 hover:bg-slate-100 transition border border-slate-200 shadow-sm flex items-center justify-center"
+              title="Notifications"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              {unreadNotificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-rose-500 text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+                  {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notification Dropdown Panel */}
+            {showNotificationDropdown && (
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border rounded-2xl shadow-2xl z-50 overflow-hidden text-left animate-fadeIn">
+                <div className="p-4 bg-slate-50 border-b flex justify-between items-center">
+                  <div>
+                    <h4 className="font-bold text-sm text-slate-800">Notifications</h4>
+                    <p className="text-[10px] text-slate-500">Live System & Equipment Alerts</p>
+                  </div>
+                  <button
+                    onClick={markAllNotificationsRead}
+                    className="text-[10px] font-bold text-cyan-700 hover:text-cyan-900 underline"
+                  >
+                    Mark all as read
+                  </button>
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="px-3 pt-2 bg-slate-50 border-b flex gap-1.5 overflow-x-auto scrollbar-thin">
+                  {[
+                    { key: 'ALL', label: 'All' },
+                    { key: 'BOOKING', label: 'Booking' },
+                    { key: 'WAITLIST', label: 'Waitlist' }
+                  ].map(tab => (
+                    <button
+                      key={tab.key}
+                      onClick={() => { setNotificationFilter(tab.key); fetchInAppNotifications(tab.key); }}
+                      className={`pb-2 px-2 text-[11px] font-bold border-b-2 transition whitespace-nowrap ${
+                        notificationFilter === tab.key ? 'border-cyan-600 text-cyan-700' : 'border-transparent text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Notification List */}
+                <div className="max-h-80 overflow-y-auto divide-y">
+                  {inAppNotifications.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-slate-400">
+                      No notifications found under this filter.
+                    </div>
+                  ) : (
+                    inAppNotifications.map(n => (
+                      <div
+                        key={n.notificationId}
+                        onClick={() => markNotificationRead(n.notificationId)}
+                        className={`p-3.5 hover:bg-slate-50 transition cursor-pointer space-y-1.5 ${
+                          !n.isRead ? 'bg-cyan-50/40 font-semibold' : ''
+                        }`}
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-xs text-slate-800 leading-tight block">{n.title}</span>
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                              n.type === 'BOOKING' ? 'bg-blue-100 text-blue-800' :
+                              n.type === 'APPROVAL' ? 'bg-purple-100 text-purple-800' :
+                              n.type === 'MAINTENANCE' ? 'bg-amber-100 text-amber-800' :
+                              n.type === 'WAITLIST' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-700'
+                            }`}>
+                              {n.type}
+                            </span>
+                          </div>
+                          <span className="text-[9px] text-slate-400 flex-shrink-0">
+                            {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-normal">{n.message}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-sm uppercase">
+            <div onClick={()=>setActiveTab("account")} className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-sm uppercase">
               {user && user.email ? user.email[0].toUpperCase() : "S"}
             </div>
             <div className="text-left hidden md:block">
@@ -904,12 +1048,29 @@ export default function StudentDashboard({ user, onLogout }) {
                             </button>
                           )}
 
-                          <button
-                            onClick={() => handleJoinWaitlist(eq)}
-                            className="text-on-surface-variant hover:text-primary font-bold text-xs tracking-wider py-2 px-3 transition hover:underline"
-                          >
-                            Join Waitlist
-                          </button>
+                          {(() => {
+                            const isAvail = eq.status === "Available" || eq.status === "Operational";
+                            return (
+                              <button
+                                disabled={isAvail || actionLoading[`waitlist-${eq.id}`]}
+                                onClick={() => handleJoinWaitlist(eq)}
+                                title={isAvail ? "Equipment is currently available for booking" : "Join waitlist queue"}
+                                className={`font-bold text-xs tracking-wider py-2 px-3 transition rounded-lg flex items-center gap-1.5 ${
+                                  isAvail
+                                    ? "text-slate-400 border border-slate-200 bg-slate-100/60 cursor-not-allowed opacity-60"
+                                    : "text-on-surface-variant hover:text-primary hover:underline cursor-pointer"
+                                }`}
+                              >
+                                {actionLoading[`waitlist-${eq.id}`] && (
+                                  <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                )}
+                                Join Waitlist
+                              </button>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -1043,6 +1204,17 @@ export default function StudentDashboard({ user, onLogout }) {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* TAB: EQUIPMENT RETURN CALENDAR */}
+        {activeTab === "calendar" && (
+          <div className="max-w-5xl mx-auto space-y-6 animate-fadeIn">
+            <EquipmentReturnCalendar
+              user={user}
+              getAuthHeaders={getAuthHeaders}
+              triggerToast={triggerToast}
+            />
           </div>
         )}
 
@@ -1231,8 +1403,15 @@ export default function StudentDashboard({ user, onLogout }) {
                 </button>
                 <button
                   type="submit"
-                  className="bg-primary hover:bg-primary-light text-white font-bold py-2.5 px-5 rounded-lg text-xs tracking-wider transition shadow"
+                  disabled={actionLoading[`book-confirm-${selectedEquipment.id || selectedEquipment.equipmentId}`]}
+                  className="bg-primary hover:bg-primary-light text-white font-bold py-2.5 px-5 rounded-lg text-xs tracking-wider transition shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
+                  {actionLoading[`book-confirm-${selectedEquipment.id || selectedEquipment.equipmentId}`] && (
+                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
                   Confirm Reservation
                 </button>
               </div>
@@ -1321,8 +1500,15 @@ export default function StudentDashboard({ user, onLogout }) {
                 </button>
                 <button
                   type="submit"
-                  className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-5 rounded-lg text-xs tracking-wider transition shadow active:scale-95"
+                  disabled={actionLoading[`waitlist-confirm-${selectedWaitlistEquipment.equipmentId || selectedWaitlistEquipment.id}`]}
+                  className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-5 rounded-lg text-xs tracking-wider transition shadow active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
+                  {actionLoading[`waitlist-confirm-${selectedWaitlistEquipment.equipmentId || selectedWaitlistEquipment.id}`] && (
+                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
                   Join Waitlist Queue
                 </button>
               </div>
@@ -1353,16 +1539,18 @@ export default function StudentDashboard({ user, onLogout }) {
           <span className="text-[10px] font-bold tracking-wider">Home</span>
         </button>
 
+       
+
         <button
-          onClick={() => setActiveTab("booking")}
-          className={`flex flex-col items-center gap-1 transition-all ${activeTab === "booking" ? "text-primary scale-105" : "text-on-surface-variant hover:text-primary"}`}
+          onClick={() => setActiveTab("calendar")}
+          className={`flex flex-col items-center gap-1 transition-all ${activeTab === "calendar" ? "text-primary scale-105" : "text-on-surface-variant hover:text-primary"}`}
         >
           <svg
             className="w-5 h-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            strokeWidth={activeTab === "booking" ? 2.5 : 2}
+            strokeWidth={activeTab === "calendar" ? 2.5 : 2}
           >
             <path
               strokeLinecap="round"
@@ -1370,13 +1558,20 @@ export default function StudentDashboard({ user, onLogout }) {
               d="M8 7V3m8 3V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
+          <span className="text-[10px] font-bold tracking-wider">Calendar</span>
+        </button>
+         <button
+          onClick={() => setActiveTab("booking")}
+          className={`flex flex-col items-center gap-1 transition-all ${activeTab === "booking" ? "text-primary scale-105" : "text-on-surface-variant hover:text-primary"}`}
+        >
+         <svg xmlns="http://www.w3.org/2000/svg" width="1.25em" height="1.25em" viewBox="0 0 48 48" strokeWidth={activeTab === "calendar" ? 4.5 : 3.5} > <path d="M0 0h48v48H0z" fill="none"/> <path fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" d="M21.84 33.87h4.33L24 30.04z" /> <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M41.38 19.84h-7.86l-7.77-13a2 2 0 0 0-3.5 0l-7.77 13H6.62a3.12 3.12 0 0 0-3 3.93L8 40.08a2.84 2.84 0 0 0 2.74 2.1h26.5a2.84 2.84 0 0 0 2.76-2.1l4.41-16.31a3.12 3.12 0 0 0-3.03-3.93m-17.38-8l4.77 8h-9.54Zm6.35 24.33a1.7 1.7 0 0 1-1.46.84h-9.78a1.69 1.69 0 0 1-1.47-2.52l4.89-8.62a1.69 1.69 0 0 1 2.94 0l4.89 8.62a1.71 1.71 0 0 1-.01 1.68" /> </svg>
           <span className="text-[10px] font-bold tracking-wider">Booking</span>
         </button>
 
 
        
 
-        <button
+        {/* <button
           onClick={() => setActiveTab("account")}
           className={`flex flex-col items-center gap-1 transition-all ${activeTab === "account" ? "text-primary scale-105" : "text-on-surface-variant hover:text-primary"}`}
         >
@@ -1394,7 +1589,7 @@ export default function StudentDashboard({ user, onLogout }) {
             />
           </svg>
           <span className="text-[10px] font-bold tracking-wider">Account</span>
-        </button>
+        </button> */}
 
          <button
           onClick={() => setActiveTab("waitlist")}
