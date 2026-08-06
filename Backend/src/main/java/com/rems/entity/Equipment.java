@@ -65,6 +65,9 @@ public class Equipment {
     @Column(name = "purchase_date")
     private LocalDate purchaseDate;
 
+    @Column(name = "expiry_date")
+    private LocalDate expiryDate;
+
     @Column(name = "purchase_cost")
     private BigDecimal purchaseCost;
 

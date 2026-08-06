@@ -6,6 +6,7 @@ import com.rems.entity.User;
 import com.rems.enums.UserStatus;
 import com.rems.exception.ApiException;
 import com.rems.repository.UserRepository;
+import com.rems.enums.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final InAppNotificationService inAppNotificationService;
 
     @Transactional
     public UserResponse approveInstitutionAdministrator(Long userId, String adminEmail) {
@@ -40,6 +42,7 @@ public class UserService {
         Role instAdminRole = targetUser.getRoles().stream().filter(r -> r.getRoleId() == 5).findFirst().orElse(null);
         User savedUser = userRepository.save(targetUser);
         notificationService.sendAccountApprovalNotification(savedUser);
+        inAppNotificationService.createNotification(savedUser, "Account Approved", "Your account registration has been approved! You can now access all portal features.", NotificationType.APPROVAL, savedUser.getUserId());
         return toUserResponse(savedUser, instAdminRole);
     }
 
@@ -69,6 +72,7 @@ public class UserService {
         Role deptHeadRole = targetUser.getRoles().stream().filter(r -> r.getRoleId() == 4).findFirst().orElse(null);
         User savedDeptHead = userRepository.save(targetUser);
         notificationService.sendAccountApprovalNotification(savedDeptHead);
+        inAppNotificationService.createNotification(savedDeptHead, "Account Approved", "Your Department Head account has been approved!", NotificationType.APPROVAL, savedDeptHead.getUserId());
         return toUserResponse(savedDeptHead, deptHeadRole);
     }
 
@@ -98,6 +102,7 @@ public class UserService {
         Role labManagerRole = targetUser.getRoles().stream().filter(r -> r.getRoleId() == 3).findFirst().orElse(null);
         User savedManager = userRepository.save(targetUser);
         notificationService.sendAccountApprovalNotification(savedManager);
+        inAppNotificationService.createNotification(savedManager, "Account Approved", "Your Lab Manager account has been approved!", NotificationType.APPROVAL, savedManager.getUserId());
         return toUserResponse(savedManager, labManagerRole);
     }
 
@@ -127,6 +132,7 @@ public class UserService {
         Role labTechRole = targetUser.getRoles().stream().filter(r -> r.getRoleId() == 2).findFirst().orElse(null);
         User savedTech = userRepository.save(targetUser);
         notificationService.sendAccountApprovalNotification(savedTech);
+        inAppNotificationService.createNotification(savedTech, "Account Approved", "Your Lab Technician account has been approved!", NotificationType.APPROVAL, savedTech.getUserId());
         return toUserResponse(savedTech, labTechRole);
     }
 
@@ -215,7 +221,9 @@ public class UserService {
         }
 
         targetUser.setStatus(UserStatus.INACTIVE);
-        return toUserResponse(userRepository.save(targetUser), null);
+        User savedRejected = userRepository.save(targetUser);
+        inAppNotificationService.createNotification(savedRejected, "Account Registration Rejected", "Your registration request was not approved.", NotificationType.APPROVAL, savedRejected.getUserId());
+        return toUserResponse(savedRejected, null);
     }
 
     private UserResponse toUserResponse(User user, Role selectedRole) {
@@ -228,12 +236,18 @@ public class UserService {
                 .map(Role::getRoleName)
                 .collect(Collectors.toSet());
 
+        List<Integer> allRoleIds = user.getRoleIds();
+        if (allRoleIds == null || allRoleIds.isEmpty()) {
+            allRoleIds = user.getRoles().stream().map(Role::getRoleId).collect(Collectors.toList());
+        }
+
         UserResponse.UserResponseBuilder builder = UserResponse.builder()
                 .userId(user.getUserId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .status(user.getStatus().name())
+                .roleIds(allRoleIds)
                 .roles(roleNames)
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt());

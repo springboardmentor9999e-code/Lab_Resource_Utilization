@@ -49,7 +49,16 @@ public class RoleRoutesController {
             new RouteInfo("/api/users/{id}/approve-department-head", "PATCH", "Approve department head", "approve_department_head"),
             new RouteInfo("/api/users/{id}/approve-lab-manager", "PATCH", "Approve lab manager", "approve_lab_manager"),
             new RouteInfo("/api/users/{id}/approve-lab-technician", "PATCH", "Approve lab technician", "approve_lab_technician"),
-            new RouteInfo("/api/users/pending-approvals", "GET", "List users pending approval", "AUTHENTICATED")
+            new RouteInfo("/api/users/pending-approvals", "GET", "List users pending approval", "AUTHENTICATED"),
+            new RouteInfo("/api/institution-sharing/institutions", "GET", "Directory of active institutions", "manage_sharing_agreements"),
+            new RouteInfo("/api/institution-sharing/agreements", "GET", "List resource sharing agreements", "manage_sharing_agreements"),
+            new RouteInfo("/api/institution-sharing/request", "POST", "Request resource sharing tie-up", "manage_sharing_agreements"),
+            new RouteInfo("/api/institution-sharing/{id}/approve", "PATCH", "Approve resource sharing tie-up", "manage_sharing_agreements"),
+            new RouteInfo("/api/institution-sharing/{id}/reject", "PATCH", "Reject resource sharing tie-up", "manage_sharing_agreements"),
+            new RouteInfo("/api/institution-sharing/partners/{partnerId}/equipment", "GET", "Browse shared equipment of partner institution", "AUTHENTICATED"),
+            new RouteInfo("/api/user-notifications", "GET", "Get user in-app notifications", "AUTHENTICATED"),
+            new RouteInfo("/api/user-notifications/{id}/read", "PATCH", "Mark notification as read", "AUTHENTICATED"),
+            new RouteInfo("/api/user-notifications/read-all", "PATCH", "Mark all notifications as read", "AUTHENTICATED")
     );
 
     @GetMapping("/api/{role}/routes")

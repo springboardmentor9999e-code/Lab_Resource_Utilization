@@ -23,4 +23,11 @@ public interface EquipmentRepository extends JpaRepository<Equipment, Long> {
                                     @Param("departmentId") Long departmentId,
                                     @Param("labId") Long labId,
                                     @Param("status") EquipmentStatus status);
+    List<Equipment> findByLabLabId(Long labId);
+
+    List<Equipment> findByInstitutionInstitutionId(Long institutionId);
+
+    List<Equipment> findByExpiryDateLessThanEqual(java.time.LocalDate date);
+
+    List<Equipment> findByExpiryDateNotNullAndExpiryDateLessThanEqual(java.time.LocalDate date);
 }

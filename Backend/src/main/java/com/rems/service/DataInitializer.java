@@ -41,6 +41,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.rems.repository.RoleRepository;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -49,6 +51,7 @@ public class DataInitializer implements CommandLineRunner {
     private final InstitutionRepository institutionRepository;
     private final EquipmentRepository equipmentRepository;
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final BookingRepository bookingRepository;
     private final UsageLogRepository usageLogRepository;
     private final WaitlistRepository waitlistRepository;
@@ -79,6 +82,10 @@ public class DataInitializer implements CommandLineRunner {
                 user -> {
                     user.setPhone("+918252285165");
                     user.setName("Akshay");
+                    if (user.getRoleIds() == null || user.getRoleIds().isEmpty()) {
+                        user.setRoleIds(new java.util.ArrayList<>(java.util.List.of(6)));
+                    }
+                    roleRepository.findById(6).ifPresent(r -> user.getRoles().add(r));
                     userRepository.save(user);
                 },
                 () -> {
@@ -87,8 +94,10 @@ public class DataInitializer implements CommandLineRunner {
                             .email("akshay7708209@gmail.com")
                             .passwordHash("$2a$10$W4WUKweqGbLPehe3AfecDe1iNRL4SZWvsN8WMT8eT5HALYHDBtmgq")
                             .phone("+918252285165")
+                            .roleIds(new java.util.ArrayList<>(java.util.List.of(6)))
                             .status(com.rems.enums.UserStatus.ACTIVE)
                             .build();
+                    roleRepository.findById(6).ifPresent(r -> newUser.getRoles().add(r));
                     userRepository.save(newUser);
                 }
         );
@@ -164,7 +173,7 @@ public class DataInitializer implements CommandLineRunner {
                             .equipment(savedEq)
                             .startTime(downtimeStart)
                             .endTime(downtimeEnd)
-                            .status("Under Maintenance")
+                            .status("Completed")
                             .build());
 
                     // Seed bookings & usage logs for past 30 days
@@ -245,19 +254,71 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Exactly 36 equipments already exist in database. Skipping clean seed.");
         }
 
-        // Ensure all equipment items have a valid manual URL link
+        // Ensure all equipment items have valid manual URLs and expiry dates
         List<Equipment> allEquipments = equipmentRepository.findAll();
-        boolean manualUpdated = false;
+        boolean updated = false;
+        int idx = 0;
         for (Equipment eq : allEquipments) {
+            boolean changed = false;
             if (eq.getManual() == null || eq.getManual().trim().isEmpty()) {
                 eq.setManual(getManualUrlForEquipment(eq.getName(), eq.getModel()));
+                changed = true;
+            }
+            if (eq.getExpiryDate() == null) {
+                if (idx % 5 == 0) {
+                    eq.setExpiryDate(LocalDate.now().plusDays(1)); // Expires tomorrow!
+                } else if (idx % 5 == 1) {
+                    eq.setExpiryDate(LocalDate.now().minusDays(1)); // Expired yesterday!
+                } else if (idx % 5 == 2) {
+                    eq.setExpiryDate(LocalDate.now().plusDays(7)); // Expires in 7 days
+                } else if (idx % 5 == 3) {
+                    eq.setExpiryDate(LocalDate.now().plusDays(20)); // Expires in 20 days
+                } else {
+                    eq.setExpiryDate(LocalDate.now().plusMonths(6)); // Expires in 6 months
+                }
+                changed = true;
+            }
+            if (changed) {
                 equipmentRepository.save(eq);
-                manualUpdated = true;
+                updated = true;
+            }
+            idx++;
+        }
+        if (updated) {
+            log.info("Successfully updated manual URLs and expiry dates for equipment records in database.");
+        }
+        seedUtilizationMetrics(allEquipments);
+    }
+
+    private void seedUtilizationMetrics(List<Equipment> equipments) {
+        if (utilizationMetricRepository.count() > 0) return;
+
+        List<com.rems.entity.UtilizationMetric> metricsToSave = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        java.util.Random rand = new java.util.Random(42);
+
+        for (Equipment eq : equipments) {
+            for (int i = 29; i >= 0; i--) {
+                LocalDate d = today.minusDays(i);
+                double usedHours;
+                if (eq.getStatus() == com.rems.enums.EquipmentStatus.MAINTENANCE) {
+                    usedHours = 0.0;
+                } else {
+                    usedHours = Math.round((1.5 + rand.nextDouble() * 9.0) * 10.0) / 10.0;
+                }
+                double utilRate = Math.round((usedHours / 12.0) * 100.0) / 100.0;
+
+                metricsToSave.add(com.rems.entity.UtilizationMetric.builder()
+                        .equipment(eq)
+                        .date(d)
+                        .usedHours(usedHours)
+                        .availableHours(12.0)
+                        .utilizationRate(utilRate)
+                        .build());
             }
         }
-        if (manualUpdated) {
-            log.info("Successfully updated manual URLs for existing equipment records in database.");
-        }
+        utilizationMetricRepository.saveAll(metricsToSave);
+        log.info("Successfully seeded " + metricsToSave.size() + " utilization metric entries for equipment analysis.");
     }
 
     private List<Equipment> createEquipmentsForLab(Lab lab) {

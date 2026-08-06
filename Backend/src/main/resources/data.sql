@@ -21,12 +21,12 @@ UPDATE users SET password_hash = '$2a$10$W4WUKweqGbLPehe3AfecDe1iNRL4SZWvsN8WMT8
 WHERE email IN ('aarav.sharma@iitbhu.ac.in', 'priya.verma@iitbhu.ac.in', 'rohan.gupta@bhu.ac.in', 'neha.singh@sgpgi.ac.in');
 
 -- Promote Priya Verma to Lab Manager for Biotech Department (Dept 1)
-UPDATE users SET role_id = 3 WHERE email = 'priya.verma@iitbhu.ac.in';
+UPDATE users SET role_ids = ARRAY[3] WHERE email = 'priya.verma@iitbhu.ac.in';
 
 -- Migrate existing user roles to many-to-many user_roles table
 INSERT INTO user_roles (user_id, role_id)
-SELECT user_id, role_id FROM users
-WHERE role_id IS NOT NULL
+SELECT u.user_id, unnest(u.role_ids) FROM users u
+WHERE u.role_ids IS NOT NULL
 ON CONFLICT DO NOTHING;
 
 -- Populate/seed equipment amount, imageUrl, and cost for existing equipment

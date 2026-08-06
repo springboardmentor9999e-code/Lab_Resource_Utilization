@@ -17,6 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/equipment")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class EquipmentController {
 
     private final EquipmentService equipmentService;
@@ -43,6 +44,31 @@ public class EquipmentController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(equipmentService.createEquipment(request,principal.getName()));
 
+    }
+
+    @GetMapping("/needs-renewal")
+    public ResponseEntity<?> getEquipmentNeedingRenewal(Principal principal) {
+        try {
+            return ResponseEntity.ok(equipmentService.getEquipmentNeedingRenewal(principal != null ? principal.getName() : null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getClass().getSimpleName(), "message", e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
+    }
+
+    @PostMapping("/{id}/renew")
+    public ResponseEntity<?> renewEquipment(
+            @PathVariable Long id,
+            @RequestBody(required = false) com.rems.dto.EquipmentRenewalRequest request,
+            Principal principal) {
+        try {
+            return ResponseEntity.ok(equipmentService.renewEquipment(id, request, principal != null ? principal.getName() : null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getClass().getSimpleName(), "message", e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
     }
 
     @DeleteMapping("/{id}")

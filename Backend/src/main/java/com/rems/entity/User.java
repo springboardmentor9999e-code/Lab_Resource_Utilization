@@ -9,8 +9,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.util.Set;
 import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
 
 import java.time.Instant;
 
@@ -27,6 +32,11 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long userId;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "role_ids", columnDefinition = "integer[]")
+    @Builder.Default
+    private List<Integer> roleIds = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

@@ -16,4 +16,7 @@ public class LabResponse {
     private String departmentName;
     private Instant createdAt;
     private Instant updatedAt;
+    private Long availableCount;
+    private Long maintenanceCount;
+    private Long bookedCount;
 }

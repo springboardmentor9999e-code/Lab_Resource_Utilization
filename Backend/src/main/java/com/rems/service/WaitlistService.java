@@ -8,6 +8,7 @@ import com.rems.exception.ApiException;
 import com.rems.repository.EquipmentRepository;
 import com.rems.repository.WaitlistRepository;
 import com.rems.repository.UserRepository;
+import com.rems.enums.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,6 +27,7 @@ public class WaitlistService {
     private final EquipmentRepository equipmentRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final InAppNotificationService inAppNotificationService;
 
     @Transactional
     public WaitlistEntry joinWaitlist(Long equipmentId, Instant requestedStart, Instant requestedEnd, String email) {
@@ -55,7 +57,9 @@ public class WaitlistService {
                 .createdAt(Instant.now())
                 .build();
 
-        return waitlistRepository.save(entry);
+        WaitlistEntry saved = waitlistRepository.save(entry);
+        inAppNotificationService.createNotification(user, "Waitlist Joined", "You are now on the waitlist for asset " + eq.getName() + ".", NotificationType.WAITLIST, saved.getWaitlistId());
+        return saved;
     }
 
     @Transactional
@@ -113,6 +117,7 @@ public class WaitlistService {
 
             // Send Email and SMS notification to the waitlisted student
             notificationService.sendWaitlistAvailabilityNotification(next.getUser(), equipment);
+            inAppNotificationService.createNotification(next.getUser(), "Equipment Available - 10 Min Window", equipment.getName() + " is now available! You have a 10-minute priority window to book it.", NotificationType.WAITLIST, next.getWaitlistId());
         }
     }
 

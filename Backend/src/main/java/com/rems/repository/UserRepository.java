@@ -13,6 +13,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     java.util.List<User> findByDepartmentDepartmentId(Long departmentId);
 
+    java.util.List<User> findByLabLabId(Long labId);
+
     java.util.List<User> findByInstitutionInstitutionId(Long institutionId);
 
     java.util.List<User> findByStatus(com.rems.enums.UserStatus status);

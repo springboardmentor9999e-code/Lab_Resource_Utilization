@@ -29,6 +29,7 @@ public class EquipmentResponse {
     private String serialNumber;
     private String manufacturer;
     private LocalDate purchaseDate;
+    private LocalDate expiryDate;
     private BigDecimal purchaseCost;
     private Integer amount;
     private String imageUrl;
@@ -39,4 +40,9 @@ public class EquipmentResponse {
     private String manual;
     private Instant createdAt;
     private Instant updatedAt;
+    private Double utilizationRate;
+    private Boolean maintenanceNeeded;
+    private Boolean isExpired;
+    private Long daysUntilExpiry;
+    private Boolean needsRenewal;
 }

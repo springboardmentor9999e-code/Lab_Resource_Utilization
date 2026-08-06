@@ -22,6 +22,7 @@ public class UserResponse {
     private String phone;
     private String status;
     private Integer roleId;
+    private List<Integer> roleIds;
     private String roleName;
     private List<String> permissions;
     private Set<String> roles;

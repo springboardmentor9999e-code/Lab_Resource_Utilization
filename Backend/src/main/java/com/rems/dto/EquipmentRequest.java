@@ -22,6 +22,7 @@ public class EquipmentRequest {
     private String serialNumber;
     private String manufacturer;
     private LocalDate purchaseDate;
+    private LocalDate expiryDate;
     private BigDecimal purchaseCost;
     private Integer amount;
     private String imageUrl;

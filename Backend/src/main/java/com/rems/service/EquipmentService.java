@@ -1,11 +1,13 @@
 package com.rems.service;
 
+import com.rems.dto.EquipmentRenewalRequest;
 import com.rems.dto.EquipmentRequest;
 import com.rems.dto.EquipmentResponse;
 import com.rems.dto.RegisterResponse;
 import com.rems.entity.Equipment;
 import com.rems.entity.User;
 import com.rems.enums.EquipmentStatus;
+import com.rems.enums.NotificationType;
 import com.rems.enums.UserStatus;
 import com.rems.exception.ApiException;
 import com.rems.repository.DepartmentRepository;
@@ -25,6 +27,10 @@ import org.springframework.security.core.GrantedAuthority;
 import java.util.Collection;
 import java.util.List;
 
+import com.rems.entity.UtilizationMetric;
+import com.rems.repository.UtilizationMetricRepository;
+import java.time.LocalDate;
+
 @Service
 @RequiredArgsConstructor
 public class EquipmentService {
@@ -34,6 +40,8 @@ public class EquipmentService {
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
     private final LabRepository labRepository;
+    private final UtilizationMetricRepository utilizationMetricRepository;
+    private final InAppNotificationService inAppNotificationService;
 
     public List<EquipmentResponse> searchEquipment(String name, Long institutionId, Long departmentId, Long labId, String statusStr) {
         EquipmentStatus status = null;
@@ -124,6 +132,12 @@ public class EquipmentService {
             }
         }
 
+        LocalDate expiryDate = request.getExpiryDate();
+        if (expiryDate == null) {
+            LocalDate baseDate = request.getPurchaseDate() != null ? request.getPurchaseDate() : LocalDate.now();
+            expiryDate = baseDate.plusYears(1);
+        }
+
         Equipment equipment = Equipment.builder()
                 .name(request.getName())
                 .category(request.getCategory())
@@ -132,6 +146,7 @@ public class EquipmentService {
                 .manufacturer(request.getManufacturer())
                 .purchaseCost(request.getPurchaseCost())
                 .purchaseDate(request.getPurchaseDate())
+                .expiryDate(expiryDate)
                 .amount(request.getAmount())
                 .imageUrl(request.getImageUrl())
                 .cost(request.getCost())
@@ -146,6 +161,93 @@ public class EquipmentService {
 
         Equipment saved = equipmentRepository.save(equipment);
         return toResponse(saved);
+    }
+
+    @Transactional
+    public EquipmentResponse renewEquipment(Long id, EquipmentRenewalRequest request, String userEmail) {
+        User user = (userEmail != null && !userEmail.trim().isEmpty())
+                ? userRepository.findByEmail(userEmail).orElse(null)
+                : null;
+
+        Equipment equipment = equipmentRepository.findById(id)
+                .orElseThrow(() -> new ApiException("Equipment not found with id " + id, HttpStatus.NOT_FOUND));
+
+        LocalDate newExpiry = LocalDate.now().plusYears(1);
+        if (request != null && request.getNewExpiryDate() != null && !request.getNewExpiryDate().trim().isEmpty()) {
+            try {
+                newExpiry = LocalDate.parse(request.getNewExpiryDate().trim());
+            } catch (Exception e) {
+                newExpiry = LocalDate.now().plusYears(1);
+            }
+        }
+
+        equipment.setExpiryDate(newExpiry);
+
+        if (request != null && request.getNotes() != null && !request.getNotes().trim().isEmpty()) {
+            String existingDesc = equipment.getDescription() != null ? equipment.getDescription() : "";
+            equipment.setDescription((existingDesc.isEmpty() ? "" : existingDesc + "\n") + "[Renewal Note: " + request.getNotes().trim() + "]");
+        }
+
+        if (request != null && request.getStatus() != null && !request.getStatus().trim().isEmpty()) {
+            equipment.setStatus(EquipmentStatus.fromValue(request.getStatus()));
+        } else if (equipment.getStatus() == null || equipment.getStatus() == EquipmentStatus.MAINTENANCE) {
+            equipment.setStatus(EquipmentStatus.AVAILABLE);
+        }
+
+        if (equipment.getInstitution() == null && equipment.getDepartment() != null) {
+            equipment.setInstitution(equipment.getDepartment().getInstitution());
+        }
+        if (equipment.getInstitution() == null && user != null) {
+            equipment.setInstitution(user.getInstitution());
+        }
+        if (equipment.getStatus() == null) {
+            equipment.setStatus(EquipmentStatus.AVAILABLE);
+        }
+
+        Equipment saved = equipmentRepository.save(equipment);
+
+        // Safely attempt in-app notification without breaking main transaction
+        if (user != null) {
+            try {
+                inAppNotificationService.createNotification(
+                        user,
+                        "Equipment Renewed: " + saved.getName(),
+                        "Equipment '" + saved.getName() + "' (ID: " + saved.getEquipmentId() + ") has been successfully renewed. New Expiry Date: " + saved.getExpiryDate() + ".",
+                        NotificationType.MAINTENANCE,
+                        saved.getEquipmentId()
+                );
+            } catch (Exception ignored) {
+            }
+        }
+
+        return toResponse(saved);
+    }
+
+    public List<EquipmentResponse> getEquipmentNeedingRenewal(String userEmail) {
+        User user = (userEmail != null && !userEmail.trim().isEmpty())
+                ? userRepository.findByEmail(userEmail).orElse(null)
+                : null;
+
+        LocalDate searchCutoff = LocalDate.now().plusDays(90);
+        List<Equipment> expiring = equipmentRepository.findByExpiryDateNotNullAndExpiryDateLessThanEqual(searchCutoff);
+
+        if (expiring == null || expiring.isEmpty()) {
+            expiring = equipmentRepository.findAll();
+        }
+
+        if (user != null) {
+            if (user.getLab() != null) {
+                Long labId = user.getLab().getLabId();
+                List<Equipment> labFiltered = expiring.stream().filter(e -> e.getLab() != null && e.getLab().getLabId().equals(labId)).toList();
+                if (!labFiltered.isEmpty()) expiring = labFiltered;
+            } else if (user.getDepartment() != null) {
+                Long deptId = user.getDepartment().getDepartmentId();
+                List<Equipment> deptFiltered = expiring.stream().filter(e -> e.getDepartment() != null && e.getDepartment().getDepartmentId().equals(deptId)).toList();
+                if (!deptFiltered.isEmpty()) expiring = deptFiltered;
+            }
+        }
+
+        return expiring.stream().map(this::toResponse).toList();
     }
 
     @Transactional
@@ -167,6 +269,21 @@ public class EquipmentService {
     public EquipmentResponse toResponse(Equipment equipment) {
         if (equipment == null) return null;
 
+        Double utilRate = 0.0;
+        try {
+            utilRate = calculate30DayUtilization(equipment.getEquipmentId());
+        } catch (Exception ignored) {}
+        if (utilRate == null) utilRate = 0.0;
+
+        boolean maintenanceNeeded = utilRate >= 0.60;
+
+        LocalDate exp = equipment.getExpiryDate();
+        Boolean isExpired = exp != null ? exp.isBefore(LocalDate.now()) : false;
+        Long daysUntilExpiry = exp != null ? java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), exp) : null;
+        Boolean needsRenewal = exp != null ? exp.isBefore(LocalDate.now().plusDays(30)) : false;
+
+        String statusStr = equipment.getStatus() != null ? equipment.getStatus().getValue() : "Available";
+
         EquipmentResponse.EquipmentResponseBuilder builder = EquipmentResponse.builder()
                 .equipmentId(equipment.getEquipmentId())
                 .name(equipment.getName())
@@ -175,16 +292,22 @@ public class EquipmentService {
                 .serialNumber(equipment.getSerialNumber())
                 .manufacturer(equipment.getManufacturer())
                 .purchaseDate(equipment.getPurchaseDate())
+                .expiryDate(equipment.getExpiryDate())
                 .purchaseCost(equipment.getPurchaseCost())
                 .amount(equipment.getAmount())
                 .imageUrl(equipment.getImageUrl())
                 .cost(equipment.getCost())
                 .location(equipment.getLocation())
-                .status(equipment.getStatus().getValue())
+                .status(statusStr)
                 .description(equipment.getDescription())
                 .manual(equipment.getManual())
                 .createdAt(equipment.getCreatedAt())
-                .updatedAt(equipment.getUpdatedAt());
+                .updatedAt(equipment.getUpdatedAt())
+                .utilizationRate(utilRate)
+                .maintenanceNeeded(maintenanceNeeded)
+                .isExpired(isExpired)
+                .daysUntilExpiry(daysUntilExpiry)
+                .needsRenewal(needsRenewal);
 
         if (equipment.getInstitution() != null) {
             builder.institutionId(equipment.getInstitution().getInstitutionId())
@@ -202,5 +325,23 @@ public class EquipmentService {
         }
 
         return builder.build();
+    }
+
+    private Double calculate30DayUtilization(Long equipmentId) {
+        LocalDate end = LocalDate.now();
+        LocalDate start = end.minusDays(29);
+        List<UtilizationMetric> metrics = utilizationMetricRepository
+                .findByEquipmentEquipmentIdAndDateBetweenOrderByDateAsc(equipmentId, start, end);
+
+        if (metrics.isEmpty()) return 0.0;
+        double sum = 0.0;
+        int count = 0;
+        for (UtilizationMetric m : metrics) {
+            if (m.getUtilizationRate() != null) {
+                sum += m.getUtilizationRate();
+                count++;
+            }
+        }
+        return count > 0 ? (sum / count) : 0.0;
     }
 }

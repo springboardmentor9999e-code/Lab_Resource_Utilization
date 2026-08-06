@@ -42,4 +42,7 @@ public class DowntimeRecord {
 
     @Column(name = "status", nullable = false, length = 50)
     private String status;
+
+    @Column(name = "quantity")
+    private Integer quantity;
 }

@@ -15,12 +15,14 @@ import com.rems.repository.InstitutionRepository;
 import com.rems.repository.RoleRepository;
 import com.rems.repository.UserRepository;
 import com.rems.security.JwtUtil;
+import com.rems.enums.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -41,6 +43,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final NotificationService notificationService;
+    private final InAppNotificationService inAppNotificationService;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -134,6 +137,12 @@ public class AuthService {
             }
 
             existingUser.getRoles().add(role);
+            if (existingUser.getRoleIds() == null) {
+                existingUser.setRoleIds(new java.util.ArrayList<>());
+            }
+            if (!existingUser.getRoleIds().contains(role.getRoleId())) {
+                existingUser.getRoleIds().add(role.getRoleId());
+            }
             if (initialStatus == UserStatus.PENDING) {
                 existingUser.setStatus(UserStatus.PENDING);
             }
@@ -159,6 +168,10 @@ public class AuthService {
                     .status(initialStatus)
                     .build();
             newUser.getRoles().add(role);
+            if (newUser.getRoleIds() == null) {
+                newUser.setRoleIds(new java.util.ArrayList<>());
+            }
+            newUser.getRoleIds().add(role.getRoleId());
             saved = userRepository.save(newUser);
         }
 
@@ -172,6 +185,7 @@ public class AuthService {
                                 "New " + role.getRoleName() + " Registration Pending",
                                 "User " + saved.getName() + " (" + saved.getEmail() + ") requested approval."
                         );
+                        inAppNotificationService.createNotification(head, "Registration Approval Needed", "User " + saved.getName() + " (" + saved.getEmail() + ") registered as " + role.getRoleName() + " and requires approval.", NotificationType.APPROVAL, saved.getUserId());
                     }
                 }
             } else if (role.getRoleId() == 4 && saved.getInstitution() != null) {
@@ -183,6 +197,7 @@ public class AuthService {
                                 "New Department Head Registration Pending",
                                 "User " + saved.getName() + " (" + saved.getEmail() + ") requested approval."
                         );
+                        inAppNotificationService.createNotification(admin, "Registration Approval Needed", "User " + saved.getName() + " (" + saved.getEmail() + ") registered as Department Head and requires approval.", NotificationType.APPROVAL, saved.getUserId());
                     }
                 }
             }
@@ -253,12 +268,18 @@ public class AuthService {
                 .map(Role::getRoleName)
                 .collect(Collectors.toSet());
 
+        List<Integer> allRoleIds = user.getRoleIds();
+        if (allRoleIds == null || allRoleIds.isEmpty()) {
+            allRoleIds = user.getRoles().stream().map(Role::getRoleId).collect(Collectors.toList());
+        }
+
         UserResponse.UserResponseBuilder builder = UserResponse.builder()
                 .userId(user.getUserId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .status(user.getStatus().name())
+                .roleIds(allRoleIds)
                 .roles(roleNames)
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt());

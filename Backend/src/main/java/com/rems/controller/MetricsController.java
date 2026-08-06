@@ -68,6 +68,23 @@ public class MetricsController {
         return ResponseEntity.ok(metricsService.getQuadrantData(departmentId));
     }
 
+    @GetMapping("/reports/booking-stats")
+    @PreAuthorize("hasAuthority('view_department_utilization') or hasAuthority('view_department_reports') or hasAuthority('view_equipment')")
+    public ResponseEntity<List<MetricsService.BookingStatPoint>> getBookingStats(
+            @RequestParam Long departmentId,
+            @RequestParam(required = false, defaultValue = "30d") String range,
+            @RequestParam(required = false, defaultValue = "All") String category) {
+        return ResponseEntity.ok(metricsService.getBookingStats(departmentId, range, category));
+    }
+
+    @GetMapping("/reports/equipment-status")
+    @PreAuthorize("hasAuthority('view_department_utilization') or hasAuthority('view_department_reports') or hasAuthority('view_equipment')")
+    public ResponseEntity<MetricsService.EquipmentStatusSummary> getEquipmentStatusSummary(
+            @RequestParam Long departmentId,
+            @RequestParam(required = false, defaultValue = "All") String category) {
+        return ResponseEntity.ok(metricsService.getEquipmentStatusSummary(departmentId, category));
+    }
+
     @PostMapping("/admin/metrics/trigger-batch")
     @PreAuthorize("hasAuthority('manage_system_settings') or hasAuthority('manage_equipment') or hasAuthority('approve_bookings')")
     public ResponseEntity<Map<String, String>> triggerBatch(

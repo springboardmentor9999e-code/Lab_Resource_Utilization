@@ -13,6 +13,7 @@ import com.rems.repository.EquipmentRepository;
 import com.rems.repository.UserRepository;
 import com.rems.repository.WaitlistRepository;
 import com.rems.entity.WaitlistEntry;
+import com.rems.enums.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class BookingService {
     private final WaitlistService waitlistService;
     private final WaitlistRepository waitlistRepository;
     private final NotificationService notificationService;
+    private final InAppNotificationService inAppNotificationService;
 
     @Transactional
     public BookingResponse createBooking(BookingRequest request, String userEmail) {
@@ -78,6 +80,7 @@ public class BookingService {
 
         Booking savedBooking = bookingRepository.save(booking);
         notificationService.sendBookingConfirmation(user, savedBooking);
+        inAppNotificationService.createNotification(user, "Booking Requested", "Your booking request for " + equipment.getName() + " is pending approval.", NotificationType.BOOKING, savedBooking.getBookingId());
 
         // Notify department lab managers of the new approval request
         if (equipment.getDepartment() != null) {
@@ -88,6 +91,7 @@ public class BookingService {
                         "New Booking Request: " + equipment.getName(),
                         "Student " + user.getName() + " requested booking for asset ID " + equipment.getEquipmentId()
                 );
+                inAppNotificationService.createNotification(staff, "New Booking Approval Request", "Student " + user.getName() + " requested booking for asset " + equipment.getName(), NotificationType.APPROVAL, savedBooking.getBookingId());
             }
         }
 
@@ -149,6 +153,7 @@ public class BookingService {
 
         Booking savedApproved = bookingRepository.save(booking);
         notificationService.sendBookingConfirmation(booking.getUser(), savedApproved);
+        inAppNotificationService.createNotification(booking.getUser(), "Booking Approved", "Your booking request for " + equipment.getName() + " has been approved!", NotificationType.BOOKING, savedApproved.getBookingId());
         return toResponse(savedApproved);
     }
 
@@ -172,7 +177,9 @@ public class BookingService {
         booking.setApprovalRemarks(remarks);
         booking.setApprovedAt(Instant.now());
 
-        return toResponse(bookingRepository.save(booking));
+        Booking savedRejected = bookingRepository.save(booking);
+        inAppNotificationService.createNotification(booking.getUser(), "Booking Rejected", "Your booking request for " + booking.getEquipment().getName() + " was rejected. Reason: " + (remarks != null ? remarks : "N/A"), NotificationType.BOOKING, savedRejected.getBookingId());
+        return toResponse(savedRejected);
     }
 
     @Transactional
@@ -229,6 +236,7 @@ public class BookingService {
 
         Booking savedReturn = bookingRepository.save(booking);
         notificationService.sendReturnConfirmation(booking.getUser(), savedReturn);
+        inAppNotificationService.createNotification(booking.getUser(), "Return Confirmed", "Your return for " + equipment.getName() + " has been approved.", NotificationType.BOOKING, savedReturn.getBookingId());
         return toResponse(savedReturn);
     }
 

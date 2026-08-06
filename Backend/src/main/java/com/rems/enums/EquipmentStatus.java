@@ -20,11 +20,20 @@ public enum EquipmentStatus {
     }
 
     public static EquipmentStatus fromValue(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return AVAILABLE;
+        }
         for (EquipmentStatus status : EquipmentStatus.values()) {
-            if (status.value.equalsIgnoreCase(value)) {
+            if (status.value.equalsIgnoreCase(value) || status.name().equalsIgnoreCase(value)) {
                 return status;
             }
         }
-        throw new IllegalArgumentException("Unknown status: " + value);
+        if ("Operational".equalsIgnoreCase(value)) {
+            return AVAILABLE;
+        }
+        if ("Under Maintenance".equalsIgnoreCase(value)) {
+            return MAINTENANCE;
+        }
+        return AVAILABLE;
     }
 }

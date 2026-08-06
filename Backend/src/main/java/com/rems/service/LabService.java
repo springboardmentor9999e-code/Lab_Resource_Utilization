@@ -1,5 +1,8 @@
 package com.rems.service;
 
+import com.rems.entity.Equipment;
+import com.rems.enums.EquipmentStatus;
+import com.rems.repository.EquipmentRepository;
 import com.rems.dto.LabRequest;
 import com.rems.dto.LabResponse;
 import com.rems.entity.Department;
@@ -21,6 +24,7 @@ public class LabService {
 
     private final LabRepository labRepository;
     private final UserRepository userRepository;
+    private final EquipmentRepository equipmentRepository;
 
     @Transactional
     public LabResponse createLab(LabRequest request, String headEmail) {
@@ -74,13 +78,22 @@ public class LabService {
 
     public LabResponse toResponse(Lab lab) {
         if (lab == null) return null;
+
+        List<Equipment> eqList = equipmentRepository.findByLabLabId(lab.getLabId());
+        long available = eqList.stream().filter(e -> e.getStatus() == EquipmentStatus.AVAILABLE).count();
+        long maintenance = eqList.stream().filter(e -> e.getStatus() == EquipmentStatus.MAINTENANCE).count();
+        long booked = eqList.stream().filter(e -> e.getStatus() == EquipmentStatus.BOOKED).count();
+
         return LabResponse.builder()
                 .labId(lab.getLabId())
                 .name(lab.getName())
-                .departmentId(lab.getDepartment().getDepartmentId())
-                .departmentName(lab.getDepartment().getName())
+                .departmentId(lab.getDepartment() != null ? lab.getDepartment().getDepartmentId() : null)
+                .departmentName(lab.getDepartment() != null ? lab.getDepartment().getName() : null)
                 .createdAt(lab.getCreatedAt())
                 .updatedAt(lab.getUpdatedAt())
+                .availableCount(available)
+                .maintenanceCount(maintenance)
+                .bookedCount(booked)
                 .build();
     }
 }
