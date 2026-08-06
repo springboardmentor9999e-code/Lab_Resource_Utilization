@@ -74,6 +74,26 @@ public class EquipmentServiceImpl implements EquipmentService {
         existingEquipment.setDocumentUrl(equipment.getDocumentUrl());
         existingEquipment.setCostPerHour(equipment.getCostPerHour());
 
+        existingEquipment.setCalibrationFrequency(equipment.getCalibrationFrequency());
+        existingEquipment.setLastCalibrationDate(equipment.getLastCalibrationDate());
+        existingEquipment.setNextCalibrationDate(equipment.getNextCalibrationDate());
+        existingEquipment.setCalibrationStatus(equipment.getCalibrationStatus());
+
+        existingEquipment.setLicenseNumber(equipment.getLicenseNumber());
+        existingEquipment.setLicenseIssueDate(equipment.getLicenseIssueDate());
+        existingEquipment.setLicenseExpiryDate(equipment.getLicenseExpiryDate());
+        existingEquipment.setLicenseRenewalFrequency(equipment.getLicenseRenewalFrequency());
+        existingEquipment.setLicenseRenewalDate(equipment.getLicenseRenewalDate());
+
+        existingEquipment.setCertificateNumber(equipment.getCertificateNumber());
+        existingEquipment.setCertificateIssueDate(equipment.getCertificateIssueDate());
+        existingEquipment.setCertificateExpiryDate(equipment.getCertificateExpiryDate());
+        existingEquipment.setCertificateRenewalFrequency(equipment.getCertificateRenewalFrequency());
+        existingEquipment.setCertificateRenewalDate(equipment.getCertificateRenewalDate());
+
+        existingEquipment.setLicenseStatus(equipment.getLicenseStatus());
+        existingEquipment.setCertificateStatus(equipment.getCertificateStatus());
+
         if (equipment.getLaboratory() != null) {
 
             Laboratory laboratory = laboratoryRepository.findById(

@@ -60,12 +60,50 @@ function StudentDashboard() {
 
     useEffect(() => {
         loadDashboardData();
+        const intervalId = setInterval(loadDashboardData, 5000);
+        return () => clearInterval(intervalId);
     }, []);
 
-    const getBadgeBg = (status) => {
-        if ("Approved".equalsIgnoreCase(status) || "Confirmed".equalsIgnoreCase(status) || "In Use".equalsIgnoreCase(status)) return "success";
-        if ("Waitlisted".equalsIgnoreCase(status) || "Pending Approval".equalsIgnoreCase(status) || "Pending".equalsIgnoreCase(status)) return "warning";
-        return "danger";
+    const getStatusColorStyle = (status) => {
+        if (!status) return { backgroundColor: "#6c757d", color: "#fff" };
+        const s = status.toUpperCase();
+        if (s.includes("AVAILABLE") || s === "WORKING") {
+            return { backgroundColor: "#28a745", color: "#fff" }; // Green
+        }
+        if (s.includes("PENDING APPROVAL") || s === "PENDING") {
+            return { backgroundColor: "#fd7e14", color: "#fff" }; // Orange
+        }
+        if (s === "CONFIRMED" || s === "APPROVED") {
+            return { backgroundColor: "#007bff", color: "#fff" }; // Blue
+        }
+        if (s === "BOOKED" || s === "RESERVED") {
+            return { backgroundColor: "#6f42c1", color: "#fff" }; // Purple
+        }
+        if (s.includes("IN USE") || s === "ACTIVE" || s === "USING") {
+            return { backgroundColor: "#17a2b8", color: "#fff" }; // Cyan
+        }
+        if (s === "COMPLETED") {
+            return { backgroundColor: "#1e4620", color: "#fff" }; // Dark Green
+        }
+        if (s === "CANCELLED" || s === "CANCELED") {
+            return { backgroundColor: "#dc3545", color: "#fff" }; // Red
+        }
+        if (s === "REJECTED") {
+            return { backgroundColor: "#8b0000", color: "#fff" }; // Dark Red
+        }
+        if (s === "EXPIRED") {
+            return { backgroundColor: "#6c757d", color: "#fff" }; // Gray
+        }
+        if (s.includes("UNDER MAINTENANCE") || s === "RESOLVING") {
+            return { backgroundColor: "#ffc107", color: "#000" }; // Yellow
+        }
+        if (s.includes("OUT OF SERVICE")) {
+            return { backgroundColor: "#000000", color: "#fff" }; // Black
+        }
+        if (s === "RETIRED") {
+            return { backgroundColor: "#8B4513", color: "#fff" }; // Brown
+        }
+        return { backgroundColor: "#6c757d", color: "#fff" }; // Default Gray
     };
 
     if (loading || !realtimeData) {
@@ -298,7 +336,7 @@ function StudentDashboard() {
                                         <td>{b.bookingDate}</td>
                                         <td>{b.startTime} - {b.endTime}</td>
                                         <td>
-                                            <Badge bg={getBadgeBg(b.status)}>{b.status}</Badge>
+                                            <Badge style={getStatusColorStyle(b.status)} className="p-2">{b.status}</Badge>
                                         </td>
                                     </tr>
                                 ))}

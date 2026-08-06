@@ -115,6 +115,10 @@ public class SecurityConfig {
                                 "STUDENT"
                         )
 
+                        .requestMatchers(HttpMethod.POST, "/api/equipment/*/calibration/complete").hasAuthority("LAB_TECHNICIAN")
+                        .requestMatchers(HttpMethod.POST, "/api/equipment/*/license/renew").hasAuthority("LAB_TECHNICIAN")
+                        .requestMatchers(HttpMethod.POST, "/api/equipment/*/certificate/renew").hasAuthority("LAB_TECHNICIAN")
+
                         .requestMatchers(HttpMethod.POST, "/api/equipment", "/api/equipment/**")
                         .hasAnyAuthority(
                                 "SYSTEM_ADMIN",

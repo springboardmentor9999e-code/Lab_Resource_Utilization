@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Row, Col, Card, Button, Table, Badge } from "react-bootstrap";
+import { Row, Col, Card, Button, Table } from "react-bootstrap";
 import {
     FaLaptop,
     FaClipboardList,
-    FaUniversity,
     FaTools,
     FaCheckCircle,
     FaChartLine,
@@ -21,6 +20,7 @@ import {
 } from "chart.js";
 import axios from "axios";
 import DashboardLayout from "./DashboardLayout";
+import ConfirmationModal from "../common/ConfirmationModal";
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -29,6 +29,22 @@ function LabManagerDashboard() {
     const [realtimeData, setRealtimeData] = useState(null);
     const [pendingBookingsList, setPendingBookingsList] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Confirmation Modal States
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [confirmConfig, setConfirmConfig] = useState({ title: "", message: "", action: null });
+
+    const triggerConfirm = (title, message, callback) => {
+        setConfirmConfig({
+            title,
+            message,
+            action: () => {
+                callback();
+                setShowConfirm(false);
+            }
+        });
+        setShowConfirm(true);
+    };
 
     const fetchData = async () => {
         try {
@@ -54,22 +70,26 @@ function LabManagerDashboard() {
 
     useEffect(() => {
         fetchData();
+        const intervalId = setInterval(fetchData, 5000);
+        return () => clearInterval(intervalId);
     }, []);
 
     const handleAction = async (booking, action) => {
-        try {
-            const token = localStorage.getItem("token");
-            const headers = { Authorization: `Bearer ${token}` };
-            const updatedBooking = { ...booking, status: action };
-            
-            await axios.put(`http://localhost:8080/api/bookings/${booking.bookingId}`, updatedBooking, { headers });
-            
-            alert(`Booking successfully ${action}`);
-            fetchData();
-        } catch (error) {
-            console.error("Error updating booking status", error);
-            alert("Failed to update booking status.");
-        }
+        triggerConfirm("Confirm Booking Approval Status Update", `Are you sure you want to transition this booking to "${action}"?`, async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { Authorization: `Bearer ${token}` };
+                const updatedBooking = { ...booking, status: action };
+                
+                await axios.put(`http://localhost:8080/api/bookings/${booking.bookingId}`, updatedBooking, { headers });
+                
+                alert(`Booking successfully ${action}`);
+                fetchData();
+            } catch (error) {
+                console.error("Error updating booking status", error);
+                alert(error.response?.data?.message || "Failed to update booking status.");
+            }
+        });
     };
 
     if (loading || !realtimeData) {
@@ -83,13 +103,13 @@ function LabManagerDashboard() {
     }
 
     const chartData = {
-        labels: (realtimeData.equipmentUtilization || []).map(item => item.name),
+        labels: (realtimeData.equipmentMaintenanceFrequency || []).map(item => item.name),
         datasets: [
             {
-                label: "Utilization Rate (%)",
-                data: (realtimeData.equipmentUtilization || []).map(item => item.utilization),
-                backgroundColor: "rgba(75, 192, 192, 0.6)",
-                borderColor: "rgba(75, 192, 192, 1)",
+                label: "Maintenance Reports",
+                data: (realtimeData.equipmentMaintenanceFrequency || []).map(item => item.value),
+                backgroundColor: "rgba(54, 162, 235, 0.6)",
+                borderColor: "rgba(54, 162, 235, 1)",
                 borderWidth: 1,
                 borderRadius: 5
             }
@@ -102,75 +122,36 @@ function LabManagerDashboard() {
                 <Card.Body>
                     <h3>Welcome, {localStorage.getItem("fullName")} 👋</h3>
                     <p className="text-muted mb-0">
-                        Monitor laboratories, manage equipment status, and coordinate reservation approvals.
+                        Oversee laboratory equipment resources, bookings, usage analytics, and maintenance requests.
                     </p>
                 </Card.Body>
             </Card>
 
             <Row className="g-4 mb-4">
-                <Col md={3}>
-                    <Card className="shadow text-center h-100">
-                        <Card.Body>
-                            <FaLaptop size={36} className="text-primary mb-2" />
-                            <h3>{realtimeData.totalEquipment}</h3>
-                            <p className="mb-0 text-muted small fw-bold">Total Equipment</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={3}>
-                    <Card className="shadow text-center h-100">
-                        <Card.Body>
-                            <FaCheckCircle size={36} className="text-success mb-2" />
-                            <h3>{realtimeData.availableEquipment}</h3>
-                            <p className="mb-0 text-muted small fw-bold">Available Equipment</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={3}>
-                    <Card className="shadow text-center h-100">
-                        <Card.Body>
-                            <FaClipboardList size={36} className="text-info mb-2" />
-                            <h3>{realtimeData.activeBookings}</h3>
-                            <p className="mb-0 text-muted small fw-bold">Active Bookings (In Use)</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={3}>
-                    <Card className="shadow text-center h-100">
-                        <Card.Body>
-                            <FaTools size={36} className="text-danger mb-2" />
-                            <h3>{realtimeData.equipmentUnderMaintenance}</h3>
-                            <p className="mb-0 text-muted small fw-bold">Under Maintenance</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-
-            <Row className="g-4 mb-4">
                 <Col md={4}>
-                    <Card className="shadow text-center h-100 bg-light">
-                        <Card.Body>
-                            <FaClipboardList size={36} className="text-warning mb-2" />
-                            <h3>{realtimeData.pendingBookings}</h3>
-                            <p className="mb-0 text-muted small fw-bold">Pending Bookings</p>
+                    <Card className="shadow text-center h-100 border-0">
+                        <Card.Body className="py-4">
+                            <FaLaptop size={40} className="text-primary mb-3" />
+                            <h3 className="fw-bold">{realtimeData.totalEquipmentRegistered}</h3>
+                            <p className="mb-0 text-muted fw-semibold">Total Instruments</p>
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={4}>
-                    <Card className="shadow text-center h-100 bg-light">
-                        <Card.Body>
-                            <FaChartLine size={36} className="text-info mb-2" />
-                            <h3>{realtimeData.utilizationPercentage}%</h3>
-                            <p className="mb-0 text-muted small fw-bold">Utilization Percentage</p>
+                    <Card className="shadow text-center h-100 border-0">
+                        <Card.Body className="py-4">
+                            <FaClipboardList size={40} className="text-warning mb-3" />
+                            <h3 className="fw-bold">{realtimeData.pendingMaintenanceRequests}</h3>
+                            <p className="mb-0 text-muted fw-semibold">Active Issues</p>
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={4}>
-                    <Card className="shadow text-center h-100 bg-light">
-                        <Card.Body>
-                            <FaCalendarDay size={36} className="text-primary mb-2" />
-                            <h3>{realtimeData.todayBookings}</h3>
-                            <p className="mb-0 text-muted small fw-bold">Today's Bookings</p>
+                    <Card className="shadow text-center h-100 border-0">
+                        <Card.Body className="py-4">
+                            <FaCalendarDay size={40} className="text-success mb-3" />
+                            <h3 className="fw-bold">{realtimeData.scheduledMaintenance}</h3>
+                            <p className="mb-0 text-muted fw-semibold">Scheduled PMs</p>
                         </Card.Body>
                     </Card>
                 </Col>
@@ -178,13 +159,14 @@ function LabManagerDashboard() {
 
             <Row className="g-4 mb-4">
                 <Col lg={12}>
-                    <Card className="shadow">
-                        <Card.Header className="bg-transparent border-0 py-3">
-                            <h5 className="mb-0 fw-bold">Equipment Utilization Rate</h5>
+                    <Card className="shadow border-0">
+                        <Card.Header className="bg-transparent border-0 py-3 d-flex align-items-center gap-2">
+                            <FaChartLine className="text-primary" />
+                            <h5 className="mb-0 fw-bold">Equipment Maintenance Issue Frequency</h5>
                         </Card.Header>
                         <Card.Body>
-                            {(realtimeData.equipmentUtilization || []).length === 0 ? (
-                                <p className="text-center text-muted py-5 mb-0">No equipment utilization records available.</p>
+                            {(realtimeData.equipmentMaintenanceFrequency || []).length === 0 ? (
+                                <p className="text-center text-muted py-5 mb-0">No maintenance tickets logged yet.</p>
                             ) : (
                                 <div style={{ width: "100%", height: "260px" }}>
                                     <Bar data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />
@@ -251,6 +233,15 @@ function LabManagerDashboard() {
                     )}
                 </Card.Body>
             </Card>
+
+            {/* Reusable Professional Confirmation Modal */}
+            <ConfirmationModal
+                show={showConfirm}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                onConfirm={confirmConfig.action}
+                onCancel={() => setShowConfirm(false)}
+            />
         </DashboardLayout>
     );
 }

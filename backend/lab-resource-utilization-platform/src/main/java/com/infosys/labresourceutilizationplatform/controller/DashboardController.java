@@ -177,7 +177,7 @@ public class DashboardController {
             data.put("totalUsers", allUsers.size());
             
             long activeBookings = allBookings.stream()
-                    .filter(b -> "In Use".equalsIgnoreCase(b.getStatus()) || "Confirmed".equalsIgnoreCase(b.getStatus()) || "Approved".equalsIgnoreCase(b.getStatus()))
+                    .filter(b -> "In Use".equalsIgnoreCase(b.getStatus()) || "Active".equalsIgnoreCase(b.getStatus()) || "Confirmed".equalsIgnoreCase(b.getStatus()) || "Approved".equalsIgnoreCase(b.getStatus()))
                     .count();
             data.put("activeBookings", activeBookings);
 
@@ -188,19 +188,121 @@ public class DashboardController {
 
             double totalHours = 0.0;
             double totalCost = 0.0;
+            long interInstituteCount = 0;
+            long crossInstUtilization = 0;
+
             for (Booking b : allBookings) {
-                if ("Completed".equalsIgnoreCase(b.getStatus()) || "In Use".equalsIgnoreCase(b.getStatus())) {
+                boolean isCompletedOrActive = "Completed".equalsIgnoreCase(b.getStatus()) 
+                        || "In Use".equalsIgnoreCase(b.getStatus()) 
+                        || "Active".equalsIgnoreCase(b.getStatus())
+                        || "Approved".equalsIgnoreCase(b.getStatus())
+                        || "Confirmed".equalsIgnoreCase(b.getStatus());
+
+                if (isCompletedOrActive) {
                     double duration = b.getDuration() != null ? b.getDuration() : 0.0;
                     totalHours += duration;
-                    double costPer = b.getEquipment() != null && b.getEquipment().getCostPerHour() != null ? b.getEquipment().getCostPerHour() : 0.0;
-                    totalCost += duration * costPer;
+
+                    if (b.getUser() != null && b.getEquipment() != null) {
+                        if (b.getEquipment().getLaboratory() != null &&
+                            b.getEquipment().getLaboratory().getDepartment() != null &&
+                            b.getEquipment().getLaboratory().getDepartment().getInstitution() != null) {
+                            Long eqInstId = b.getEquipment().getLaboratory().getDepartment().getInstitution().getInstitutionId();
+                            Integer userInstId = b.getUser().getInstitutionId();
+                            if (userInstId == null || !eqInstId.equals(Long.valueOf(userInstId))) {
+                                interInstituteCount++;
+                                if ("Completed".equalsIgnoreCase(b.getStatus()) || "In Use".equalsIgnoreCase(b.getStatus()) || "Active".equalsIgnoreCase(b.getStatus())) {
+                                    crossInstUtilization++;
+                                }
+                                double costPer = b.getEquipment().getCostPerHour() != null ? b.getEquipment().getCostPerHour() : 0.0;
+                                totalCost += duration * costPer;
+                            }
+                        }
+                    }
                 }
             }
+
             double avgUtilization = allEquipment.isEmpty() ? 0.0 : (totalHours / (allEquipment.size() * 720.0)) * 100.0;
             if (avgUtilization > 100.0) avgUtilization = 100.0;
 
             data.put("overallUtilization", Math.round(avgUtilization * 100.0) / 100.0);
             data.put("overallUtilizationCost", Math.round(totalCost * 100.0) / 100.0);
+
+            long totalSharedEquipment = allBookings.stream()
+                    .filter(b -> {
+                        if (b.getUser() == null || b.getEquipment() == null) return false;
+                        if (b.getEquipment().getLaboratory() == null ||
+                            b.getEquipment().getLaboratory().getDepartment() == null ||
+                            b.getEquipment().getLaboratory().getDepartment().getInstitution() == null) return false;
+                        Long eqInstId = b.getEquipment().getLaboratory().getDepartment().getInstitution().getInstitutionId();
+                        Integer userInstId = b.getUser().getInstitutionId();
+                        return userInstId == null || !eqInstId.equals(Long.valueOf(userInstId));
+                    })
+                    .map(b -> b.getEquipment().getId())
+                    .distinct()
+                    .count();
+
+            data.put("totalSharedEquipment", totalSharedEquipment);
+            data.put("totalInterInstituteRequests", interInstituteCount);
+            data.put("crossInstituteUtilization", crossInstUtilization);
+
+            // Chart: Top Shared Equipment
+            List<Map<String, Object>> topSharedEquip = allBookings.stream()
+                    .filter(b -> {
+                        if (b.getUser() == null || b.getEquipment() == null) return false;
+                        if (b.getEquipment().getLaboratory() == null ||
+                            b.getEquipment().getLaboratory().getDepartment() == null ||
+                            b.getEquipment().getLaboratory().getDepartment().getInstitution() == null) return false;
+                        Long eqInstId = b.getEquipment().getLaboratory().getDepartment().getInstitution().getInstitutionId();
+                        Integer userInstId = b.getUser().getInstitutionId();
+                        return userInstId == null || !eqInstId.equals(Long.valueOf(userInstId));
+                    })
+                    .collect(Collectors.groupingBy(b -> b.getEquipment().getEquipmentName(), Collectors.counting()))
+                    .entrySet().stream()
+                    .sorted((e1, e2) -> Long.compare(e2.getValue(), e1.getValue()))
+                    .limit(5)
+                    .map(e -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("name", e.getKey());
+                        map.put("value", e.getValue());
+                        return map;
+                    })
+                    .collect(Collectors.toList());
+            data.put("topSharedEquipment", topSharedEquip);
+
+            // Chart: Top Sharing Institutes
+            Map<String, Long> instSharingCount = new HashMap<>();
+            for (Booking b : allBookings) {
+                if (b.getUser() != null && b.getEquipment() != null) {
+                    if (b.getEquipment().getLaboratory() != null &&
+                        b.getEquipment().getLaboratory().getDepartment() != null &&
+                        b.getEquipment().getLaboratory().getDepartment().getInstitution() != null) {
+                        Long eqInstId = b.getEquipment().getLaboratory().getDepartment().getInstitution().getInstitutionId();
+                        Integer userInstId = b.getUser().getInstitutionId();
+                        if (userInstId == null || !eqInstId.equals(Long.valueOf(userInstId))) {
+                            String eqInstName = b.getEquipment().getLaboratory().getDepartment().getInstitution().getInstitutionName();
+                            instSharingCount.put(eqInstName, instSharingCount.getOrDefault(eqInstName, 0L) + 1);
+                            if (b.getUser().getInstitutionId() != null) {
+                                Institution userInst = institutionRepository.findById(Long.valueOf(b.getUser().getInstitutionId())).orElse(null);
+                                if (userInst != null) {
+                                    String userInstName = userInst.getInstitutionName();
+                                    instSharingCount.put(userInstName, instSharingCount.getOrDefault(userInstName, 0L) + 1);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            List<Map<String, Object>> topInstitutes = instSharingCount.entrySet().stream()
+                    .sorted((e1, e2) -> Long.compare(e2.getValue(), e1.getValue()))
+                    .limit(5)
+                    .map(e -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("name", e.getKey());
+                        map.put("value", e.getValue());
+                        return map;
+                    })
+                    .collect(Collectors.toList());
+            data.put("topInstitutesByResourceSharing", topInstitutes);
 
             // Chart: Institution Comparison
             List<Map<String, Object>> instComp = institutionRepository.findAll().stream().map(inst -> {
@@ -240,8 +342,19 @@ public class DashboardController {
                     .collect(Collectors.toList());
             List<Long> equipIds = instEquip.stream().map(Equipment::getId).collect(Collectors.toList());
 
-            List<Booking> instBookings = allBookings.stream()
+            List<Booking> incomingBookings = allBookings.stream()
                     .filter(b -> b.getEquipment() != null && equipIds.contains(b.getEquipment().getId()))
+                    .collect(Collectors.toList());
+
+            List<Booking> outgoingBookings = allBookings.stream()
+                    .filter(b -> b.getUser() != null && b.getUser().getInstitutionId() != null 
+                            && b.getUser().getInstitutionId().equals(user.getInstitutionId())
+                            && (b.getEquipment() == null || !equipIds.contains(b.getEquipment().getId())))
+                    .collect(Collectors.toList());
+
+            List<Booking> myAllRelatedBookings = allBookings.stream()
+                    .filter(b -> (b.getEquipment() != null && equipIds.contains(b.getEquipment().getId())) 
+                            || (b.getUser() != null && b.getUser().getInstitutionId() != null && b.getUser().getInstitutionId().equals(user.getInstitutionId())))
                     .collect(Collectors.toList());
 
             List<User> instUsers = allUsers.stream()
@@ -256,8 +369,8 @@ public class DashboardController {
             data.put("totalActiveUsers", instUsers.size() - pendingApprovals);
             data.put("pendingUserApprovals", pendingApprovals);
 
-            long activeBookings = instBookings.stream()
-                    .filter(b -> "In Use".equalsIgnoreCase(b.getStatus()) || "Confirmed".equalsIgnoreCase(b.getStatus()) || "Approved".equalsIgnoreCase(b.getStatus()))
+            long activeBookings = incomingBookings.stream()
+                    .filter(b -> "In Use".equalsIgnoreCase(b.getStatus()) || "Active".equalsIgnoreCase(b.getStatus()) || "Confirmed".equalsIgnoreCase(b.getStatus()) || "Approved".equalsIgnoreCase(b.getStatus()))
                     .count();
             data.put("activeBookings", activeBookings);
 
@@ -266,12 +379,18 @@ public class DashboardController {
 
             double totalHours = 0.0;
             double totalCost = 0.0;
-            for (Booking b : instBookings) {
-                if ("Completed".equalsIgnoreCase(b.getStatus()) || "In Use".equalsIgnoreCase(b.getStatus())) {
+            for (Booking b : incomingBookings) {
+                if ("Completed".equalsIgnoreCase(b.getStatus()) || "In Use".equalsIgnoreCase(b.getStatus()) || "Active".equalsIgnoreCase(b.getStatus())) {
                     double duration = b.getDuration() != null ? b.getDuration() : 0.0;
                     totalHours += duration;
-                    double costPer = b.getEquipment() != null && b.getEquipment().getCostPerHour() != null ? b.getEquipment().getCostPerHour() : 0.0;
-                    totalCost += duration * costPer;
+                    
+                    if (b.getUser() != null) {
+                        Integer userInstId = b.getUser().getInstitutionId();
+                        if (userInstId == null || !instId.equals(Long.valueOf(userInstId))) {
+                            double costPer = b.getEquipment() != null && b.getEquipment().getCostPerHour() != null ? b.getEquipment().getCostPerHour() : 0.0;
+                            totalCost += duration * costPer;
+                        }
+                    }
                 }
             }
             double instUtilization = instEquip.isEmpty() ? 0.0 : (totalHours / (instEquip.size() * 720.0)) * 100.0;
@@ -279,6 +398,90 @@ public class DashboardController {
 
             data.put("totalUtilizationCost", Math.round(totalCost * 100.0) / 100.0);
             data.put("institutionUtilizationPercentage", Math.round(instUtilization * 100.0) / 100.0);
+
+            // Inter-Institute Sharing metrics
+            long incomingRequestsCount = incomingBookings.stream()
+                    .filter(b -> b.getUser() != null && (b.getUser().getInstitutionId() == null || !Long.valueOf(b.getUser().getInstitutionId()).equals(instId)))
+                    .count();
+            long outgoingRequestsCount = outgoingBookings.size();
+            long pendingSharingApprovals = incomingBookings.stream()
+                    .filter(b -> b.getUser() != null && (b.getUser().getInstitutionId() == null || !Long.valueOf(b.getUser().getInstitutionId()).equals(instId)))
+                    .filter(b -> "Pending".equalsIgnoreCase(b.getStatus()))
+                    .count();
+            long approvedSharingRequests = incomingBookings.stream()
+                    .filter(b -> b.getUser() != null && (b.getUser().getInstitutionId() == null || !Long.valueOf(b.getUser().getInstitutionId()).equals(instId)))
+                    .filter(b -> "Approved".equalsIgnoreCase(b.getStatus()) || "Active".equalsIgnoreCase(b.getStatus()) || "Completed".equalsIgnoreCase(b.getStatus()))
+                    .count();
+            long rejectedSharingRequests = incomingBookings.stream()
+                    .filter(b -> b.getUser() != null && (b.getUser().getInstitutionId() == null || !Long.valueOf(b.getUser().getInstitutionId()).equals(instId)))
+                    .filter(b -> "Rejected".equalsIgnoreCase(b.getStatus()))
+                    .count();
+            double externalRevenue = incomingBookings.stream()
+                    .filter(b -> b.getUser() != null && (b.getUser().getInstitutionId() == null || !Long.valueOf(b.getUser().getInstitutionId()).equals(instId)))
+                    .filter(b -> "Completed".equalsIgnoreCase(b.getStatus()))
+                    .mapToDouble(b -> b.getUtilizationCost() != null ? b.getUtilizationCost() : 0.0)
+                    .sum();
+            long crossInstituteUtilizationCount = myAllRelatedBookings.stream()
+                    .filter(b -> b.getUser() != null && b.getEquipment() != null)
+                    .filter(b -> {
+                        Long eqId = b.getEquipment().getLaboratory().getDepartment().getInstitution().getInstitutionId();
+                        Integer userIdVal = b.getUser().getInstitutionId();
+                        return userIdVal == null || !eqId.equals(Long.valueOf(userIdVal));
+                    })
+                    .filter(b -> "Completed".equalsIgnoreCase(b.getStatus()) || "In Use".equalsIgnoreCase(b.getStatus()) || "Active".equalsIgnoreCase(b.getStatus()))
+                    .count();
+            double internalEquipmentUsage = incomingBookings.stream()
+                    .filter(b -> b.getUser() != null && b.getUser().getInstitutionId() != null && Long.valueOf(b.getUser().getInstitutionId()).equals(instId))
+                    .filter(b -> "Completed".equalsIgnoreCase(b.getStatus()))
+                    .mapToDouble(b -> b.getDuration() != null ? b.getDuration() : 0.0)
+                    .sum();
+            double externalEquipmentUsage = incomingBookings.stream()
+                    .filter(b -> b.getUser() != null && (b.getUser().getInstitutionId() == null || !Long.valueOf(b.getUser().getInstitutionId()).equals(instId)))
+                    .filter(b -> "Completed".equalsIgnoreCase(b.getStatus()))
+                    .mapToDouble(b -> b.getDuration() != null ? b.getDuration() : 0.0)
+                    .sum();
+            long totalInternalBookings = incomingBookings.stream()
+                    .filter(b -> b.getUser() != null && b.getUser().getInstitutionId() != null && Long.valueOf(b.getUser().getInstitutionId()).equals(instId))
+                    .count();
+            long totalExternalBookings = incomingBookings.stream()
+                    .filter(b -> b.getUser() != null && (b.getUser().getInstitutionId() == null || !Long.valueOf(b.getUser().getInstitutionId()).equals(instId)))
+                    .count();
+
+            Map<String, Double> instRevenueMap = new HashMap<>();
+            incomingBookings.stream()
+                    .filter(b -> b.getUser() != null && (b.getUser().getInstitutionId() == null || !Long.valueOf(b.getUser().getInstitutionId()).equals(instId)))
+                    .filter(b -> "Completed".equalsIgnoreCase(b.getStatus()))
+                    .forEach(b -> {
+                        if (b.getUser().getInstitutionId() != null) {
+                            Institution reqInst = institutionRepository.findById(Long.valueOf(b.getUser().getInstitutionId())).orElse(null);
+                            if (reqInst != null) {
+                                String name = reqInst.getInstitutionName();
+                                double costVal = b.getUtilizationCost() != null ? b.getUtilizationCost() : 0.0;
+                                instRevenueMap.put(name, instRevenueMap.getOrDefault(name, 0.0) + costVal);
+                            }
+                        }
+                    });
+            List<Map<String, Object>> instWiseRev = instRevenueMap.entrySet().stream()
+                    .map(e -> {
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("name", e.getKey());
+                        m.put("value", Math.round(e.getValue() * 100.0) / 100.0);
+                        return m;
+                    }).collect(Collectors.toList());
+
+            data.put("incomingRequestsCount", incomingRequestsCount);
+            data.put("outgoingRequestsCount", outgoingRequestsCount);
+            data.put("pendingSharingApprovals", pendingSharingApprovals);
+            data.put("approvedSharingRequests", approvedSharingRequests);
+            data.put("rejectedSharingRequests", rejectedSharingRequests);
+            data.put("externalRevenue", Math.round(externalRevenue * 100.0) / 100.0);
+            data.put("crossInstituteUtilizationCount", crossInstituteUtilizationCount);
+            data.put("internalEquipmentUsage", Math.round(internalEquipmentUsage * 100.0) / 100.0);
+            data.put("externalEquipmentUsage", Math.round(externalEquipmentUsage * 100.0) / 100.0);
+            data.put("totalInternalBookings", totalInternalBookings);
+            data.put("totalExternalBookings", totalExternalBookings);
+            data.put("externalUtilizationRevenue", Math.round(externalRevenue * 100.0) / 100.0);
+            data.put("institutionWiseUtilizationRevenue", instWiseRev);
 
             // Chart: Department Comparison
             List<Map<String, Object>> deptComp = instDepts.stream().map(dept -> {
@@ -296,8 +499,8 @@ public class DashboardController {
             List<Map<String, Object>> equipUtil = instEquip.stream().limit(10).map(eq -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("name", eq.getEquipmentName());
-                double eqHours = instBookings.stream()
-                        .filter(b -> b.getEquipment() != null && b.getEquipment().getId().equals(eq.getId()) && ("Completed".equalsIgnoreCase(b.getStatus()) || "In Use".equalsIgnoreCase(b.getStatus())))
+                double eqHours = incomingBookings.stream()
+                        .filter(b -> b.getEquipment() != null && b.getEquipment().getId().equals(eq.getId()) && ("Completed".equalsIgnoreCase(b.getStatus()) || "In Use".equalsIgnoreCase(b.getStatus()) || "Active".equalsIgnoreCase(b.getStatus())))
                         .mapToDouble(b -> b.getDuration() != null ? b.getDuration() : 0.0)
                         .sum();
                 double util = (eqHours / 720.0) * 100.0;

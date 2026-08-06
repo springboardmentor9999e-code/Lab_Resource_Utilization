@@ -43,6 +43,9 @@ public class Booking {
     @Column(name = "duration")
     private Double duration;
 
+    @Column(name = "utilization_cost")
+    private Double utilizationCost = 0.0;
+
     public Booking() {
     }
 
@@ -116,5 +119,13 @@ public class Booking {
 
     public void setDuration(Double duration) {
         this.duration = duration;
+    }
+
+    public Double getUtilizationCost() {
+        return utilizationCost;
+    }
+
+    public void setUtilizationCost(Double utilizationCost) {
+        this.utilizationCost = utilizationCost;
     }
 }

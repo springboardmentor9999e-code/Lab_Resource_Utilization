@@ -30,6 +30,7 @@ import * as labService from "../../services/laboratoryService";
 import * as equipService from "../../services/equipmentService";
 import axios from "axios";
 import DashboardLayout from "./DashboardLayout";
+import ConfirmationModal from "../common/ConfirmationModal";
 
 // Register ChartJS elements
 ChartJS.register(
@@ -53,6 +54,11 @@ function SystemAdminDashboard() {
         totalMaintenance: 0,
         overallUtilization: 0,
         overallUtilizationCost: 0,
+        totalSharedEquipment: 0,
+        totalInterInstituteRequests: 0,
+        crossInstituteUtilization: 0,
+        topSharedEquipment: [],
+        topInstitutesByResourceSharing: [],
         institutionComparison: [],
         bookingTrend: {},
         maintenanceTrend: {}
@@ -165,7 +171,21 @@ function SystemAdminDashboard() {
         documentUrl: "",
         costPerHour: 0.0,
         departmentId: "",
-        laboratory: { labId: "" }
+        laboratory: { labId: "" },
+        calibrationFrequency: "Every 3 Months",
+        lastCalibrationDate: "",
+        nextCalibrationDate: "",
+        calibrationStatus: "Scheduled",
+        licenseNumber: "",
+        licenseIssueDate: "",
+        licenseExpiryDate: "",
+        licenseRenewalFrequency: "Every 6 Months",
+        licenseRenewalDate: "",
+        certificateNumber: "",
+        certificateIssueDate: "",
+        certificateExpiryDate: "",
+        certificateRenewalFrequency: "Every 6 Months",
+        certificateRenewalDate: ""
     });
     const [editEquip, setEditEquip] = useState({
         equipmentName: "",
@@ -184,7 +204,21 @@ function SystemAdminDashboard() {
         documentUrl: "",
         costPerHour: 0.0,
         departmentId: "",
-        laboratory: { labId: "" }
+        laboratory: { labId: "" },
+        calibrationFrequency: "Every 3 Months",
+        lastCalibrationDate: "",
+        nextCalibrationDate: "",
+        calibrationStatus: "Scheduled",
+        licenseNumber: "",
+        licenseIssueDate: "",
+        licenseExpiryDate: "",
+        licenseRenewalFrequency: "Every 6 Months",
+        licenseRenewalDate: "",
+        certificateNumber: "",
+        certificateIssueDate: "",
+        certificateExpiryDate: "",
+        certificateRenewalFrequency: "Every 6 Months",
+        certificateRenewalDate: ""
     });
     const [equipSearch, setEquipSearch] = useState("");
     const [equipCatFilter, setEquipCatFilter] = useState("");
@@ -225,8 +259,25 @@ function SystemAdminDashboard() {
         }
     };
 
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [confirmConfig, setConfirmConfig] = useState({ title: "", message: "", action: null });
+
+    const triggerConfirm = (title, message, callback) => {
+        setConfirmConfig({
+            title,
+            message,
+            action: () => {
+                callback();
+                setShowConfirm(false);
+            }
+        });
+        setShowConfirm(true);
+    };
+
     useEffect(() => {
         loadData();
+        const intervalId = setInterval(loadData, 5000);
+        return () => clearInterval(intervalId);
     }, []);
 
     const handleInputChange = (e) => {
@@ -319,17 +370,16 @@ function SystemAdminDashboard() {
     };
 
     const handleDeleteClick = async (id) => {
-        if (!window.confirm("Are you sure you want to remove this institution? This action will delete the institution and cannot be undone.")) {
-            return;
-        }
-        try {
-            await institutionService.deleteInstitution(id);
-            alert("Institution successfully removed.");
-            loadData();
-        } catch (error) {
-            console.error("Error deleting institution", error);
-            alert("Failed to delete institution. It may have associated departments, laboratories, or users.");
-        }
+        triggerConfirm("Delete Institution", "Are you sure you want to remove this institution? This action will delete the institution and cannot be undone.", async () => {
+            try {
+                await institutionService.deleteInstitution(id);
+                alert("Institution successfully removed.");
+                loadData();
+            } catch (error) {
+                console.error("Error deleting institution", error);
+                alert("Failed to delete institution. It may have associated departments, laboratories, or users.");
+            }
+        });
     };
 
     const handleAddDepartment = async (e) => {
@@ -392,17 +442,16 @@ function SystemAdminDashboard() {
     };
 
     const handleDeleteDeptClick = async (id) => {
-        if (!window.confirm("Are you sure you want to remove this department? This action cannot be undone.")) {
-            return;
-        }
-        try {
-            await departmentService.deleteDepartment(id);
-            alert("Department successfully removed.");
-            loadData();
-        } catch (error) {
-            console.error("Error deleting department", error);
-            alert("Failed to delete department. It may have associated laboratories or equipment.");
-        }
+        triggerConfirm("Delete Department", "Are you sure you want to remove this department? This action cannot be undone.", async () => {
+            try {
+                await departmentService.deleteDepartment(id);
+                alert("Department successfully removed.");
+                loadData();
+            } catch (error) {
+                console.error("Error deleting department", error);
+                alert("Failed to delete department. It may have associated laboratories or equipment.");
+            }
+        });
     };
 
     // Lab event handlers
@@ -475,17 +524,16 @@ function SystemAdminDashboard() {
     };
 
     const handleDeleteLabClick = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this laboratory? This action cannot be undone.")) {
-            return;
-        }
-        try {
-            await labService.deleteLaboratory(id);
-            alert("Laboratory successfully removed.");
-            loadData();
-        } catch (error) {
-            console.error("Error deleting laboratory", error);
-            alert("Failed to delete laboratory.");
-        }
+        triggerConfirm("Delete Laboratory", "Are you sure you want to delete this laboratory? This action cannot be undone.", async () => {
+            try {
+                await labService.deleteLaboratory(id);
+                alert("Laboratory successfully removed.");
+                loadData();
+            } catch (error) {
+                console.error("Error deleting laboratory", error);
+                alert("Failed to delete laboratory.");
+            }
+        });
     };
 
     // Equipment event handlers
@@ -585,7 +633,21 @@ function SystemAdminDashboard() {
             documentUrl: equip.documentUrl || "",
             costPerHour: equip.costPerHour || 0.0,
             departmentId: equip.laboratory?.department?.departmentId || "",
-            laboratory: { labId: equip.laboratory?.labId || "" }
+            laboratory: { labId: equip.laboratory?.labId || "" },
+            calibrationFrequency: equip.calibrationFrequency || "Every 3 Months",
+            lastCalibrationDate: equip.lastCalibrationDate || "",
+            nextCalibrationDate: equip.nextCalibrationDate || "",
+            calibrationStatus: equip.calibrationStatus || "Scheduled",
+            licenseNumber: equip.licenseNumber || "",
+            licenseIssueDate: equip.licenseIssueDate || "",
+            licenseExpiryDate: equip.licenseExpiryDate || "",
+            licenseRenewalFrequency: equip.licenseRenewalFrequency || "Every 6 Months",
+            licenseRenewalDate: equip.licenseRenewalDate || "",
+            certificateNumber: equip.certificateNumber || "",
+            certificateIssueDate: equip.certificateIssueDate || "",
+            certificateExpiryDate: equip.certificateExpiryDate || "",
+            certificateRenewalFrequency: equip.certificateRenewalFrequency || "Every 6 Months",
+            certificateRenewalDate: equip.certificateRenewalDate || ""
         });
         setShowEditEquipModal(true);
     };
@@ -608,17 +670,16 @@ function SystemAdminDashboard() {
     };
 
     const handleDeleteEquipClick = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this equipment? This action cannot be undone.")) {
-            return;
-        }
-        try {
-            await equipService.deleteEquipment(id);
-            alert("Equipment successfully removed.");
-            loadData();
-        } catch (error) {
-            console.error("Error deleting equipment", error);
-            alert("Failed to delete equipment.");
-        }
+        triggerConfirm("Delete Equipment", "Are you sure you want to delete this equipment? This action cannot be undone.", async () => {
+            try {
+                await equipService.deleteEquipment(id);
+                alert("Equipment successfully removed.");
+                loadData();
+            } catch (error) {
+                console.error("Error deleting equipment", error);
+                alert("Failed to delete equipment.");
+            }
+        });
     };
 
     return (
@@ -700,7 +761,21 @@ function SystemAdminDashboard() {
                             documentUrl: "",
                             costPerHour: 0.0,
                             departmentId: "",
-                            laboratory: { labId: "" }
+                            laboratory: { labId: "" },
+                            calibrationFrequency: "Every 3 Months",
+                            lastCalibrationDate: "",
+                            nextCalibrationDate: "",
+                            calibrationStatus: "Scheduled",
+                            licenseNumber: "",
+                            licenseIssueDate: "",
+                            licenseExpiryDate: "",
+                            licenseRenewalFrequency: "Every 6 Months",
+                            licenseRenewalDate: "",
+                            certificateNumber: "",
+                            certificateIssueDate: "",
+                            certificateExpiryDate: "",
+                            certificateRenewalFrequency: "Every 6 Months",
+                            certificateRenewalDate: ""
                         });
                         setShowEquipModal(true);
                     }}>
@@ -800,15 +875,50 @@ function SystemAdminDashboard() {
                                     <Card className="shadow text-center border-start border-primary border-4">
                                         <Card.Body>
                                             <FaDollarSign size={36} className="text-warning mb-2" />
-                                            <h3>${stats.overallUtilizationCost || 0}</h3>
+                                            <h3>₹{stats.overallUtilizationCost || 0}</h3>
                                             <p className="mb-0 text-muted small fw-bold">Overall Utilization Cost</p>
                                         </Card.Body>
                                     </Card>
                                 </Col>
                             </Row>
 
+                            {/* Inter-Institute Resource Sharing Summary */}
+                            <Card className="shadow border-0 mb-4 bg-white">
+                                <Card.Header className="bg-dark text-white border-0 py-3">
+                                    <h5 className="mb-0 fw-bold">Inter-Institute Resource Sharing Workspace</h5>
+                                </Card.Header>
+                                <Card.Body>
+                                    <Row className="g-4">
+                                        <Col md={4}>
+                                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                                <Card.Body>
+                                                    <h4 className="fw-bold text-primary">{stats.totalSharedEquipment || 0}</h4>
+                                                    <p className="mb-0 text-muted small fw-bold">Total Shared Equipment</p>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                        <Col md={4}>
+                                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                                <Card.Body>
+                                                    <h4 className="fw-bold text-success">{stats.totalInterInstituteRequests || 0}</h4>
+                                                    <p className="mb-0 text-muted small fw-bold">Cross-Institute Requests</p>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                        <Col md={4}>
+                                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                                <Card.Body>
+                                                    <h4 className="fw-bold text-info">{stats.crossInstituteUtilization || 0}</h4>
+                                                    <p className="mb-0 text-muted small fw-bold">Cross-Institute Utilization</p>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                    </Row>
+                                </Card.Body>
+                            </Card>
+
                             {/* Charts */}
-                            <Row className="g-4">
+                            <Row className="g-4 mb-4">
                                 <Col lg={6}>
                                     <Card className="shadow h-100">
                                         <Card.Header className="bg-transparent border-0 py-3">
@@ -888,6 +998,66 @@ function SystemAdminDashboard() {
                                                                     "rgba(75, 192, 192, 0.6)"
                                                                 ],
                                                                 borderWidth: 1
+                                                            }
+                                                        ]
+                                                    }} options={{ responsive: true, maintainAspectRatio: false }} />
+                                                </div>
+                                            )}
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            </Row>
+
+                            {/* Additional Sharing Charts */}
+                            <Row className="g-4 mb-4">
+                                <Col lg={6}>
+                                    <Card className="shadow h-100">
+                                        <Card.Header className="bg-transparent border-0 py-3">
+                                            <h5 className="mb-0 fw-bold">Top Shared Equipment</h5>
+                                        </Card.Header>
+                                        <Card.Body>
+                                            {(!stats.topSharedEquipment || stats.topSharedEquipment.length === 0) ? (
+                                                <p className="text-center text-muted py-5 mb-0">No sharing recorded.</p>
+                                            ) : (
+                                                <div style={{ width: "100%", height: "200px" }}>
+                                                    <Bar data={{
+                                                        labels: (stats.topSharedEquipment || []).map(item => item.name),
+                                                        datasets: [
+                                                            {
+                                                                label: "Booking Count",
+                                                                data: (stats.topSharedEquipment || []).map(item => item.value),
+                                                                backgroundColor: "rgba(153, 102, 255, 0.6)",
+                                                                borderColor: "rgba(153, 102, 255, 1)",
+                                                                borderWidth: 1,
+                                                                borderRadius: 5
+                                                            }
+                                                        ]
+                                                    }} options={{ responsive: true, maintainAspectRatio: false }} />
+                                                </div>
+                                            )}
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                                <Col lg={6}>
+                                    <Card className="shadow h-100">
+                                        <Card.Header className="bg-transparent border-0 py-3">
+                                            <h5 className="mb-0 fw-bold">Top Sharing Institutes</h5>
+                                        </Card.Header>
+                                        <Card.Body>
+                                            {(!stats.topInstitutesByResourceSharing || stats.topInstitutesByResourceSharing.length === 0) ? (
+                                                <p className="text-center text-muted py-5 mb-0">No cross-institute sharing logs.</p>
+                                            ) : (
+                                                <div style={{ width: "100%", height: "200px" }}>
+                                                    <Bar data={{
+                                                        labels: (stats.topInstitutesByResourceSharing || []).map(item => item.name),
+                                                        datasets: [
+                                                            {
+                                                                label: "Total Transactions",
+                                                                data: (stats.topInstitutesByResourceSharing || []).map(item => item.value),
+                                                                backgroundColor: "rgba(255, 159, 64, 0.6)",
+                                                                borderColor: "rgba(255, 159, 64, 1)",
+                                                                borderWidth: 1,
+                                                                borderRadius: 5
                                                             }
                                                         ]
                                                     }} options={{ responsive: true, maintainAspectRatio: false }} />
@@ -1959,6 +2129,133 @@ function SystemAdminDashboard() {
                                     />
                                 </Form.Group>
                             </Col>
+
+                            <Col md={12}>
+                                <h6 className="fw-bold mt-3 border-bottom pb-2 text-primary">Calibration Management</h6>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Calibration Frequency</Form.Label>
+                                    <Form.Select 
+                                        name="calibrationFrequency"
+                                        value={newEquip.calibrationFrequency} onChange={handleEquipInputChange}
+                                    >
+                                        <option value="Every 3 Months">Every 3 Months</option>
+                                        <option value="Every 6 Months">Every 6 Months</option>
+                                        <option value="Every 12 Months">Every 12 Months</option>
+                                        <option value="Custom Date">Custom Date</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Last Calibration Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="lastCalibrationDate"
+                                        value={newEquip.lastCalibrationDate} onChange={handleEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Next Calibration Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="nextCalibrationDate"
+                                        value={newEquip.nextCalibrationDate} onChange={handleEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Calibration Status</Form.Label>
+                                    <Form.Select 
+                                        name="calibrationStatus"
+                                        value={newEquip.calibrationStatus} onChange={handleEquipInputChange}
+                                    >
+                                        <option value="Scheduled">Scheduled</option>
+                                        <option value="Due Soon">Due Soon</option>
+                                        <option value="Overdue">Overdue</option>
+                                        <option value="Completed">Completed</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+
+                            <Col md={12}>
+                                <h6 className="fw-bold mt-3 border-bottom pb-2 text-primary">License & Compliance Management</h6>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>License Number</Form.Label>
+                                    <Form.Control 
+                                        type="text" name="licenseNumber" placeholder="e.g. LIC-9834821"
+                                        value={newEquip.licenseNumber} onChange={handleEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>License Issue Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="licenseIssueDate"
+                                        value={newEquip.licenseIssueDate} onChange={handleEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>License Expiry Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="licenseExpiryDate"
+                                        value={newEquip.licenseExpiryDate} onChange={handleEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>License Renewal Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="licenseRenewalDate"
+                                        value={newEquip.licenseRenewalDate} onChange={handleEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Certificate Number</Form.Label>
+                                    <Form.Control 
+                                        type="text" name="certificateNumber" placeholder="e.g. CERT-2983719"
+                                        value={newEquip.certificateNumber} onChange={handleEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Certificate Issue Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="certificateIssueDate"
+                                        value={newEquip.certificateIssueDate} onChange={handleEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Certificate Expiry Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="certificateExpiryDate"
+                                        value={newEquip.certificateExpiryDate} onChange={handleEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Certificate Renewal Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="certificateRenewalDate"
+                                        value={newEquip.certificateRenewalDate} onChange={handleEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
                         </Row>
                     </Modal.Body>
                     <Modal.Footer>
@@ -2173,6 +2470,133 @@ function SystemAdminDashboard() {
                                     />
                                 </Form.Group>
                             </Col>
+
+                            <Col md={12}>
+                                <h6 className="fw-bold mt-3 border-bottom pb-2 text-primary">Calibration Management</h6>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Calibration Frequency</Form.Label>
+                                    <Form.Select 
+                                        name="calibrationFrequency"
+                                        value={editEquip.calibrationFrequency} onChange={handleEditEquipInputChange}
+                                    >
+                                        <option value="Every 3 Months">Every 3 Months</option>
+                                        <option value="Every 6 Months">Every 6 Months</option>
+                                        <option value="Every 12 Months">Every 12 Months</option>
+                                        <option value="Custom Date">Custom Date</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Last Calibration Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="lastCalibrationDate"
+                                        value={editEquip.lastCalibrationDate} onChange={handleEditEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Next Calibration Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="nextCalibrationDate"
+                                        value={editEquip.nextCalibrationDate} onChange={handleEditEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Calibration Status</Form.Label>
+                                    <Form.Select 
+                                        name="calibrationStatus"
+                                        value={editEquip.calibrationStatus} onChange={handleEditEquipInputChange}
+                                    >
+                                        <option value="Scheduled">Scheduled</option>
+                                        <option value="Due Soon">Due Soon</option>
+                                        <option value="Overdue">Overdue</option>
+                                        <option value="Completed">Completed</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+
+                            <Col md={12}>
+                                <h6 className="fw-bold mt-3 border-bottom pb-2 text-primary">License & Compliance Management</h6>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>License Number</Form.Label>
+                                    <Form.Control 
+                                        type="text" name="licenseNumber" placeholder="e.g. LIC-9834821"
+                                        value={editEquip.licenseNumber} onChange={handleEditEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>License Issue Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="licenseIssueDate"
+                                        value={editEquip.licenseIssueDate} onChange={handleEditEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>License Expiry Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="licenseExpiryDate"
+                                        value={editEquip.licenseExpiryDate} onChange={handleEditEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>License Renewal Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="licenseRenewalDate"
+                                        value={editEquip.licenseRenewalDate} onChange={handleEditEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Certificate Number</Form.Label>
+                                    <Form.Control 
+                                        type="text" name="certificateNumber" placeholder="e.g. CERT-2983719"
+                                        value={editEquip.certificateNumber} onChange={handleEditEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Certificate Issue Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="certificateIssueDate"
+                                        value={editEquip.certificateIssueDate} onChange={handleEditEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Certificate Expiry Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="certificateExpiryDate"
+                                        value={editEquip.certificateExpiryDate} onChange={handleEditEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label>Certificate Renewal Date</Form.Label>
+                                    <Form.Control 
+                                        type="date" name="certificateRenewalDate"
+                                        value={editEquip.certificateRenewalDate} onChange={handleEditEquipInputChange}
+                                    />
+                                </Form.Group>
+                            </Col>
                         </Row>
                     </Modal.Body>
                     <Modal.Footer>
@@ -2183,6 +2607,13 @@ function SystemAdminDashboard() {
                     </Modal.Footer>
                 </Form>
             </Modal>
+            <ConfirmationModal
+                show={showConfirm}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                onConfirm={confirmConfig.action}
+                onCancel={() => setShowConfirm(false)}
+            />
         </DashboardLayout>
     );
 }

@@ -8,17 +8,21 @@ public class LoginResponse {
     private String fullName;
     private String email;
     private String role;
+    private Integer institutionId;
+    private Integer departmentId;
 
     public LoginResponse(String message) {
         this.message = message;
     }
 
-    public LoginResponse(String token, Integer userId, String fullName, String email, String role) {
+    public LoginResponse(String token, Integer userId, String fullName, String email, String role, Integer institutionId, Integer departmentId) {
         this.token = token;
         this.userId = userId;
         this.fullName = fullName;
         this.email = email;
         this.role = role;
+        this.institutionId = institutionId;
+        this.departmentId = departmentId;
     }
 
     public String getMessage() {
@@ -43,5 +47,13 @@ public class LoginResponse {
 
     public String getRole() {
         return role;
+    }
+
+    public Integer getInstitutionId() {
+        return institutionId;
+    }
+
+    public Integer getDepartmentId() {
+        return departmentId;
     }
 }

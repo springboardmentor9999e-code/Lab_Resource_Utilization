@@ -84,11 +84,24 @@ public class EquipmentUtilizationServiceImpl implements EquipmentUtilizationServ
 
             long usageCount = utilizationBookings.size();
             double totalHoursUsed = 0.0;
+            double totalCost = 0.0;
 
             for (Booking b : utilizationBookings) {
                 if (b.getStartTime() != null && b.getEndTime() != null) {
                     double durationMinutes = Duration.between(b.getStartTime(), b.getEndTime()).toMinutes();
-                    totalHoursUsed += durationMinutes / 60.0;
+                    double durationHours = durationMinutes / 60.0;
+                    totalHoursUsed += durationHours;
+
+                    if (b.getUser() != null && eq.getLaboratory() != null &&
+                        eq.getLaboratory().getDepartment() != null &&
+                        eq.getLaboratory().getDepartment().getInstitution() != null) {
+                        Long eqInstId = eq.getLaboratory().getDepartment().getInstitution().getInstitutionId();
+                        Integer userInstId = b.getUser().getInstitutionId();
+                        if (userInstId == null || !eqInstId.equals(Long.valueOf(userInstId))) {
+                            double costPerHour = eq.getCostPerHour() != null ? eq.getCostPerHour() : 0.0;
+                            totalCost += durationHours * costPerHour;
+                        }
+                    }
                 }
             }
 
@@ -108,7 +121,7 @@ public class EquipmentUtilizationServiceImpl implements EquipmentUtilizationServ
             totalHoursUsed = Math.round(totalHoursUsed * 100.0) / 100.0;
             utilizationPercentage = Math.round(utilizationPercentage * 100.0) / 100.0;
             double costPerHour = eq.getCostPerHour() != null ? eq.getCostPerHour() : 0.0;
-            double totalCost = Math.round((totalHoursUsed * costPerHour) * 100.0) / 100.0;
+            totalCost = Math.round(totalCost * 100.0) / 100.0;
 
             String labName = eq.getLaboratory() != null ? eq.getLaboratory().getLabName() : "N/A";
             String deptName = eq.getLaboratory() != null && eq.getLaboratory().getDepartment() != null 

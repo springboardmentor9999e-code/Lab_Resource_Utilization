@@ -45,6 +45,8 @@ function Login({ onLogin, onForgotPassword }) {
             localStorage.setItem("role", response.data.role);
             localStorage.setItem("fullName", response.data.fullName);
             localStorage.setItem("email", response.data.email);
+            localStorage.setItem("institutionId", response.data.institutionId || "");
+            localStorage.setItem("departmentId", response.data.departmentId || "");
 
             const role = response.data.role;
 

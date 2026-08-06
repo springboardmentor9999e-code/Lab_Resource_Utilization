@@ -40,6 +40,9 @@ public class UserService {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public List<User> getPendingUsers() {
         return userRepository.findByStatus("PENDING");
     }
@@ -56,6 +59,10 @@ public class UserService {
         user.setStatus("ACTIVE");
         userRepository.save(user);
 
+        Long uId = user.getUserId() != null ? Long.valueOf(user.getUserId()) : null;
+        Long instId = user.getInstitutionId() != null ? Long.valueOf(user.getInstitutionId()) : null;
+        notificationService.sendNotification(uId, null, instId, "Account Approved", "Your account has been approved by the Administrator.", "SYSTEM", "High");
+
         return "User approved successfully.";
     }
 
@@ -66,6 +73,10 @@ public class UserService {
 
         user.setStatus("REJECTED");
         userRepository.save(user);
+
+        Long uId = user.getUserId() != null ? Long.valueOf(user.getUserId()) : null;
+        Long instId = user.getInstitutionId() != null ? Long.valueOf(user.getInstitutionId()) : null;
+        notificationService.sendNotification(uId, null, instId, "Account Rejected", "Your account has been rejected.", "SYSTEM", "High");
 
         return "User rejected successfully.";
     }
@@ -176,6 +187,12 @@ public class UserService {
 
         userRepository.save(user);
 
+        if ("PENDING".equals(user.getStatus())) {
+            Long newInstId = user.getInstitutionId() != null ? Long.valueOf(user.getInstitutionId()) : null;
+            notificationService.sendNotification(null, "INSTITUTION_ADMIN", newInstId, "Pending User Approval", "New user registration pending approval: " + user.getFullName() + ".", "SYSTEM", "High");
+            notificationService.sendNotification(null, "SYSTEM_ADMIN", null, "Pending User Approval", "New user registration pending approval: " + user.getFullName() + ".", "SYSTEM", "High");
+        }
+
         return "User Registered Successfully";
     }
 
@@ -207,7 +224,9 @@ public class UserService {
                 user.getUserId(),
                 user.getFullName(),
                 user.getEmail(),
-                user.getRole().getRoleName()
+                user.getRole().getRoleName(),
+                user.getInstitutionId(),
+                user.getDepartmentId()
         );
     }
 

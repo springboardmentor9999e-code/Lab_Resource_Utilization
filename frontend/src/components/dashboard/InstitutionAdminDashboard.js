@@ -23,6 +23,7 @@ import {
 } from "chart.js";
 import axios from "axios";
 import DashboardLayout from "./DashboardLayout";
+import ConfirmationModal from "../common/ConfirmationModal";
 
 // Register ChartJS elements
 ChartJS.register(
@@ -67,27 +68,46 @@ function InstitutionAdminDashboard() {
         }
     };
 
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [confirmConfig, setConfirmConfig] = useState({ title: "", message: "", action: null });
+
+    const triggerConfirm = (title, message, callback) => {
+        setConfirmConfig({
+            title,
+            message,
+            action: () => {
+                callback();
+                setShowConfirm(false);
+            }
+        });
+        setShowConfirm(true);
+    };
+
     useEffect(() => {
         fetchData();
+        const intervalId = setInterval(fetchData, 5000);
+        return () => clearInterval(intervalId);
     }, []);
 
     const handleUserAction = async (userId, action) => {
-        try {
-            const token = localStorage.getItem("token");
-            const headers = { Authorization: `Bearer ${token}` };
+        triggerConfirm("Confirm User Registration", `Are you sure you want to ${action} this user registration request?`, async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { Authorization: `Bearer ${token}` };
 
-            if (action === "approve") {
-                await axios.put(`http://localhost:8080/api/admin/approve/${userId}`, {}, { headers });
-                alert("User approved successfully!");
-            } else {
-                await axios.put(`http://localhost:8080/api/admin/reject/${userId}`, {}, { headers });
-                alert("User registration rejected!");
+                if (action === "approve") {
+                    await axios.put(`http://localhost:8080/api/admin/approve/${userId}`, {}, { headers });
+                    alert("User approved successfully!");
+                } else {
+                    await axios.put(`http://localhost:8080/api/admin/reject/${userId}`, {}, { headers });
+                    alert("User registration rejected!");
+                }
+                fetchData();
+            } catch (error) {
+                console.error("Error updating user status", error);
+                alert("Failed to process action.");
             }
-            fetchData();
-        } catch (error) {
-            console.error("Error updating user status", error);
-            alert("Failed to process action.");
-        }
+        });
     };
 
     if (loading || !realtimeData) {
@@ -121,6 +141,20 @@ function InstitutionAdminDashboard() {
             {
                 label: "Utilization Rate (%)",
                 data: (realtimeData.equipmentUtilization || []).map(item => item.utilization),
+                backgroundColor: "rgba(75, 192, 192, 0.6)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 1,
+                borderRadius: 5
+            }
+        ]
+    };
+
+    const instWiseChartData = {
+        labels: (realtimeData.institutionWiseUtilizationRevenue || []).map(item => item.name),
+        datasets: [
+            {
+                label: "Shared Revenue (₹)",
+                data: (realtimeData.institutionWiseUtilizationRevenue || []).map(item => item.value),
                 backgroundColor: "rgba(75, 192, 192, 0.6)",
                 borderColor: "rgba(75, 192, 192, 1)",
                 borderWidth: 1,
@@ -311,16 +345,85 @@ function InstitutionAdminDashboard() {
                     <Card className="shadow text-center h-100 bg-light">
                         <Card.Body>
                             <FaDollarSign size={36} className="text-primary mb-2" />
-                            <h3>${realtimeData.totalUtilizationCost}</h3>
+                            <h3>₹{realtimeData.totalUtilizationCost}</h3>
                             <p className="mb-0 text-muted small fw-bold">Total Utilization Billing</p>
                         </Card.Body>
                     </Card>
                 </Col>
             </Row>
 
+            {/* Inter-Institute Resource Sharing Card Row */}
+            <Card className="shadow border-0 mb-4 bg-white">
+                <Card.Header className="bg-primary text-white border-0 py-3">
+                    <h5 className="mb-0 fw-bold">Inter-Institute Resource Sharing Intelligence</h5>
+                </Card.Header>
+                <Card.Body>
+                    <Row className="g-4">
+                        <Col md={3}>
+                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                <Card.Body>
+                                    <h4 className="fw-bold text-primary">{realtimeData.incomingRequestsCount || 0}</h4>
+                                    <p className="mb-0 text-muted small fw-bold">Incoming Requests</p>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col md={3}>
+                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                <Card.Body>
+                                    <h4 className="fw-bold text-success">{realtimeData.outgoingRequestsCount || 0}</h4>
+                                    <p className="mb-0 text-muted small fw-bold">Outgoing Requests</p>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col md={3}>
+                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                <Card.Body>
+                                    <h4 className="fw-bold text-warning">{realtimeData.pendingSharingApprovals || 0}</h4>
+                                    <p className="mb-0 text-muted small fw-bold">Pending Incoming Approvals</p>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col md={3}>
+                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                <Card.Body>
+                                    <h4 className="fw-bold text-info">{realtimeData.crossInstituteUtilizationCount || 0}</h4>
+                                    <p className="mb-0 text-muted small fw-bold">Sharing Utilization Count</p>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    </Row>
+                    <Row className="g-4 mt-2">
+                        <Col md={4}>
+                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                <Card.Body>
+                                    <h4 className="fw-bold text-success">₹{(realtimeData.externalRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h4>
+                                    <p className="mb-0 text-muted small fw-bold">Shared Revenue Generated</p>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col md={4}>
+                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                <Card.Body>
+                                    <h4 className="fw-bold text-secondary">{(realtimeData.internalEquipmentUsage || 0).toFixed(1)} hrs</h4>
+                                    <p className="mb-0 text-muted small fw-bold">Internal Usage Hours</p>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col md={4}>
+                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                <Card.Body>
+                                    <h4 className="fw-bold text-primary">{(realtimeData.externalEquipmentUsage || 0).toFixed(1)} hrs</h4>
+                                    <p className="mb-0 text-muted small fw-bold">External Usage Hours</p>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    </Row>
+                </Card.Body>
+            </Card>
+
             <Row className="mb-4 g-4">
                 <Col md={3}>
-                    <Card className="shadow text-center h-100 border-start border-primary border-4">
+                    <Card className="shadow text-center h-100 border-start border-primary border-4 py-4">
                         <Card.Body>
                             <FaChartLine size={42} className="text-primary mb-2" />
                             <h3>{realtimeData.institutionUtilizationPercentage}%</h3>
@@ -329,20 +432,40 @@ function InstitutionAdminDashboard() {
                     </Card>
                 </Col>
                 <Col md={9}>
-                    <Card className="shadow">
-                        <Card.Header className="bg-transparent border-0 py-3">
-                            <h5 className="mb-0 fw-bold">Equipment Count by Department</h5>
-                        </Card.Header>
-                        <Card.Body>
-                            {(realtimeData.departmentComparison || []).length === 0 ? (
-                                <p className="text-center text-muted py-4 mb-0">No departments recorded.</p>
-                            ) : (
-                                <div style={{ width: "100%", height: "200px" }}>
-                                    <Bar data={deptCompChartData} options={{ responsive: true, maintainAspectRatio: false }} />
-                                </div>
-                            )}
-                        </Card.Body>
-                    </Card>
+                    <Row className="g-4">
+                        <Col md={6}>
+                            <Card className="shadow">
+                                <Card.Header className="bg-transparent border-0 py-3">
+                                    <h5 className="mb-0 fw-bold">Equipment Count by Department</h5>
+                                </Card.Header>
+                                <Card.Body>
+                                    {(realtimeData.departmentComparison || []).length === 0 ? (
+                                        <p className="text-center text-muted py-4 mb-0">No departments recorded.</p>
+                                    ) : (
+                                        <div style={{ width: "100%", height: "200px" }}>
+                                            <Bar data={deptCompChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                                        </div>
+                                    )}
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col md={6}>
+                            <Card className="shadow">
+                                <Card.Header className="bg-transparent border-0 py-3">
+                                    <h5 className="mb-0 fw-bold">Revenue by Requesting Institute</h5>
+                                </Card.Header>
+                                <Card.Body>
+                                    {(realtimeData.institutionWiseUtilizationRevenue || []).length === 0 ? (
+                                        <p className="text-center text-muted py-4 mb-0">No shared revenue logged yet.</p>
+                                    ) : (
+                                        <div style={{ width: "100%", height: "200px" }}>
+                                            <Bar data={instWiseChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                                        </div>
+                                    )}
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    </Row>
                 </Col>
             </Row>
 
@@ -420,6 +543,13 @@ function InstitutionAdminDashboard() {
                     )}
                 </Card.Body>
             </Card>
+            <ConfirmationModal
+                show={showConfirm}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                onConfirm={confirmConfig.action}
+                onCancel={() => setShowConfirm(false)}
+            />
         </DashboardLayout>
     );
 }

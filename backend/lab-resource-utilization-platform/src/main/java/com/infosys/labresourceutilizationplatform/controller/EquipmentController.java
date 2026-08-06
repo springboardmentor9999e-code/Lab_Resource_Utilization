@@ -2,10 +2,12 @@ package com.infosys.labresourceutilizationplatform.controller;
 
 import com.infosys.labresourceutilizationplatform.entity.Equipment;
 import com.infosys.labresourceutilizationplatform.service.EquipmentService;
+import com.infosys.labresourceutilizationplatform.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -15,6 +17,9 @@ public class EquipmentController {
 
     @Autowired
     private EquipmentService equipmentService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     // Add Equipment
     @PostMapping
@@ -114,5 +119,127 @@ public class EquipmentController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error uploading file: " + e.getMessage());
         }
+    }
+
+    // Complete Calibration
+    @PostMapping("/{id}/calibration/complete")
+    public ResponseEntity<Equipment> completeCalibration(@PathVariable Long id, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        Equipment eq = equipmentService.getEquipmentById(id);
+        eq.setLastCalibrationDate(java.time.LocalDate.now());
+        
+        String freq = eq.getCalibrationFrequency();
+        java.time.LocalDate nextCal = java.time.LocalDate.now();
+        if ("Every 3 Months".equalsIgnoreCase(freq) || freq == null) {
+            nextCal = nextCal.plusMonths(3);
+        } else if ("Every 6 Months".equalsIgnoreCase(freq)) {
+            nextCal = nextCal.plusMonths(6);
+        } else if ("Every 12 Months".equalsIgnoreCase(freq)) {
+            nextCal = nextCal.plusMonths(12);
+        } else {
+            nextCal = nextCal.plusMonths(3);
+        }
+        
+        eq.setNextCalibrationDate(nextCal);
+        eq.setCalibrationStatus("Completed");
+        Equipment saved = equipmentService.updateEquipment(id, eq);
+        
+        Long instId = (saved.getLaboratory() != null &&
+                       saved.getLaboratory().getDepartment() != null &&
+                       saved.getLaboratory().getDepartment().getInstitution() != null) ?
+                       saved.getLaboratory().getDepartment().getInstitution().getInstitutionId() : null;
+        
+        String msg = "Calibration completed successfully for " + saved.getEquipmentName() + ". Next calibration scheduled on " + nextCal + ".";
+        
+        notificationService.sendNotification(null, "LAB_TECHNICIAN", instId, "Calibration Completed", msg, "CALIBRATION");
+        notificationService.sendNotification(null, "LAB_MANAGER", instId, "Calibration Completed", msg, "CALIBRATION");
+        notificationService.sendNotification(null, "SYSTEM_ADMIN", null, "Calibration Completed", msg, "CALIBRATION");
+        
+        return ResponseEntity.ok(saved);
+    }
+
+    // Renew License
+    @PostMapping("/{id}/license/renew")
+    public ResponseEntity<Equipment> renewLicense(@PathVariable Long id, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        Equipment eq = equipmentService.getEquipmentById(id);
+        eq.setLicenseIssueDate(java.time.LocalDate.now());
+        
+        String freq = eq.getLicenseRenewalFrequency();
+        java.time.LocalDate nextExpiry = java.time.LocalDate.now();
+        if ("Every 3 Months".equalsIgnoreCase(freq)) {
+            nextExpiry = nextExpiry.plusMonths(3);
+        } else if ("Every 6 Months".equalsIgnoreCase(freq) || freq == null) {
+            nextExpiry = nextExpiry.plusMonths(6);
+        } else if ("Every 12 Months".equalsIgnoreCase(freq)) {
+            nextExpiry = nextExpiry.plusMonths(12);
+        } else {
+            nextExpiry = nextExpiry.plusMonths(6);
+        }
+        
+        eq.setLicenseExpiryDate(nextExpiry);
+        eq.setLicenseRenewalDate(nextExpiry);
+        eq.setLicenseStatus("Renewed");
+        Equipment saved = equipmentService.updateEquipment(id, eq);
+        
+        Long instId = (saved.getLaboratory() != null &&
+                       saved.getLaboratory().getDepartment() != null &&
+                       saved.getLaboratory().getDepartment().getInstitution() != null) ?
+                       saved.getLaboratory().getDepartment().getInstitution().getInstitutionId() : null;
+        
+        String msg = "License renewed successfully for " + saved.getEquipmentName() + ". New expiration date is " + nextExpiry + ".";
+        
+        notificationService.sendNotification(null, "LAB_TECHNICIAN", instId, "License Renewed", msg, "LICENSE_RENEWAL");
+        notificationService.sendNotification(null, "LAB_MANAGER", instId, "License Renewed", msg, "LICENSE_RENEWAL");
+        notificationService.sendNotification(null, "SYSTEM_ADMIN", null, "License Renewed", msg, "LICENSE_RENEWAL");
+        
+        return ResponseEntity.ok(saved);
+    }
+
+    // Renew Certificate
+    @PostMapping("/{id}/certificate/renew")
+    public ResponseEntity<Equipment> renewCertificate(@PathVariable Long id, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        Equipment eq = equipmentService.getEquipmentById(id);
+        eq.setCertificateIssueDate(java.time.LocalDate.now());
+        
+        String freq = eq.getCertificateRenewalFrequency();
+        java.time.LocalDate nextExpiry = java.time.LocalDate.now();
+        if ("Every 3 Months".equalsIgnoreCase(freq)) {
+            nextExpiry = nextExpiry.plusMonths(3);
+        } else if ("Every 6 Months".equalsIgnoreCase(freq) || freq == null) {
+            nextExpiry = nextExpiry.plusMonths(6);
+        } else if ("Every 12 Months".equalsIgnoreCase(freq)) {
+            nextExpiry = nextExpiry.plusMonths(12);
+        } else {
+            nextExpiry = nextExpiry.plusMonths(6);
+        }
+        
+        eq.setCertificateExpiryDate(nextExpiry);
+        eq.setCertificateRenewalDate(nextExpiry);
+        eq.setCertificateStatus("Renewed");
+        Equipment saved = equipmentService.updateEquipment(id, eq);
+        
+        Long instId = (saved.getLaboratory() != null &&
+                       saved.getLaboratory().getDepartment() != null &&
+                       saved.getLaboratory().getDepartment().getInstitution() != null) ?
+                       saved.getLaboratory().getDepartment().getInstitution().getInstitutionId() : null;
+        
+        String msg = "Certificate renewed successfully for " + saved.getEquipmentName() + ". New expiration date is " + nextExpiry + ".";
+        
+        notificationService.sendNotification(null, "LAB_TECHNICIAN", instId, "Certificate Renewed", msg, "CERTIFICATE_RENEWAL");
+        notificationService.sendNotification(null, "LAB_MANAGER", instId, "Certificate Renewed", msg, "CERTIFICATE_RENEWAL");
+        notificationService.sendNotification(null, "SYSTEM_ADMIN", null, "Certificate Renewed", msg, "CERTIFICATE_RENEWAL");
+        
+        return ResponseEntity.ok(saved);
     }
 }

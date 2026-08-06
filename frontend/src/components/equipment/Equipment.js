@@ -47,10 +47,24 @@ const Equipment = () => {
     // Track image loading errors
     const [imgErrors, setImgErrors] = useState({});
 
+    const refreshCurrentSelection = async () => {
+        loadBookings();
+        if (selectedLaboratory) {
+            try {
+                const response = await getEquipmentByLaboratory(selectedLaboratory);
+                setEquipment(response.data);
+            } catch (error) {
+                console.error("Error refreshing current selection", error);
+            }
+        }
+    };
+
     useEffect(() => {
         loadInstitutions();
         loadBookings();
-    }, []);
+        const intervalId = setInterval(refreshCurrentSelection, 5000);
+        return () => clearInterval(intervalId);
+    }, [selectedLaboratory]);
 
     const loadInstitutions = async () => {
         try {
@@ -195,13 +209,50 @@ const Equipment = () => {
         return item.status || "Available";
     };
 
+    const getStatusColorStyle = (status) => {
+        if (!status) return { backgroundColor: "#6c757d", color: "#fff" };
+        const s = status.toUpperCase();
+        if (s.includes("AVAILABLE") || s === "WORKING") {
+            return { backgroundColor: "#28a745", color: "#fff" }; // Green
+        }
+        if (s.includes("PENDING APPROVAL") || s === "PENDING") {
+            return { backgroundColor: "#fd7e14", color: "#fff" }; // Orange
+        }
+        if (s === "CONFIRMED" || s === "APPROVED") {
+            return { backgroundColor: "#007bff", color: "#fff" }; // Blue
+        }
+        if (s === "BOOKED" || s === "RESERVED") {
+            return { backgroundColor: "#6f42c1", color: "#fff" }; // Purple
+        }
+        if (s.includes("IN USE") || s === "ACTIVE" || s === "USING") {
+            return { backgroundColor: "#17a2b8", color: "#fff" }; // Cyan
+        }
+        if (s === "COMPLETED") {
+            return { backgroundColor: "#1e4620", color: "#fff" }; // Dark Green
+        }
+        if (s === "CANCELLED" || s === "CANCELED") {
+            return { backgroundColor: "#dc3545", color: "#fff" }; // Red
+        }
+        if (s === "REJECTED") {
+            return { backgroundColor: "#8b0000", color: "#fff" }; // Dark Red
+        }
+        if (s === "EXPIRED") {
+            return { backgroundColor: "#6c757d", color: "#fff" }; // Gray
+        }
+        if (s.includes("UNDER MAINTENANCE") || s === "RESOLVING") {
+            return { backgroundColor: "#ffc107", color: "#000" }; // Yellow
+        }
+        if (s.includes("OUT OF SERVICE")) {
+            return { backgroundColor: "#000000", color: "#fff" }; // Black
+        }
+        if (s === "RETIRED") {
+            return { backgroundColor: "#8B4513", color: "#fff" }; // Brown
+        }
+        return { backgroundColor: "#6c757d", color: "#fff" }; // Default Gray
+    };
+
     const getStatusBadge = (status) => {
-        if ("Available".equalsIgnoreCase(status)) return <Badge bg="success">Available</Badge>;
-        if ("Booked".equalsIgnoreCase(status) || "Using".equalsIgnoreCase(status)) return <Badge bg="danger">Booked</Badge>;
-        if ("Under Maintenance".equalsIgnoreCase(status)) return <Badge bg="warning" text="dark">Under Maintenance</Badge>;
-        if ("Out of Service".equalsIgnoreCase(status)) return <Badge bg="dark">Out of Service</Badge>;
-        if ("Retired".equalsIgnoreCase(status)) return <Badge bg="secondary">Retired</Badge>;
-        return <Badge bg="info">{status}</Badge>;
+        return <Badge style={getStatusColorStyle(status)} className="p-2">{status}</Badge>;
     };
 
     return (
@@ -296,37 +347,48 @@ const Equipment = () => {
                                                 <Card.Title className="fw-bold text-primary">{item.equipmentName}</Card.Title>
                                                 <hr className="my-2" style={{ borderColor: "rgba(0,0,0,0.08)" }} />
                                                 <Card.Text className="small text-muted mb-3">
-                                                    <strong>Category:</strong> {item.category}
-                                                    <br />
-                                                    <strong>Manufacturer:</strong> {item.manufacturer} ({item.model})
-                                                    <br />
-                                                    <strong>Status:</strong>{" "}
-                                                    {getStatusBadge(currentStatus)}
-                                                    {item.description && (
-                                                        <>
-                                                            <br />
-                                                            <strong>Documentation:</strong>{" "}
-                                                            <Button 
-                                                                variant="link" 
-                                                                className="p-0 text-info fw-bold small align-baseline"
-                                                                style={{ textDecoration: "none" }}
-                                                                onClick={() => openDocModal(item)}
-                                                            >
-                                                                <FaBookOpen className="me-1" /> View datasheet & guide
-                                                            </Button>
-                                                        </>
-                                                    )}
-                                                </Card.Text>
+                                                     <strong>Category:</strong> {item.category}
+                                                     <br />
+                                                     <strong>Manufacturer:</strong> {item.manufacturer} ({item.model})
+                                                     <br />
+                                                     <strong>Status:</strong> {getStatusBadge(currentStatus)}
+                                                     <br />
+                                                     <strong>Owning Institute:</strong> {item.laboratory?.department?.institution?.institutionName || "N/A"}
+                                                     <br />
+                                                     <strong>Dept & Lab:</strong> {item.laboratory?.department?.departmentName} - {item.laboratory?.labName}
+                                                     <br />
+                                                     <strong>Cost Rate:</strong> ₹{item.costPerHour?.toFixed(2)}/hr
+                                                     {item.specifications && (
+                                                         <>
+                                                             <br />
+                                                             <strong>Specifications:</strong> {item.specifications}
+                                                         </>
+                                                     )}
+                                                     {item.description && (
+                                                         <>
+                                                             <br />
+                                                             <strong>Documentation:</strong>{" "}
+                                                             <Button 
+                                                                 variant="link" 
+                                                                 className="p-0 text-info fw-bold small align-baseline"
+                                                                 style={{ textDecoration: "none" }}
+                                                                 onClick={() => openDocModal(item)}
+                                                             >
+                                                                 <FaBookOpen className="me-1" /> View datasheet & guide
+                                                             </Button>
+                                                         </>
+                                                     )}
+                                                 </Card.Text>
                                             </div>
                                             <div className="d-flex flex-column gap-2 mt-3">
-                                                <Button
-                                                    variant="success"
-                                                    className="w-100"
-                                                    onClick={() => openBookingModal(item)}
-                                                    disabled={"Under Maintenance".equalsIgnoreCase(currentStatus) || "Out of Service".equalsIgnoreCase(currentStatus) || "Retired".equalsIgnoreCase(currentStatus)}
-                                                >
-                                                    <FaCalendarAlt className="me-2" /> Book Now
-                                                </Button>
+                                                 <Button
+                                                     variant="success"
+                                                     className="w-100"
+                                                     onClick={() => openBookingModal(item)}
+                                                     disabled={"Under Maintenance".equalsIgnoreCase(currentStatus) || "Out of Service".equalsIgnoreCase(currentStatus) || "Retired".equalsIgnoreCase(currentStatus)}
+                                                 >
+                                                     <FaCalendarAlt className="me-2" /> Book Now
+                                                 </Button>
                                                 {("STUDENT".equalsIgnoreCase(role) || "RESEARCHER".equalsIgnoreCase(role)) && (
                                                     <Button
                                                         variant="outline-warning"

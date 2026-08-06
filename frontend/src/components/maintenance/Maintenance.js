@@ -3,6 +3,7 @@ import { Table, Badge, Card, Container, Button, Modal, Form, Nav, Row, Col } fro
 import { FaTools, FaCheck, FaSpinner, FaCalendarPlus, FaUserCheck, FaClipboardList } from "react-icons/fa";
 import axios from "axios";
 import DashboardLayout from "../dashboard/DashboardLayout";
+import ConfirmationModal from "../common/ConfirmationModal";
 
 function Maintenance() {
     // Shared state
@@ -39,6 +40,15 @@ function Maintenance() {
     const [selectedPm, setSelectedPm] = useState(null);
     const [pmRemarks, setPmRemarks] = useState("");
 
+    // Modal state for editing compliance details
+    const [showEditComplianceModal, setShowEditComplianceModal] = useState(false);
+    const [complianceEditForm, setComplianceEditForm] = useState({
+        equipmentId: null,
+        type: "", // CALIBRATION, LICENSE, CERTIFICATE
+        dueDate: "",
+        frequency: ""
+    });
+
     const loadData = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -61,12 +71,11 @@ function Maintenance() {
                 setPreventives(pmRes.data.sort((a, b) => b.id - a.id));
             }
 
-            // 3. Load extra data for managers
-            if (role === "LAB_MANAGER") {
-                // Fetch equipments to schedule PMs
-                const equipRes = await axios.get("http://localhost:8080/api/equipment", { headers });
-                setEquipments(equipRes.data);
+            // 3. Load equipment for compliance checking and technician loading
+            const equipRes = await axios.get("http://localhost:8080/api/equipment", { headers });
+            setEquipments(equipRes.data);
 
+            if (role === "LAB_MANAGER") {
                 // Fetch technicians to assign tasks
                 const usersRes = await axios.get("http://localhost:8080/api/admin/users", { headers });
                 const techs = usersRes.data.filter(u => u.role?.roleName === "LAB_TECHNICIAN");
@@ -80,22 +89,41 @@ function Maintenance() {
         }
     };
 
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [confirmConfig, setConfirmConfig] = useState({ title: "", message: "", action: null });
+
+    const triggerConfirm = (title, message, callback) => {
+        setConfirmConfig({
+            title,
+            message,
+            action: () => {
+                callback();
+                setShowConfirm(false);
+            }
+        });
+        setShowConfirm(true);
+    };
+
     useEffect(() => {
         loadData();
+        const intervalId = setInterval(loadData, 5000);
+        return () => clearInterval(intervalId);
     }, []);
 
     // Workflow actions for Lab Technicians
     const handleStartWork = async (issueId) => {
-        try {
-            const token = localStorage.getItem("token");
-            const headers = { Authorization: `Bearer ${token}` };
-            await axios.put(`http://localhost:8080/api/issues/${issueId}/resolve`, { status: "IN_PROGRESS" }, { headers });
-            alert("Maintenance work started.");
-            loadData();
-        } catch (error) {
-            console.error("Error starting work", error);
-            alert("Failed to start maintenance work.");
-        }
+        triggerConfirm("Start Maintenance Work", "Are you sure you want to start work on this maintenance task?", async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { Authorization: `Bearer ${token}` };
+                await axios.put(`http://localhost:8080/api/issues/${issueId}/resolve`, { status: "IN_PROGRESS" }, { headers });
+                alert("Maintenance work started.");
+                loadData();
+            } catch (error) {
+                console.error("Error starting work", error);
+                alert("Failed to start maintenance work.");
+            }
+        });
     };
 
     const openResolveModal = (issue) => {
@@ -110,20 +138,22 @@ function Maintenance() {
             alert("Please enter resolution details.");
             return;
         }
-        try {
-            const token = localStorage.getItem("token");
-            const headers = { Authorization: `Bearer ${token}` };
-            await axios.put(`http://localhost:8080/api/issues/${selectedIssue.reportId}/resolve`, {
-                status: "RESOLVED",
-                resolutionDetails: resolutionDetails
-            }, { headers });
-            alert("Issue successfully resolved and equipment returned to Available status.");
-            setShowResolveModal(false);
-            loadData();
-        } catch (error) {
-            console.error("Error resolving issue", error);
-            alert("Failed to resolve issue.");
-        }
+        triggerConfirm("Resolve Issue", "Are you sure you want to resolve this issue and return the equipment to service?", async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { Authorization: `Bearer ${token}` };
+                await axios.put(`http://localhost:8080/api/issues/${selectedIssue.reportId}/resolve`, {
+                    status: "RESOLVED",
+                    resolutionDetails: resolutionDetails
+                }, { headers });
+                alert("Issue successfully resolved and equipment returned to Available status.");
+                setShowResolveModal(false);
+                loadData();
+            } catch (error) {
+                console.error("Error resolving issue", error);
+                alert("Failed to resolve issue.");
+            }
+        });
     };
 
     // Assignment actions for Lab Managers
@@ -139,19 +169,21 @@ function Maintenance() {
             alert("Please select a technician.");
             return;
         }
-        try {
-            const token = localStorage.getItem("token");
-            const headers = { Authorization: `Bearer ${token}` };
-            await axios.put(`http://localhost:8080/api/issues/${selectedAssignIssue.reportId}/assign`, {
-                technicianUserId: selectedTechId
-            }, { headers });
-            alert("Technician assigned successfully.");
-            setShowAssignModal(false);
-            loadData();
-        } catch (error) {
-            console.error("Error assigning task", error);
-            alert("Failed to assign technician.");
-        }
+        triggerConfirm("Assign Technician", "Are you sure you want to assign this task to the selected technician?", async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { Authorization: `Bearer ${token}` };
+                await axios.put(`http://localhost:8080/api/issues/${selectedAssignIssue.reportId}/assign`, {
+                    technicianUserId: selectedTechId
+                }, { headers });
+                alert("Technician assigned successfully.");
+                setShowAssignModal(false);
+                loadData();
+            } catch (error) {
+                console.error("Error assigning task", error);
+                alert("Failed to assign technician.");
+            }
+        });
     };
 
     // Schedule actions for Lab Managers
@@ -161,18 +193,20 @@ function Maintenance() {
             alert("Please fill in all scheduling fields.");
             return;
         }
-        try {
-            const token = localStorage.getItem("token");
-            const headers = { Authorization: `Bearer ${token}` };
-            await axios.post("http://localhost:8080/api/preventive", newSchedule, { headers });
-            alert("Preventive maintenance scheduled successfully.");
-            setShowScheduleModal(false);
-            setNewSchedule({ equipmentId: "", scheduledDate: "", description: "" });
-            loadData();
-        } catch (error) {
-            console.error("Error scheduling PM", error);
-            alert("Failed to schedule maintenance.");
-        }
+        triggerConfirm("Schedule PM", "Are you sure you want to schedule this preventive maintenance?", async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { Authorization: `Bearer ${token}` };
+                await axios.post("http://localhost:8080/api/preventive", newSchedule, { headers });
+                alert("Preventive maintenance scheduled successfully.");
+                setShowScheduleModal(false);
+                setNewSchedule({ equipmentId: "", scheduledDate: "", description: "" });
+                loadData();
+            } catch (error) {
+                console.error("Error scheduling PM", error);
+                alert("Failed to schedule maintenance.");
+            }
+        });
     };
 
     // Preventive actions for Lab Technicians
@@ -188,20 +222,181 @@ function Maintenance() {
             alert("Please enter completion remarks.");
             return;
         }
-        try {
-            const token = localStorage.getItem("token");
-            const headers = { Authorization: `Bearer ${token}` };
-            await axios.put(`http://localhost:8080/api/preventive/${selectedPm.id}`, {
-                status: "COMPLETED",
-                remarks: pmRemarks
-            }, { headers });
-            alert("Preventive maintenance marked as Completed.");
-            setShowCompletePmModal(false);
-            loadData();
-        } catch (error) {
-            console.error("Error completing PM", error);
-            alert("Failed to complete preventive maintenance.");
+        triggerConfirm("Complete PM Task", "Are you sure you want to complete this preventive maintenance task?", async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { Authorization: `Bearer ${token}` };
+                await axios.put(`http://localhost:8080/api/preventive/${selectedPm.id}`, {
+                    status: "COMPLETED",
+                    remarks: pmRemarks
+                }, { headers });
+                alert("Preventive maintenance marked as Completed.");
+                setShowCompletePmModal(false);
+                loadData();
+            } catch (error) {
+                console.error("Error completing PM", error);
+                alert("Failed to complete preventive maintenance.");
+            }
+        });
+    };
+
+    const handleCompleteCalibration = async (equipId) => {
+        triggerConfirm("Complete Calibration", "Are you sure you want to mark this equipment's calibration as completed?", async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { Authorization: `Bearer ${token}` };
+                await axios.post(`http://localhost:8080/api/equipment/${equipId}/calibration/complete`, {}, { headers });
+                alert("Calibration marked as completed successfully. Dates have been updated.");
+                loadData();
+            } catch (error) {
+                console.error("Error completing calibration", error);
+                alert("Failed to complete calibration.");
+            }
+        });
+    };
+
+
+
+    const handleRenewLicense = async (equipId) => {
+        triggerConfirm("Renew License", "Are you sure you want to renew this equipment's license?", async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { Authorization: `Bearer ${token}` };
+                await axios.post(`http://localhost:8080/api/equipment/${equipId}/license/renew`, {}, { headers });
+                alert("License marked as renewed successfully. Expiration date has been updated.");
+                loadData();
+            } catch (error) {
+                console.error("Error renewing license", error);
+                alert("Failed to renew license.");
+            }
+        });
+    };
+
+    const handleRenewCertificate = async (equipId) => {
+        triggerConfirm("Renew Certificate", "Are you sure you want to renew this equipment's certificate?", async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { Authorization: `Bearer ${token}` };
+                await axios.post(`http://localhost:8080/api/equipment/${equipId}/certificate/renew`, {}, { headers });
+                alert("Certificate marked as renewed successfully. Expiration date has been updated.");
+                loadData();
+            } catch (error) {
+                console.error("Error renewing certificate", error);
+                alert("Failed to renew certificate.");
+            }
+        });
+    };
+
+    const openEditComplianceModal = (eq, type) => {
+        let dueDate = "";
+        let frequency = "";
+        if (type === "CALIBRATION") {
+            dueDate = eq.nextCalibrationDate || "";
+            frequency = eq.calibrationFrequency || "Every 3 Months";
+        } else if (type === "LICENSE") {
+            dueDate = eq.licenseRenewalDate || "";
+            frequency = eq.licenseRenewalFrequency || "Every 6 Months";
+        } else if (type === "CERTIFICATE") {
+            dueDate = eq.certificateRenewalDate || "";
+            frequency = eq.certificateRenewalFrequency || "Every 6 Months";
         }
+        setComplianceEditForm({
+            equipmentId: eq.id,
+            type,
+            dueDate,
+            frequency
+        });
+        setShowEditComplianceModal(true);
+    };
+
+    const handleComplianceEditSubmit = async (e) => {
+        e.preventDefault();
+        triggerConfirm("Update Compliance Details", "Are you sure you want to update these compliance scheduling details?", async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const headers = { Authorization: `Bearer ${token}` };
+                
+                const equipRes = await axios.get(`http://localhost:8080/api/equipment/${complianceEditForm.equipmentId}`, { headers });
+                const eq = equipRes.data;
+                
+                if (complianceEditForm.type === "CALIBRATION") {
+                    eq.nextCalibrationDate = complianceEditForm.dueDate;
+                    eq.calibrationFrequency = complianceEditForm.frequency;
+                    eq.calibrationStatus = "Scheduled";
+                } else if (complianceEditForm.type === "LICENSE") {
+                    eq.licenseRenewalDate = complianceEditForm.dueDate;
+                    eq.licenseRenewalFrequency = complianceEditForm.frequency;
+                    eq.licenseStatus = "Active";
+                } else if (complianceEditForm.type === "CERTIFICATE") {
+                    eq.certificateRenewalDate = complianceEditForm.dueDate;
+                    eq.certificateRenewalFrequency = complianceEditForm.frequency;
+                    eq.certificateStatus = "Active";
+                }
+                
+                await axios.put(`http://localhost:8080/api/equipment/${complianceEditForm.equipmentId}`, eq, { headers });
+                alert("Compliance schedule updated successfully.");
+                setShowEditComplianceModal(false);
+                loadData();
+            } catch (err) {
+                console.error("Error updating compliance", err);
+                alert("Failed to update compliance details.");
+            }
+        });
+    };
+
+    const getCalibrationStatusBadge = (status) => {
+        switch (status) {
+            case "Completed":
+                return <Badge bg="success">Completed</Badge>;
+            case "Due Soon":
+                return <Badge bg="warning" text="dark">Due Soon</Badge>;
+            case "Overdue":
+                return <Badge bg="danger">Overdue</Badge>;
+            default:
+                return <Badge bg="primary">Scheduled</Badge>;
+        }
+    };
+
+    const getComplianceStatusBadge = (status) => {
+        switch (status) {
+            case "Active":
+            case "Renewed":
+                return <Badge bg="success">{status}</Badge>;
+            case "Due Soon":
+                return <Badge bg="warning" text="dark">Due Soon</Badge>;
+            case "Expired":
+                return <Badge bg="danger">Expired</Badge>;
+            default:
+                return <Badge bg="primary">Active</Badge>;
+        }
+    };
+
+    const getLicenseStatus = (eq) => {
+        if (eq.licenseStatus === "Renewed") return "Renewed";
+        if (!eq.licenseExpiryDate) return "Active";
+        const exp = new Date(eq.licenseExpiryDate);
+        const today = new Date();
+        if (exp < today) return "Expired";
+        
+        const diffTime = exp.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays >= 0 && diffDays <= 7) return "Due Soon";
+        
+        return "Active";
+    };
+
+    const getCertificateStatus = (eq) => {
+        if (eq.certificateStatus === "Renewed") return "Renewed";
+        if (!eq.certificateExpiryDate) return "Active";
+        const exp = new Date(eq.certificateExpiryDate);
+        const today = new Date();
+        if (exp < today) return "Expired";
+        
+        const diffTime = exp.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays >= 0 && diffDays <= 7) return "Due Soon";
+        
+        return "Active";
     };
 
     // Badges helper
@@ -226,15 +421,23 @@ function Maintenance() {
                     </Card.Body>
                 </Card>
 
-                {/* Tab layout toggling between Issues and PM */}
+                {/* Tab layout toggling between Issues, PM, Calibration, and Renewals */}
                 <Nav variant="tabs" className="mb-4" activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
                     <Nav.Item>
                         <Nav.Link eventKey="issues"><FaTools className="me-2" /> Reported Issues</Nav.Link>
                     </Nav.Item>
                     {!["STUDENT", "RESEARCHER"].includes(role) && (
-                        <Nav.Item>
-                            <Nav.Link eventKey="preventive"><FaClipboardList className="me-2" /> Preventive Maintenance Schedules</Nav.Link>
-                        </Nav.Item>
+                        <>
+                            <Nav.Item>
+                                <Nav.Link eventKey="preventive"><FaClipboardList className="me-2" /> Preventive Maintenance Schedules</Nav.Link>
+                            </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link eventKey="calibration"><FaClipboardList className="me-2" /> Calibration Tests</Nav.Link>
+                            </Nav.Item>
+                            <Nav.Item>
+                                <Nav.Link eventKey="renewals"><FaClipboardList className="me-2" /> License & Certificate Renewal</Nav.Link>
+                            </Nav.Item>
+                        </>
                     )}
                 </Nav>
 
@@ -348,7 +551,7 @@ function Maintenance() {
                             )}
                         </Card.Body>
                     </Card>
-                ) : (
+                ) : activeTab === "preventive" ? (
                     // Preventive Maintenance Tab
                     <Card className="shadow border-0">
                         {role === "LAB_MANAGER" && (
@@ -398,6 +601,167 @@ function Maintenance() {
                                                 )}
                                             </tr>
                                         ))}
+                                    </tbody>
+                                </Table>
+                            )}
+                        </Card.Body>
+                    </Card>
+                ) : activeTab === "calibration" ? (
+                    // Calibration Tests Tab
+                    <Card className="shadow border-0">
+                        <Card.Body className="p-0">
+                            {equipments.filter(e => e.nextCalibrationDate).length === 0 ? (
+                                <p className="text-center text-muted py-5 mb-0">No calibration tests scheduled.</p>
+                            ) : (
+                                <Table striped hover responsive className="mb-0 align-middle">
+                                    <thead className="table-light">
+                                        <tr>
+                                            <th>Equipment Name</th>
+                                            <th>Maintenance Type</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Assigned Technician</th>
+                                            {!["DEPARTMENT_HEAD"].includes(role) && <th className="text-center">Actions</th>}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {equipments.filter(e => e.nextCalibrationDate).map((eq) => (
+                                            <tr key={eq.id}>
+                                                <td>
+                                                    <strong>{eq.equipmentName}</strong>
+                                                    <br />
+                                                    <small className="text-muted">Serial: {eq.serialNumber}</small>
+                                                </td>
+                                                <td>Calibration Test</td>
+                                                <td>{eq.nextCalibrationDate}</td>
+                                                <td>{getCalibrationStatusBadge(eq.calibrationStatus)}</td>
+                                                <td>Lab Technician</td>
+                                                {!["DEPARTMENT_HEAD"].includes(role) && (
+                                                    <td className="text-center">
+                                                        {role === "LAB_TECHNICIAN" && eq.calibrationStatus !== "Completed" && (
+                                                            <Button 
+                                                                variant="success" 
+                                                                size="sm" 
+                                                                onClick={() => handleCompleteCalibration(eq.id)}
+                                                            >
+                                                                <FaCheck className="me-1" /> Complete Calibration
+                                                            </Button>
+                                                        )}
+                                                        {["SYSTEM_ADMIN", "INSTITUTION_ADMIN", "LAB_MANAGER"].includes(role) && (
+                                                            <Button 
+                                                                variant="outline-primary" 
+                                                                size="sm" 
+                                                                onClick={() => openEditComplianceModal(eq, "CALIBRATION")}
+                                                            >
+                                                                Edit Details
+                                                            </Button>
+                                                        )}
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                            )}
+                        </Card.Body>
+                    </Card>
+                ) : (
+                    // License & Certificate Renewal Tab
+                    <Card className="shadow border-0">
+                        <Card.Body className="p-0">
+                            {equipments.filter(e => e.licenseRenewalDate || e.certificateRenewalDate).length === 0 ? (
+                                <p className="text-center text-muted py-5 mb-0">No license or certificate renewals scheduled.</p>
+                            ) : (
+                                <Table striped hover responsive className="mb-0 align-middle">
+                                    <thead className="table-light">
+                                        <tr>
+                                            <th>Equipment Name</th>
+                                            <th>Maintenance Type</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Assigned Technician</th>
+                                            {!["DEPARTMENT_HEAD"].includes(role) && <th className="text-center">Actions</th>}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {/* Render License Renewals */}
+                                        {equipments.filter(e => e.licenseRenewalDate).map((eq) => {
+                                            const status = getLicenseStatus(eq);
+                                            return (
+                                                <tr key={`lic-${eq.id}`}>
+                                                    <td>
+                                                        <strong>{eq.equipmentName}</strong>
+                                                        <br />
+                                                        <small className="text-muted">License: {eq.licenseNumber || "N/A"}</small>
+                                                    </td>
+                                                    <td>License Renewal</td>
+                                                    <td>{eq.licenseRenewalDate}</td>
+                                                    <td>{getComplianceStatusBadge(status)}</td>
+                                                    <td>Institution Admin</td>
+                                                    {!["DEPARTMENT_HEAD"].includes(role) && (
+                                                        <td className="text-center">
+                                                            {role === "LAB_TECHNICIAN" && status !== "Renewed" && (
+                                                                <Button 
+                                                                    variant="success" 
+                                                                    size="sm" 
+                                                                    onClick={() => handleRenewLicense(eq.id)}
+                                                                >
+                                                                    <FaCheck className="me-1" /> Mark Renewed
+                                                                </Button>
+                                                            )}
+                                                            {["SYSTEM_ADMIN", "INSTITUTION_ADMIN", "LAB_MANAGER"].includes(role) && (
+                                                                <Button 
+                                                                    variant="outline-primary" 
+                                                                    size="sm" 
+                                                                    onClick={() => openEditComplianceModal(eq, "LICENSE")}
+                                                                >
+                                                                    Edit Details
+                                                                </Button>
+                                                            )}
+                                                        </td>
+                                                    )}
+                                                </tr>
+                                            );
+                                        })}
+                                        {/* Render Certificate Renewals */}
+                                        {equipments.filter(e => e.certificateRenewalDate).map((eq) => {
+                                            const status = getCertificateStatus(eq);
+                                            return (
+                                                <tr key={`cert-${eq.id}`}>
+                                                    <td>
+                                                        <strong>{eq.equipmentName}</strong>
+                                                        <br />
+                                                        <small className="text-muted">Certificate: {eq.certificateNumber || "N/A"}</small>
+                                                    </td>
+                                                    <td>Certificate Renewal</td>
+                                                    <td>{eq.certificateRenewalDate}</td>
+                                                    <td>{getComplianceStatusBadge(status)}</td>
+                                                    <td>Lab Manager</td>
+                                                    {!["DEPARTMENT_HEAD"].includes(role) && (
+                                                        <td className="text-center">
+                                                            {role === "LAB_TECHNICIAN" && status !== "Renewed" && (
+                                                                <Button 
+                                                                    variant="success" 
+                                                                    size="sm" 
+                                                                    onClick={() => handleRenewCertificate(eq.id)}
+                                                                >
+                                                                    <FaCheck className="me-1" /> Mark Renewed
+                                                                </Button>
+                                                            )}
+                                                            {["SYSTEM_ADMIN", "INSTITUTION_ADMIN", "LAB_MANAGER"].includes(role) && (
+                                                                <Button 
+                                                                    variant="outline-primary" 
+                                                                    size="sm" 
+                                                                    onClick={() => openEditComplianceModal(eq, "CERTIFICATE")}
+                                                                >
+                                                                    Edit Details
+                                                                </Button>
+                                                            )}
+                                                        </td>
+                                                    )}
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </Table>
                             )}
@@ -540,6 +904,56 @@ function Maintenance() {
                     </Modal.Footer>
                 </Form>
             </Modal>
+            {/* Edit Compliance Details Modal */}
+            <Modal show={showEditComplianceModal} onHide={() => setShowEditComplianceModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Update Compliance Schedule Details</Modal.Title>
+                </Modal.Header>
+                <Form onSubmit={handleComplianceEditSubmit}>
+                    <Modal.Body>
+                        <Row className="g-3">
+                            <Col md={12}>
+                                <Form.Group>
+                                    <Form.Label>Target Due Date / Deadline</Form.Label>
+                                    <Form.Control 
+                                        type="date" 
+                                        value={complianceEditForm.dueDate}
+                                        onChange={(e) => setComplianceEditForm(prev => ({ ...prev, dueDate: e.target.value }))}
+                                        required
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col md={12}>
+                                <Form.Group>
+                                    <Form.Label>Renewal / Recalibration Frequency</Form.Label>
+                                    <Form.Select 
+                                        value={complianceEditForm.frequency}
+                                        onChange={(e) => setComplianceEditForm(prev => ({ ...prev, frequency: e.target.value }))}
+                                        required
+                                    >
+                                        <option value="Every 3 Months">Every 3 Months</option>
+                                        <option value="Every 6 Months">Every 6 Months</option>
+                                        <option value="Every 12 Months">Every 12 Months</option>
+                                        <option value="Custom Date">Custom Date</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => setShowEditComplianceModal(false)}>Cancel</Button>
+                        <Button variant="primary" type="submit">Save Changes</Button>
+                    </Modal.Footer>
+                </Form>
+            </Modal>
+
+            <ConfirmationModal
+                show={showConfirm}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                onConfirm={confirmConfig.action}
+                onCancel={() => setShowConfirm(false)}
+            />
         </DashboardLayout>
     );
 }

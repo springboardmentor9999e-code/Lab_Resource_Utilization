@@ -20,6 +20,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final EquipmentRepository equipmentRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationRepository notificationRepository;
 
     public DatabaseSeeder(RoleRepository roleRepository,
                           InstitutionRepository institutionRepository,
@@ -27,7 +28,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                           LaboratoryRepository laboratoryRepository,
                           EquipmentRepository equipmentRepository,
                           UserRepository userRepository,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder,
+                          NotificationRepository notificationRepository) {
         this.roleRepository = roleRepository;
         this.institutionRepository = institutionRepository;
         this.departmentRepository = departmentRepository;
@@ -35,6 +37,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.equipmentRepository = equipmentRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.notificationRepository = notificationRepository;
     }
 
     @Override
@@ -369,6 +372,138 @@ public class DatabaseSeeder implements CommandLineRunner {
             createUser("pending@infosys.com", "pending", "Pending Registration User", studentRole, cseId, instId, "PENDING");
         }
         updateExistingEquipmentUrls();
+
+        // Seed Geotechnical & Surveying Lab and Equipment
+        boolean hasCivilLab = laboratoryRepository.findAll().stream().anyMatch(l -> "Geotechnical & Surveying Lab".equalsIgnoreCase(l.getLabName()));
+        if (!hasCivilLab && mechDept != null) {
+            System.out.println("Seeding Geotechnical & Surveying Lab and Equipment...");
+            Laboratory geoLab = new Laboratory();
+            geoLab.setLabName("Geotechnical & Surveying Lab");
+            geoLab.setDepartment(mechDept);
+            geoLab.setDescription("Testing and analysis of soil, structures, concrete, and advanced surveying methods.");
+            geoLab = laboratoryRepository.save(geoLab);
+
+            createEquipment("Total Station", "Surveying", "Precision electronic/optical instrument used in modern surveying and building construction.", "Leica", "TS16", "LC-TS-7762391", 3, "/images/equipment/total-station.jpg", "https://leica-geosystems.com/products/total-stations", geoLab);
+            createEquipment("Universal Testing Machine", "Structural Testing", "High-capacity load frame used to test the tensile strength and compressive strength of materials.", "Instron", "UTM-5960", "IS-UTM-9834710", 2, "/images/equipment/universal-testing-machine.jpg", "https://www.instron.com/products/testing-systems", geoLab);
+            createEquipment("Auto Level", "Surveying", "Professional optical instrument used by contractors, builders and land surveying professionals.", "Topcon", "AT-B4A", "TC-AL-5462711", 5, "/images/equipment/auto-level.jpg", "https://www.topconpositioning.com/optical-instruments/auto-levels", geoLab);
+            createEquipment("Compression Testing Machine", "Concrete Testing", "Rigid compression frame designed for testing concrete cubes, cylinders and blocks.", "Heico", "CTM-2000", "HC-CTM-8876230", 2, "/images/equipment/compression-testing-machine.jpg", "https://www.heicoin.com/concrete-testing", geoLab);
+            createEquipment("GPS Survey Receiver", "Surveying", "Multi-frequency GNSS receiver for high accuracy surveying and geodetic measurements.", "Trimble", "R12i", "TB-GPS-671380", 4, "/images/equipment/gps-survey-receiver.jpg", "https://geospatial.trimble.com/products-and-solutions/gnss-systems", geoLab);
+        }
+
+        // Setup custom dates for specific demo equipment
+        List<Equipment> allEquip = equipmentRepository.findAll();
+        for (Equipment e : allEquip) {
+            if ("Total Station".equalsIgnoreCase(e.getEquipmentName())) {
+                e.setNextCalibrationDate(LocalDate.now().plusDays(1));
+                e.setCalibrationStatus("Due Soon");
+                equipmentRepository.save(e);
+            } else if ("Universal Testing Machine".equalsIgnoreCase(e.getEquipmentName())) {
+                e.setNextCalibrationDate(LocalDate.now().minusDays(5));
+                e.setCalibrationStatus("Overdue");
+                equipmentRepository.save(e);
+            } else if ("Auto Level".equalsIgnoreCase(e.getEquipmentName())) {
+                e.setLicenseExpiryDate(LocalDate.now().plusDays(2));
+                e.setLicenseRenewalDate(LocalDate.now().plusDays(2));
+                equipmentRepository.save(e);
+            } else if ("Compression Testing Machine".equalsIgnoreCase(e.getEquipmentName())) {
+                e.setCertificateExpiryDate(LocalDate.now().plusDays(1));
+                e.setCertificateRenewalDate(LocalDate.now().plusDays(1));
+                equipmentRepository.save(e);
+            }
+        }
+
+        // Seed realistic notifications for demo
+        System.out.println("Seeding Demo Notifications...");
+        notificationRepository.deleteAll();
+
+        User student = userRepository.findByEmail("student@infosys.com").orElse(null);
+        Long studentId = (student != null && student.getUserId() != null) ? Long.valueOf(student.getUserId()) : null;
+        Long instId = (student != null && student.getInstitutionId() != null) ? Long.valueOf(student.getInstitutionId()) : null;
+
+        User researcher = userRepository.findByEmail("researcher@infosys.com").orElse(null);
+        Long researcherId = (researcher != null && researcher.getUserId() != null) ? Long.valueOf(researcher.getUserId()) : null;
+
+        User manager = userRepository.findByEmail("manager@infosys.com").orElse(null);
+        Long managerId = (manager != null && manager.getUserId() != null) ? Long.valueOf(manager.getUserId()) : null;
+
+        User tech = userRepository.findByEmail("tech@infosys.com").orElse(null);
+        Long techId = (tech != null && tech.getUserId() != null) ? Long.valueOf(tech.getUserId()) : null;
+
+        User hod = userRepository.findByEmail("hod@infosys.com").orElse(null);
+        Long hodId = (hod != null && hod.getUserId() != null) ? Long.valueOf(hod.getUserId()) : null;
+
+        User admin = userRepository.findByEmail("admin@infosys.com").orElse(null);
+        Long adminId = (admin != null && admin.getUserId() != null) ? Long.valueOf(admin.getUserId()) : null;
+
+        User sys = userRepository.findByEmail("admin@system.com").orElse(null);
+        Long sysId = (sys != null && sys.getUserId() != null) ? Long.valueOf(sys.getUserId()) : null;
+
+        // 1. STUDENT / RESEARCHER
+        createNotification(studentId, "STUDENT", instId, "[DEMO] Booking Approved", "Your booking request for NVIDIA Jetson AGX Xavier has been approved.", "BOOKING", "High");
+        createNotification(studentId, "STUDENT", instId, "[DEMO] Booking Rejected", "Your booking request for GPU Server RTX 4090 was rejected due to high utilization demand.", "BOOKING", "Medium");
+        createNotification(studentId, "STUDENT", instId, "[DEMO] Booking Completed", "Your booking for Stanford High-Performance Server has been completed.", "BOOKING", "Low");
+        createNotification(studentId, "STUDENT", instId, "[DEMO] Equipment Returned", "Equipment returned successfully: NVIDIA Jetson AGX Xavier.", "BOOKING", "Low");
+
+        createNotification(researcherId, "RESEARCHER", instId, "[DEMO] Booking Approved", "Your booking request for NVIDIA Jetson AGX Xavier has been approved.", "BOOKING", "High");
+        createNotification(researcherId, "RESEARCHER", instId, "[DEMO] Booking Completed", "Your booking for GPU Server RTX 4090 has been completed.", "BOOKING", "Low");
+
+        // 2. LAB TECHNICIAN
+        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] New Issue Reported", "New issue reported: Lens alignment error on Auto Level.", "MAINTENANCE", "Medium");
+        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Maintenance Assigned", "Preventive maintenance assigned: Inspect Dobot Magician Robotic Arm.", "MAINTENANCE", "High");
+        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Maintenance Completed", "Recalibration task on Universal Testing Machine completed successfully.", "MAINTENANCE", "Low");
+        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Calibration Due", "Total Station calibration is due tomorrow.", "CALIBRATION", "High");
+        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Calibration Overdue", "Universal Testing Machine calibration is overdue!", "CALIBRATION", "High");
+        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
+        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Certificate Renewal Due", "Compression Testing Machine certificate renewal due tomorrow.", "CERTIFICATE_RENEWAL", "High");
+
+        // 3. LAB MANAGER
+        createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Maintenance Requests", "New preventive maintenance request submitted for Rigol Function Generator.", "MAINTENANCE", "Medium");
+        createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Maintenance Status", "Dobot Magician Robotic Arm maintenance status changed to In Progress.", "MAINTENANCE", "Low");
+        createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Calibration Due", "Total Station calibration is due tomorrow.", "CALIBRATION", "High");
+        createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
+        createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Equipment Under Maintenance", "Dobot Magician Robotic Arm status changed to Under Maintenance.", "MAINTENANCE", "Medium");
+        createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Laboratory Notification", "Lab-03 monthly checkup scheduled.", "SYSTEM", "Low");
+
+        // 4. DEPARTMENT HEAD
+        createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] Department Maintenance", "Monthly preventive maintenance summary: 2 resolved, 1 pending.", "MAINTENANCE", "Low");
+        createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] Calibration Due", "Total Station calibration is due tomorrow.", "CALIBRATION", "Medium");
+        createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
+        createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] Equipment Health", "NVIDIA Jetson AGX Xavier reported under critical warning.", "EQUIPMENT", "High");
+        createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] Department Alert", "Department Lab access policy updated.", "SYSTEM", "Low");
+
+        // 5. INSTITUTION ADMINISTRATOR
+        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Pending User Approvals", "There are pending user registration requests waiting for your approval.", "SYSTEM", "High");
+        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Booking Approval Request", "Inter-institute booking request pending approval for Stanford Tech.", "BOOKING", "Medium");
+        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Maintenance Summary", "Weekly overview: 15 active maintenance schedules across all colleges.", "MAINTENANCE", "Low");
+        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Calibration Due", "Total Station calibration is due tomorrow.", "CALIBRATION", "Medium");
+        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
+        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Certificate Renewal Due", "Compression Testing Machine certificate renewal due tomorrow.", "CERTIFICATE_RENEWAL", "High");
+        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Institution Alert", "Boston Dynamics Spot Robot requires warranty inspection soon.", "SYSTEM", "Low");
+
+        // 6. SYSTEM ADMINISTRATOR
+        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Institution-wide Alerts", "Weekly overview: 15 active maintenance schedules across all colleges.", "SYSTEM", "Low");
+        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Pending User Approvals", "There are pending user registration requests waiting for your approval.", "SYSTEM", "High");
+        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Cross-Institute Resource Sharing", "Inter-institute booking request pending approval for Stanford Tech.", "BOOKING", "Medium");
+        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Booking Approval Request", "Inter-institute booking request pending approval for Stanford Tech.", "BOOKING", "Medium");
+        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Maintenance Summary", "Weekly overview: 15 active maintenance schedules across all colleges.", "MAINTENANCE", "Low");
+        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Calibration Due", "Total Station calibration is due tomorrow.", "CALIBRATION", "Medium");
+        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
+        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Certificate Renewal Due", "Compression Testing Machine certificate renewal due tomorrow.", "CERTIFICATE_RENEWAL", "High");
+        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Overall System Alerts", "Overall System Database maintenance scheduled for Sunday at 02:00 AM.", "SYSTEM", "Low");
+    }
+
+    private void createNotification(Long userId, String roleName, Long institutionId, String title, String message, String category, String priority) {
+        Notification n = new Notification();
+        n.setUserId(userId);
+        n.setRoleName(roleName);
+        n.setInstitutionId(institutionId);
+        n.setTitle(title);
+        n.setMessage(message);
+        n.setCategory(category);
+        n.setPriority(priority);
+        n.setRead(false);
+        n.setCreatedAt(java.time.LocalDateTime.now());
+        notificationRepository.save(n);
     }
 
     private Role createRole(String name, String desc) {

@@ -70,6 +70,28 @@ public class BookingController {
         }
     }
 
+    @GetMapping("/sharing-history")
+    public ResponseEntity<List<Booking>> getSharingHistory(java.security.Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        List<Booking> allBookings = bookingService.getAllBookings();
+        List<Booking> sharingHistory = allBookings.stream()
+                .filter(b -> {
+                    if (b.getUser() == null || b.getEquipment() == null) return false;
+                    if (b.getEquipment().getLaboratory() == null ||
+                        b.getEquipment().getLaboratory().getDepartment() == null ||
+                        b.getEquipment().getLaboratory().getDepartment().getInstitution() == null) return false;
+                    Long eqInstId = b.getEquipment().getLaboratory().getDepartment().getInstitution().getInstitutionId();
+                    Integer userInstId = b.getUser().getInstitutionId();
+                    return userInstId == null || !eqInstId.equals(Long.valueOf(userInstId));
+                })
+                .collect(java.util.stream.Collectors.toList());
+                
+        return ResponseEntity.ok(sharingHistory);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBooking(@PathVariable Long id) {
 

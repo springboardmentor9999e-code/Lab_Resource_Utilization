@@ -91,6 +91,7 @@ function Sidebar() {
             { name: "Dashboard", path: "/system-dashboard", icon: <FaHome /> },
             { name: "Institutions", path: "/institutions", icon: <FaUniversity /> },
             { name: "Users", path: "/users", icon: <FaUsers /> },
+            { name: "Bookings", path: "/bookings", icon: <FaClipboardList /> },
             { name: "Reports", path: "/reports", icon: <FaChartBar /> },
             { name: "Maintenance", path: "/maintenance", icon: <FaTools /> },
             { name: "Utilization Cost", path: "/utilization-cost", icon: <FaDollarSign /> },

@@ -123,4 +123,81 @@ public class Institution {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    @Transient
+    private Integer totalDepartments;
+
+    @Transient
+    private Integer totalLaboratories;
+
+    @Transient
+    private Integer totalEquipment;
+
+    @Transient
+    private Integer activeUsers;
+
+    @Transient
+    private String institutionAdministrator;
+
+    @Transient
+    private String equipmentUtilizationSummary;
+
+    @Transient
+    private String resourceSharingSummary;
+
+    public Integer getTotalDepartments() {
+        return totalDepartments;
+    }
+
+    public void setTotalDepartments(Integer totalDepartments) {
+        this.totalDepartments = totalDepartments;
+    }
+
+    public Integer getTotalLaboratories() {
+        return totalLaboratories;
+    }
+
+    public void setTotalLaboratories(Integer totalLaboratories) {
+        this.totalLaboratories = totalLaboratories;
+    }
+
+    public Integer getTotalEquipment() {
+        return totalEquipment;
+    }
+
+    public void setTotalEquipment(Integer totalEquipment) {
+        this.totalEquipment = totalEquipment;
+    }
+
+    public Integer getActiveUsers() {
+        return activeUsers;
+    }
+
+    public void setActiveUsers(Integer activeUsers) {
+        this.activeUsers = activeUsers;
+    }
+
+    public String getInstitutionAdministrator() {
+        return institutionAdministrator;
+    }
+
+    public void setInstitutionAdministrator(String institutionAdministrator) {
+        this.institutionAdministrator = institutionAdministrator;
+    }
+
+    public String getEquipmentUtilizationSummary() {
+        return equipmentUtilizationSummary;
+    }
+
+    public void setEquipmentUtilizationSummary(String equipmentUtilizationSummary) {
+        this.equipmentUtilizationSummary = equipmentUtilizationSummary;
+    }
+
+    public String getResourceSharingSummary() {
+        return resourceSharingSummary;
+    }
+
+    public void setResourceSharingSummary(String resourceSharingSummary) {
+        this.resourceSharingSummary = resourceSharingSummary;
+    }
 }
