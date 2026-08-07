@@ -476,8 +476,18 @@ export default function Dashboard({ user, onLogout }) {
       headers: getAuthHeaders(),
       body: JSON.stringify(payload)
     })
-    .then(res => {
-      if (!res.ok) throw new Error('Failed to put equipment into maintenance');
+    .then(async res => {
+      if (!res.ok) {
+        let errStr = 'Failed to put equipment into maintenance';
+        try {
+          const json = await res.json();
+          errStr = json.message || json.error || errStr;
+        } catch {
+          const text = await res.text().catch(() => '');
+          if (text) errStr = text;
+        }
+        throw new Error(errStr);
+      }
       return res.json();
     })
     .then(() => {
@@ -3150,7 +3160,7 @@ export default function Dashboard({ user, onLogout }) {
                     Labs
                   </button>
                 )}
-                {hasPermission('manage_maintenance')&&(
+                {(hasPermission('manage_maintenance') || hasPermission('manage_maintenance_requests') ) &&(
                 <button
                   onClick={() => setActiveSubTab('maintenance')}
                   className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
