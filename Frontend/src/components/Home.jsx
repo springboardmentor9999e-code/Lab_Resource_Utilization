@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
-import heroImg from '../assets/hero.jpg';
-import microscope from '../assets/microscope.png'
+import heroImg from '../../public/hero.jpg';
+import microscope from '../../public/microscope.png'
 
 export default function Home({ onNavigate }) {
   const [activeSection, setActiveSection] = useState('home');

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Skeleton from "react-loading-skeleton";
 import { usePermissions } from "../context/PermissionsContext";
-import microscope from "../assets/microscope.png";
+import microscope from '../../public/microscope.png'
 import EquipmentReturnCalendar from "./EquipmentReturnCalendar";
 
 export default function StudentDashboard({ user, onLogout }) {
@@ -40,15 +40,15 @@ export default function StudentDashboard({ user, onLogout }) {
   const [actionLoading, setActionLoading] = useState({});
   const setButtonLoading = (key, isLoading) => setActionLoading(prev => ({ ...prev, [key]: isLoading }));
 
-  // Form values
-  const [bookingPurpose, setBookingPurpose] = useState("");
-  const [bookingDate, setBookingDate] = useState("2026-07-21");
-  const [bookingStart, setBookingStart] = useState("09:00");
-  const [bookingEnd, setBookingEnd] = useState("11:00");
+  // Form refs (Uncontrolled components - zero re-renders while typing)
+  const bookingPurposeRef = useRef(null);
+  const bookingDateRef = useRef(null);
+  const bookingStartRef = useRef(null);
+  const bookingEndRef = useRef(null);
 
-  const [waitlistDate, setWaitlistDate] = useState("2026-07-21");
-  const [waitlistStart, setWaitlistStart] = useState("09:00");
-  const [waitlistEnd, setWaitlistEnd] = useState("11:00");
+  const waitlistDateRef = useRef(null);
+  const waitlistStartRef = useRef(null);
+  const waitlistEndRef = useRef(null);
 
   useEffect(() => {
     setViewedEquipment(null);
@@ -215,6 +215,11 @@ export default function StudentDashboard({ user, onLogout }) {
     e.preventDefault();
     if (!selectedEquipment) return;
 
+    const bookingDate = bookingDateRef.current?.value || "2026-07-21";
+    const bookingStart = bookingStartRef.current?.value || "09:00";
+    const bookingEnd = bookingEndRef.current?.value || "11:00";
+    const bookingPurpose = bookingPurposeRef.current?.value || "General Student Lab Research run";
+
     const key = `book-confirm-${selectedEquipment.id || selectedEquipment.equipmentId}`;
     setButtonLoading(key, true);
 
@@ -222,7 +227,7 @@ export default function StudentDashboard({ user, onLogout }) {
       equipmentId: selectedEquipment.equipmentId || selectedEquipment.id,
       startTime: `${bookingDate}T${bookingStart}:00Z`,
       endTime: `${bookingDate}T${bookingEnd}:00Z`,
-      purpose: bookingPurpose || "General Student Lab Research run",
+      purpose: bookingPurpose,
     };
 
     fetch("http://localhost:8080/api/bookings", {
@@ -246,7 +251,7 @@ export default function StudentDashboard({ user, onLogout }) {
           startTime: `${bookingDate}T${bookingStart}:00Z`,
           endTime: `${bookingDate}T${bookingEnd}:00Z`,
           createdAt: new Date().toISOString(),
-          purpose: bookingPurpose || "General Student Lab Research run",
+          purpose: bookingPurpose,
           status: "Pending Approval",
         };
         setBookings([newBooking, ...bookings]);
@@ -263,6 +268,10 @@ export default function StudentDashboard({ user, onLogout }) {
   const handleConfirmWaitlist = (e) => {
     e.preventDefault();
     if (!selectedWaitlistEquipment) return;
+
+    const waitlistDate = waitlistDateRef.current?.value || "2026-07-21";
+    const waitlistStart = waitlistStartRef.current?.value || "09:00";
+    const waitlistEnd = waitlistEndRef.current?.value || "11:00";
 
     const startISO = `${waitlistDate}T${waitlistStart}:00Z`;
     const endISO = `${waitlistDate}T${waitlistEnd}:00Z`;
@@ -371,11 +380,13 @@ export default function StudentDashboard({ user, onLogout }) {
     const endInstant = new Date(notif.requestedEnd);
     const endTimeStr = endInstant.toTimeString().substring(0, 5);
 
-    setBookingDate(dateStr);
-    setBookingStart(startTimeStr);
-    setBookingEnd(endTimeStr);
-    setBookingPurpose("Waitlist Priority Fulfillment");
     setSelectedEquipment(eq);
+    setTimeout(() => {
+      if (bookingDateRef.current) bookingDateRef.current.value = dateStr;
+      if (bookingStartRef.current) bookingStartRef.current.value = startTimeStr;
+      if (bookingEndRef.current) bookingEndRef.current.value = endTimeStr;
+      if (bookingPurposeRef.current) bookingPurposeRef.current.value = "Waitlist Priority Fulfillment";
+    }, 50);
   };
 
   const renderEquipmentDetailView = (eq) => {
@@ -1346,8 +1357,8 @@ export default function StudentDashboard({ user, onLogout }) {
                 </label>
                 <input
                   type="date"
-                  value={bookingDate}
-                  onChange={(e) => setBookingDate(e.target.value)}
+                  ref={bookingDateRef}
+                  defaultValue="2026-07-21"
                   className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold"
                   required
                 />
@@ -1360,8 +1371,8 @@ export default function StudentDashboard({ user, onLogout }) {
                   </label>
                   <input
                     type="time"
-                    value={bookingStart}
-                    onChange={(e) => setBookingStart(e.target.value)}
+                    ref={bookingStartRef}
+                    defaultValue="09:00"
                     className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold"
                     required
                   />
@@ -1372,8 +1383,8 @@ export default function StudentDashboard({ user, onLogout }) {
                   </label>
                   <input
                     type="time"
-                    value={bookingEnd}
-                    onChange={(e) => setBookingEnd(e.target.value)}
+                    ref={bookingEndRef}
+                    defaultValue="11:00"
                     className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold"
                     required
                   />
@@ -1386,8 +1397,8 @@ export default function StudentDashboard({ user, onLogout }) {
                 </label>
                 <textarea
                   placeholder="Explain the project or research scope..."
-                  value={bookingPurpose}
-                  onChange={(e) => setBookingPurpose(e.target.value)}
+                  ref={bookingPurposeRef}
+                  defaultValue=""
                   className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold h-20"
                   required
                 />
@@ -1452,8 +1463,8 @@ export default function StudentDashboard({ user, onLogout }) {
                 </label>
                 <input
                   type="date"
-                  value={waitlistDate}
-                  onChange={(e) => setWaitlistDate(e.target.value)}
+                  ref={waitlistDateRef}
+                  defaultValue="2026-07-21"
                   className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold font-sans"
                   required
                 />
@@ -1466,8 +1477,8 @@ export default function StudentDashboard({ user, onLogout }) {
                   </label>
                   <input
                     type="time"
-                    value={waitlistStart}
-                    onChange={(e) => setWaitlistStart(e.target.value)}
+                    ref={waitlistStartRef}
+                    defaultValue="09:00"
                     className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold"
                     required
                   />
@@ -1478,8 +1489,8 @@ export default function StudentDashboard({ user, onLogout }) {
                   </label>
                   <input
                     type="time"
-                    value={waitlistEnd}
-                    onChange={(e) => setWaitlistEnd(e.target.value)}
+                    ref={waitlistEndRef}
+                    defaultValue="11:00"
                     className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold"
                     required
                   />

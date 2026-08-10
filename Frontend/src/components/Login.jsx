@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
-import microscope from '../assets/microscope.png';
+
+import microscope from '../../public/microscope.png'
 
 export default function Login({ onNavigate, onLoginSuccess }) {
   const [formData, setFormData] = useState({
