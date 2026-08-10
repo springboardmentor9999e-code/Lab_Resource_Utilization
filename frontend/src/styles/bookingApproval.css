@@ -1,0 +1,53 @@
+.main{
+    margin-left:250px;
+    padding:20px;
+    background:#f4f6fa;
+    min-height:100vh;
+}
+
+.approval-container{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+}
+
+.approval-container h2{
+    color:#2563eb;
+    margin-bottom:20px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+table th{
+    background:#2563eb;
+    color:white;
+    padding:12px;
+}
+
+table td{
+    padding:12px;
+    text-align:center;
+    border-bottom:1px solid #ddd;
+}
+
+.approve-btn{
+    background:#16a34a;
+    color:white;
+    border:none;
+    padding:8px 15px;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+.reject-btn{
+    background:#dc2626;
+    color:white;
+    border:none;
+    padding:8px 15px;
+    border-radius:5px;
+    cursor:pointer;
+    margin-left:8px;
+}

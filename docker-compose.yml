@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Container
+  postgres:
+    image: postgres:15-alpine
+    container_name: lab_postgres_db
+    environment:
+      POSTGRES_DB: lab_resource_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 80733
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lab_resource_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lab_network
+
+  # Spring Boot Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lab_backend_app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/lab_resource_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 80733
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_SQL_INIT_MODE: always
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lab_network
+
+  # React Frontend Service (Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lab_frontend_app
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - lab_network
+
+volumes:
+  postgres_data:
+  uploads_data:
+
+networks:
+  lab_network:
+    driver: bridge

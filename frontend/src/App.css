@@ -1,0 +1,59 @@
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background:#f3f6fb;
+}
+
+/* Login & Register Page */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.form-card {
+  width: 420px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+.register-card {
+  width: 500px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+.form-title {
+  text-align: center;
+  color: #0d6efd;
+  margin-bottom: 20px;
+}
+
+.form-control,
+.form-select {
+  height: 45px;
+}
+
+/* Dashboard */
+.dashboard-card {
+  transition: 0.3s;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-6px);
+}
+
+.card {
+  border-radius: 12px;
+}
+
+.table th,
+.table td {
+  text-align: center;
+  vertical-align: middle;
+}

@@ -1,0 +1,71 @@
+.main{
+    margin-left:250px;
+    padding:20px;
+    background:#f4f6fa;
+    min-height:100vh;
+}
+
+.role-container h2{
+    color:#2563eb;
+    margin-bottom:20px;
+}
+
+.request-form{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    margin-bottom:20px;
+}
+
+.request-form select,
+.request-form textarea{
+    width:100%;
+    padding:10px;
+    margin-bottom:15px;
+    border:1px solid #ccc;
+    border-radius:6px;
+}
+
+.request-form button{
+    background:#2563eb;
+    color:white;
+    padding:10px 20px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+table{
+    width:100%;
+    background:white;
+    border-collapse:collapse;
+}
+
+table th{
+    background:#2563eb;
+    color:white;
+    padding:12px;
+}
+
+table td{
+    padding:12px;
+    border-bottom:1px solid #ddd;
+}
+
+button{
+    margin:4px;
+    padding:8px 14px;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+button:first-child{
+    background:#16a34a;
+    color:white;
+}
+
+button:last-child{
+    background:#dc2626;
+    color:white;
+}

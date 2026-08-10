@@ -1,0 +1,180 @@
+/* =========================
+   HEATMAP PAGE
+========================= */
+
+.heatmap-page {
+    width: 100%;
+    min-height: 100vh;
+    padding: 30px;
+    background: #f8fafc;
+}
+
+.heatmap-page h2 {
+    margin: 0 0 25px;
+    color: #1e3a8a;
+    font-size: 32px;
+    font-weight: bold;
+}
+
+/* =========================
+   LEGEND
+========================= */
+
+.legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 30px;
+    font-size: 15px;
+}
+
+.box {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.heatmap-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+.heatmap-table th {
+    background: #2563eb;
+    color: white;
+    padding: 18px;
+    text-align: left;
+    font-size: 18px;
+}
+
+.heatmap-table td {
+    padding: 18px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+.heatmap-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* =========================
+   DAYS HEADER
+========================= */
+
+.days-header {
+    display: grid;
+    grid-template-columns: repeat(6, 32px);
+    gap: 16px;
+    justify-content: start;
+}
+
+.days-header div {
+    width: 32px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+}
+
+/* =========================
+   CELLS
+========================= */
+
+.cells {
+    display: grid;
+    grid-template-columns: repeat(6, 32px);
+    gap: 16px;
+    justify-content: start;
+}
+
+.cell {
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.cell:hover {
+    transform: scale(1.2);
+}
+
+/* =========================
+   EQUIPMENT COLUMN
+========================= */
+
+.heatmap-table td:first-child,
+.heatmap-table th:first-child {
+    width: 230px;
+    font-weight: 600;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 992px) {
+
+    .heatmap-page {
+        padding: 20px;
+    }
+
+    .heatmap-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .days-header {
+        grid-template-columns: repeat(6, 28px);
+        gap: 12px;
+    }
+
+    .cells {
+        grid-template-columns: repeat(6, 28px);
+        gap: 12px;
+    }
+
+    .cell {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .heatmap-page h2 {
+        font-size: 26px;
+    }
+
+    .legend {
+        flex-wrap: wrap;
+    }
+
+    .days-header {
+        grid-template-columns: repeat(6, 24px);
+        gap: 10px;
+    }
+
+    .days-header div {
+        font-size: 13px;
+    }
+
+    .cells {
+        grid-template-columns: repeat(6, 24px);
+        gap: 10px;
+    }
+
+    .cell {
+        width: 20px;
+        height: 20px;
+    }
+}

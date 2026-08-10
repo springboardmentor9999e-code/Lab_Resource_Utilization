@@ -1,0 +1,285 @@
+.reports-page {
+    width: 100%;
+    padding-bottom: 40px;
+}
+
+.reports-page * {
+    box-sizing: border-box;
+}
+
+.reports-page .dashboard-header {
+    margin-bottom: 25px;
+}
+
+.reports-page .dashboard-header h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    color: #0f172a;
+}
+
+.reports-page .dashboard-header p {
+    margin: 0;
+    color: #64748b;
+}
+
+
+/* =========================
+   SUMMARY CARDS
+========================= */
+
+.reports-page .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.reports-page .stat-card {
+    min-width: 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
+}
+
+.reports-page .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.reports-page .stat-card h2 {
+    margin: 0 0 4px;
+    font-size: 21px;
+    color: #0f172a;
+}
+
+.reports-page .stat-card p {
+    margin: 0;
+    color: #64748b;
+    font-size: 12px;
+}
+
+
+/* =========================
+   CHART CARDS
+========================= */
+
+.reports-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.report-chart-card {
+    min-width: 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
+}
+
+.report-dot-card {
+    margin-bottom: 24px;
+}
+
+.report-chart-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.report-chart-heading h3 {
+    margin: 0 0 5px;
+    color: #0f172a;
+    font-size: 17px;
+}
+
+.report-chart-heading p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+
+/* =========================
+   LOADING / EMPTY
+========================= */
+
+.reports-loading,
+.empty-chart {
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+}
+
+
+/* =========================
+   SUMMARY SECTION
+========================= */
+
+.reports-summary-grid {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1.8fr);
+    gap: 24px;
+}
+
+.reports-summary-grid .chart-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
+}
+
+.reports-summary-grid .chart-card h3 {
+    margin: 0;
+    color: #0f172a;
+}
+
+
+/* =========================
+   BOOKING STATUS
+========================= */
+
+.booking-status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.booking-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 18px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border-left: 4px solid #94a3b8;
+}
+
+.booking-status-row.approved {
+    border-left-color: #10b981;
+}
+
+.booking-status-row.pending {
+    border-left-color: #f59e0b;
+}
+
+.booking-status-row.cancelled {
+    border-left-color: #ef4444;
+}
+
+
+/* =========================
+   TABLE
+========================= */
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 18px;
+}
+
+.recent-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 650px;
+}
+
+.recent-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+    padding: 13px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.recent-table td {
+    padding: 14px 13px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 13px;
+}
+
+.recent-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+
+/* =========================
+   UTILIZATION BAR
+========================= */
+
+.utilization-cell {
+    min-width: 150px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.utilization-track {
+    flex: 1;
+    height: 8px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+
+.utilization-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #2563eb;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1200px) {
+    .reports-page .stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1000px) {
+    .reports-chart-grid,
+    .reports-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .reports-page .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .reports-chart-grid,
+    .reports-summary-grid {
+        gap: 16px;
+    }
+
+    .report-chart-card,
+    .reports-summary-grid .chart-card {
+        padding: 15px;
+    }
+}

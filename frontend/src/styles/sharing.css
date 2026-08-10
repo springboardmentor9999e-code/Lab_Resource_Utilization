@@ -1,0 +1,167 @@
+.sharing-container{
+
+    width:500px;
+
+    margin:40px auto;
+
+    background:white;
+
+    padding:30px;
+
+    border-radius:10px;
+
+    box-shadow:0 2px 10px rgba(0,0,0,0.2);
+
+}
+
+.sharing-container h2{
+
+    text-align:center;
+
+    margin-bottom:20px;
+
+}
+
+.sharing-container label{
+
+    display:block;
+
+    margin-top:15px;
+
+    font-weight:bold;
+
+}
+
+.sharing-container input,
+.sharing-container textarea{
+
+    width:100%;
+
+    padding:10px;
+
+    margin-top:5px;
+
+    border-radius:5px;
+
+    border:1px solid #ccc;
+
+}
+
+.sharing-container textarea{
+
+    height:100px;
+
+}
+
+.sharing-container button{
+
+    margin-top:20px;
+
+    width:100%;
+
+    padding:12px;
+
+    border:none;
+
+    background:#0d6efd;
+
+    color:white;
+
+    font-size:16px;
+
+    border-radius:5px;
+
+    cursor:pointer;
+
+}
+
+.sharing-container button:hover{
+
+    background:#084298;
+
+}
+.sharing-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    margin-top:20px;
+
+}
+
+.sharing-table th,
+.sharing-table td{
+
+    border:1px solid #ddd;
+
+    padding:12px;
+
+    text-align:center;
+
+}
+
+.sharing-table th{
+
+    background:#0d6efd;
+
+    color:white;
+
+}
+
+.approve-btn{
+
+    background:green;
+
+    color:white;
+
+    border:none;
+
+    padding:8px 14px;
+
+    margin-right:5px;
+
+    cursor:pointer;
+
+    border-radius:5px;
+
+}
+
+.reject-btn{
+
+    background:red;
+
+    color:white;
+
+    border:none;
+
+    padding:8px 14px;
+
+    cursor:pointer;
+
+    border-radius:5px;
+
+}
+.status-approved{
+
+    color:green;
+
+    font-weight:bold;
+
+}
+
+.status-rejected{
+
+    color:red;
+
+    font-weight:bold;
+
+}
+
+.status-pending{
+
+    color:orange;
+
+    font-weight:bold;
+
+}
