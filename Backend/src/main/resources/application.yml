@@ -31,6 +31,8 @@ spring:
             enable: true
 
 app:
+  google:
+    client-id: ${859293705785-vig2ia3i2js8pkc0dcqpjaldom5gas8o.apps.googleusercontent.com}
   jwt:
     # In production, load this from an environment variable / secrets manager — never hardcode it.
     secret: "${JWT_SECRET:63c64009015a63f75def522e8c9c639ad17cae0ea0f079845c35d9ee5d47bf51}"

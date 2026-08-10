@@ -37,6 +37,12 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    // POST /api/auth/google  (Google OAuth 2.0 Single Sign-On)
+    @PostMapping("/google")
+    public ResponseEntity<LoginResponse> googleLogin(@Valid @RequestBody com.rems.dto.GoogleOAuthRequest request) {
+        return ResponseEntity.ok(authService.loginWithGoogle(request));
+    }
+
     // POST /api/auth/logout  -> pass the same "Authorization: Bearer <token>" header used to log in
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(HttpServletRequest request) {
