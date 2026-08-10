@@ -18,6 +18,8 @@ public interface MaintenanceWorkOrderRepository extends JpaRepository<Maintenanc
     @Query("SELECT w FROM MaintenanceWorkOrder w WHERE w.equipment.laboratory.department.id = :departmentId ORDER BY w.createdAt DESC")
     List<MaintenanceWorkOrder> findByEquipmentDepartmentId(@Param("departmentId") Long departmentId);
 
+    long countByEquipmentIdAndStatus(Long equipmentId, WorkOrderStatus status);
+
     @Query("SELECT COUNT(w) FROM MaintenanceWorkOrder w WHERE w.equipment.laboratory.department.id = :departmentId")
     Long countByEquipmentLaboratoryDepartmentId(@Param("departmentId") Long departmentId);
 

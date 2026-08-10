@@ -30,6 +30,9 @@ public class CalibrationRecord {
     @Column(name = "next_due_date", nullable = false)
     private LocalDate nextDueDate;
 
+    @Column(name = "certificate_number", length = 50)
+    private String certificateNumber;
+
     @Column(name = "certificate_url")
     private String certificateUrl;
 

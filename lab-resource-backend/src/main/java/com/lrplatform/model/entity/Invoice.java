@@ -36,6 +36,12 @@ public class Invoice {
     @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalAmount;
 
+    @Column(name = "hours_billed", precision = 10, scale = 2)
+    private BigDecimal hoursBilled;
+
+    @Column(name = "hourly_rate", precision = 12, scale = 2)
+    private BigDecimal hourlyRate;
+
     @Column(name = "tax_amount", precision = 12, scale = 2)
     @Builder.Default
     private BigDecimal taxAmount = BigDecimal.ZERO;

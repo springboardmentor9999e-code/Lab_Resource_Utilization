@@ -22,6 +22,8 @@ const equipmentSchema = z.object({
   warrantyExpiry: z.string().optional().or(z.literal('')),
   description: z.string().optional().or(z.literal('')),
   maxBookingHours: z.number().min(1).max(24).default(8),
+  serviceIntervalMonths: z.number().min(1).max(120).default(6),
+  calibrationIntervalMonths: z.number().min(1).max(120).default(12),
 });
 
 export default function EquipmentFormPage() {
@@ -60,6 +62,8 @@ export default function EquipmentFormPage() {
       warrantyExpiry: '',
       description: '',
       maxBookingHours: 8,
+      serviceIntervalMonths: 6,
+      calibrationIntervalMonths: 12,
     },
   });
 
@@ -79,6 +83,8 @@ export default function EquipmentFormPage() {
         warrantyExpiry: existing.warrantyExpiry || '',
         description: existing.description || '',
         maxBookingHours: existing.maxBookingHours || 8,
+        serviceIntervalMonths: existing.serviceIntervalMonths || 6,
+        calibrationIntervalMonths: existing.calibrationIntervalMonths || 12,
       });
       if (existing.specifications && typeof existing.specifications === 'object') {
         const specs = Object.entries(existing.specifications).map(([key, value]) => ({ key, value: String(value) }));
@@ -143,6 +149,8 @@ export default function EquipmentFormPage() {
         purchaseCost: data.purchaseCost ? parseFloat(data.purchaseCost) : null,
         hourlyRate: data.hourlyRate ? parseFloat(data.hourlyRate) : null,
         maxBookingHours: parseInt(data.maxBookingHours) || 8,
+        serviceIntervalMonths: parseInt(data.serviceIntervalMonths) || 6,
+        calibrationIntervalMonths: parseInt(data.calibrationIntervalMonths) || 12,
         specifications: Object.keys(specsObj).length > 0 ? specsObj : null,
         tags: tags.map(t => ({ tagName: typeof t === 'string' ? t : t.tagName })),
       };
@@ -271,6 +279,21 @@ export default function EquipmentFormPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Warranty Expiry</label>
               <input type="date" {...register('warrantyExpiry')} className="input-field" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Service Interval (months)</label>
+              <input type="number" min={1} max={120} {...register('serviceIntervalMonths', { valueAsNumber: true })} className="input-field" />
+              <p className="text-xs text-gray-400 mt-1">Next service due = last service + this interval</p>
+              {errors.serviceIntervalMonths && <p className="text-danger-500 text-xs mt-1">{errors.serviceIntervalMonths.message}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Calibration Interval (months)</label>
+              <input type="number" min={1} max={120} {...register('calibrationIntervalMonths', { valueAsNumber: true })} className="input-field" />
+              <p className="text-xs text-gray-400 mt-1">Used when renewing calibration certificates</p>
+              {errors.calibrationIntervalMonths && <p className="text-danger-500 text-xs mt-1">{errors.calibrationIntervalMonths.message}</p>}
             </div>
           </div>
 

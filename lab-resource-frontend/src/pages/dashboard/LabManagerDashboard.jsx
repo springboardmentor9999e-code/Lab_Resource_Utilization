@@ -1,6 +1,6 @@
 import { useAuth } from '../../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Cpu, Calendar, AlertTriangle, TrendingUp, Clock, CheckCircle, XCircle, Megaphone, BarChart3, Percent } from 'lucide-react';
+import { Cpu, Calendar, AlertTriangle, TrendingUp, Clock, CheckCircle, XCircle, Megaphone, BarChart3, Percent, Play, Square } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import toast from 'react-hot-toast';
@@ -91,6 +91,40 @@ export default function LabManagerDashboard() {
     },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed to reject'),
   });
+
+  const startUsageMutation = useMutation({
+    mutationFn: (id) => bookingApi.startUsage(id),
+    onSuccess: () => {
+      toast.success('Usage started');
+      queryClient.invalidateQueries(['allBookings']);
+      queryClient.invalidateQueries(['myBookings']);
+    },
+    onError: (err) => toast.error(err.response?.data?.message || 'Failed to start usage'),
+  });
+
+  const endUsageMutation = useMutation({
+    mutationFn: (id) => bookingApi.endUsage(id),
+    onSuccess: () => {
+      toast.success('Usage ended! Invoice generated.');
+      queryClient.invalidateQueries(['allBookings']);
+      queryClient.invalidateQueries(['myBookings']);
+    },
+    onError: (err) => toast.error(err.response?.data?.message || 'Failed to end usage'),
+  });
+
+  const { data: allBookings = [] } = useQuery({
+    queryKey: ['allBookings'],
+    queryFn: async () => {
+      const res = await bookingApi.getAll();
+      return res.data?.content || [];
+    },
+  });
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const usageSessions = allBookings
+    .filter(b => b.bookingDate === todayStr)
+    .filter(b => b.status === 'APPROVED' || b.status === 'CONFIRMED' || b.status === 'IN_USE')
+    .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
 
   const totalEquipment = equipment.length;
   const availableCount = equipment.filter(e => e.status === 'AVAILABLE').length;
@@ -375,6 +409,67 @@ export default function LabManagerDashboard() {
           </div>
         )}
       </div>
+
+      {/* Usage Sessions */}
+      {usageSessions.length > 0 && (
+        <div className="card mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Usage Sessions Today</h3>
+            <Link to="/bookings" className="text-sm text-primary-600 hover:text-primary-700">View Calendar</Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 text-gray-600 font-medium">Equipment</th>
+                  <th className="text-left py-2 text-gray-600 font-medium">User</th>
+                  <th className="text-left py-2 text-gray-600 font-medium">Time</th>
+                  <th className="text-left py-2 text-gray-600 font-medium">Status</th>
+                  <th className="text-right py-2 text-gray-600 font-medium">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usageSessions.map((booking) => (
+                  <tr key={booking.id} className="border-b last:border-0">
+                    <td className="py-2 font-medium">{booking.equipmentName}</td>
+                    <td className="py-2 text-gray-500">{booking.userFullName}</td>
+                    <td className="py-2 text-gray-500">{booking.startTime} - {booking.endTime}</td>
+                    <td className="py-2">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        booking.status === 'IN_USE' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                      }`}>
+                        {booking.status.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td className="py-2">
+                      <div className="flex gap-2 justify-end">
+                        {(booking.status === 'APPROVED' || booking.status === 'CONFIRMED') && (
+                          <button
+                            onClick={() => startUsageMutation.mutate(booking.id)}
+                            className="px-3 py-1 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1"
+                            disabled={startUsageMutation.isLoading}
+                          >
+                            <Play size={12} /> Start
+                          </button>
+                        )}
+                        {booking.status === 'IN_USE' && (
+                          <button
+                            onClick={() => endUsageMutation.mutate(booking.id)}
+                            className="px-3 py-1 rounded-lg text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 flex items-center gap-1"
+                            disabled={endUsageMutation.isLoading}
+                          >
+                            <Square size={12} /> End
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Idle Equipment Alerts */}
       {utilizationData?.idleEquipment?.length > 0 && (

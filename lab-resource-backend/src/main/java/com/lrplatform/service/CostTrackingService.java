@@ -3,6 +3,7 @@ package com.lrplatform.service;
 import com.lrplatform.dto.request.CostAllocationRequest;
 import com.lrplatform.dto.response.BudgetSummaryResponse;
 import com.lrplatform.dto.response.CostBreakdownResponse;
+import com.lrplatform.dto.response.EquipmentUsageChargesResponse;
 import com.lrplatform.exception.ResourceNotFoundException;
 import com.lrplatform.model.entity.*;
 import com.lrplatform.model.enums.PaymentStatus;
@@ -32,6 +33,7 @@ public class CostTrackingService {
     private final InstitutionRepository institutionRepository;
     private final SharedEquipmentRepository sharedEquipmentRepository;
     private final DepartmentBudgetRepository budgetRepository;
+    private final UsageLogRepository usageLogRepository;
 
     public CostBreakdownResponse getCostBreakdown(CostAllocationRequest request) {
         List<Invoice> invoices = fetchFilteredInvoices(request);
@@ -59,6 +61,65 @@ public class CostTrackingService {
         List<Invoice> invoices = invoiceRepository.findByInstitutionIdOrderByGeneratedAtDesc(institutionId,
                 org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE)).getContent();
         return buildCostBreakdown(invoices);
+    }
+
+    public List<EquipmentUsageChargesResponse> getEquipmentUsageCharges(Long institutionId, Long departmentId,
+                                                                        LocalDate dateFrom, LocalDate dateTo) {
+        List<UsageLog> logs = fetchUsageLogs(institutionId, dateFrom, dateTo);
+
+        if (departmentId != null) {
+            logs = logs.stream()
+                    .filter(l -> l.getEquipment() != null
+                            && l.getEquipment().getLaboratory() != null
+                            && l.getEquipment().getLaboratory().getDepartment() != null
+                            && l.getEquipment().getLaboratory().getDepartment().getId().equals(departmentId))
+                    .toList();
+        }
+
+        Map<Long, List<UsageLog>> grouped = logs.stream()
+                .collect(Collectors.groupingBy(l -> l.getEquipment().getId()));
+
+        List<EquipmentUsageChargesResponse> result = new ArrayList<>();
+        for (Map.Entry<Long, List<UsageLog>> entry : grouped.entrySet()) {
+            List<UsageLog> eqLogs = entry.getValue();
+            Equipment equipment = eqLogs.get(0).getEquipment();
+            BigDecimal rate = equipment.getHourlyRate() != null ? equipment.getHourlyRate() : equipment.getPurchaseCost();
+            long totalMinutes = eqLogs.stream().mapToLong(UsageLog::getMinutes).sum();
+            BigDecimal totalHours = BigDecimal.valueOf(totalMinutes)
+                    .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
+            BigDecimal totalCharge = rate != null
+                    ? totalHours.multiply(rate).setScale(2, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+
+            result.add(EquipmentUsageChargesResponse.builder()
+                    .equipmentId(equipment.getId())
+                    .equipmentName(equipment.getEquipmentName())
+                    .equipmentCode(equipment.getEquipmentCode())
+                    .totalHours(totalHours)
+                    .hourlyRate(rate)
+                    .totalCharge(totalCharge)
+                    .bookingCount(eqLogs.size())
+                    .build());
+        }
+
+        result.sort(Comparator.comparing(EquipmentUsageChargesResponse::getTotalCharge, Comparator.nullsLast(Comparator.reverseOrder())));
+        return result;
+    }
+
+    private List<UsageLog> fetchUsageLogs(Long institutionId, LocalDate dateFrom, LocalDate dateTo) {
+        LocalDateTime from = dateFrom != null ? dateFrom.atStartOfDay() : null;
+        LocalDateTime to = dateTo != null ? dateTo.atTime(LocalTime.MAX) : null;
+
+        if (institutionId != null && from != null && to != null) {
+            return usageLogRepository.findByInstitutionIdAndStartTimeGreaterThanEqualAndEndTimeLessThanEqual(institutionId, from, to);
+        }
+        if (institutionId != null) {
+            return usageLogRepository.findByInstitutionIdOrderByStartTimeDesc(institutionId);
+        }
+        if (from != null && to != null) {
+            return usageLogRepository.findByStartTimeGreaterThanEqualAndEndTimeLessThanEqual(from, to);
+        }
+        return usageLogRepository.findAll();
     }
 
     public BudgetSummaryResponse getBudgetSummary() {
@@ -316,12 +377,16 @@ public class CostTrackingService {
 
             int bookingCount = eqInvoices.size();
 
+            BigDecimal equipmentRate = equipment.getHourlyRate() != null
+                    ? equipment.getHourlyRate()
+                    : hourlyRateMap.get(equipment.getId());
+
             eqCosts.add(CostBreakdownResponse.EquipmentCost.builder()
                     .equipmentId(equipment.getId())
                     .equipmentName(equipment.getEquipmentName())
                     .equipmentCode(equipment.getEquipmentCode())
                     .totalCost(totalCost)
-                    .hourlyRate(hourlyRateMap.getOrDefault(equipment.getId(), null))
+                    .hourlyRate(equipmentRate)
                     .bookingCount(bookingCount)
                     .build());
         }

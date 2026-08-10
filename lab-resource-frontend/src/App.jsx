@@ -127,12 +127,12 @@ function App() {
 
               <Route path="bookings" element={<BookingCalendarPage />} />
               <Route path="bookings/my" element={<MyBookingsPage />} />
-              <Route path="bookings/approvals" element={<ManagerRoute><NonSystemAdminRoute><PendingApprovalsPage /></NonSystemAdminRoute></ManagerRoute>} />
+              <Route path="bookings/approvals" element={<ManagerRoute><PendingApprovalsPage /></ManagerRoute>} />
               <Route path="bookings/waitlist" element={<NonSystemAdminRoute><WaitlistPage /></NonSystemAdminRoute>} />
 
-              <Route path="maintenance" element={<MaintenanceRoute><NonSystemAdminRoute><MaintenanceDashboard /></NonSystemAdminRoute></MaintenanceRoute>} />
+              <Route path="maintenance" element={<MaintenanceRoute><MaintenanceDashboard /></MaintenanceRoute>} />
 
-              <Route path="admin/calibration" element={<MaintenanceRoute><NonSystemAdminRoute><CalibrationDashboard /></NonSystemAdminRoute></MaintenanceRoute>} />
+              <Route path="admin/calibration" element={<MaintenanceRoute><CalibrationDashboard /></MaintenanceRoute>} />
 
               <Route path="institutions" element={<AdminRoute><InstitutionManagement /></AdminRoute>} />
               <Route path="admin/laboratories" element={<AdminRoute><LaboratoryManagement /></AdminRoute>} />

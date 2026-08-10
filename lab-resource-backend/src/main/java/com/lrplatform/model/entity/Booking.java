@@ -44,6 +44,12 @@ public class Booking {
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
 
+    @Column(name = "actual_start_time")
+    private LocalDateTime actualStartTime;
+
+    @Column(name = "actual_end_time")
+    private LocalDateTime actualEndTime;
+
     @Column(columnDefinition = "TEXT")
     private String purpose;
 

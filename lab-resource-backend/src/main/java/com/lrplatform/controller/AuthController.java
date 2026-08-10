@@ -3,14 +3,18 @@ package com.lrplatform.controller;
 import com.lrplatform.dto.request.*;
 import com.lrplatform.dto.response.ApiResponse;
 import com.lrplatform.dto.response.AuthResponse;
+import com.lrplatform.dto.response.OAuthSetupInfoResponse;
+import com.lrplatform.exception.BadRequestException;
+import com.lrplatform.security.JwtCookieUtil;
+import com.lrplatform.security.JwtTokenProvider;
 import com.lrplatform.service.AuthService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtTokenProvider tokenProvider;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -29,50 +34,52 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
+                                              HttpServletRequest httpRequest,
                                               HttpServletResponse response) {
         AuthResponse authResponse = authService.login(request);
 
-        if (request.isRememberMe()) {
-            Cookie refreshCookie = new Cookie("refresh_token", authResponse.getRefreshToken());
-            refreshCookie.setHttpOnly(true);
-            refreshCookie.setSecure(false);
-            refreshCookie.setPath("/api/auth/refresh");
-            refreshCookie.setMaxAge(30 * 24 * 60 * 60);
-            response.addCookie(refreshCookie);
-        }
+        JwtCookieUtil.addAccessCookie(httpRequest, response, authResponse.getAccessToken(),
+                tokenProvider.getAccessTokenExpiration() / 1000);
+        long refreshMaxAge = request.isRememberMe()
+                ? tokenProvider.getRefreshTokenExpiration() / 1000
+                : -1;
+        JwtCookieUtil.addRefreshCookie(httpRequest, response, authResponse.getRefreshToken(), refreshMaxAge);
 
         return ResponseEntity.ok(authResponse);
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request,
-                                                     HttpServletRequest httpRequest) {
-        String refreshTokenValue = request.getRefreshToken();
-
+    public ResponseEntity<AuthResponse> refreshToken(@RequestBody(required = false) RefreshTokenRequest request,
+                                                     HttpServletRequest httpRequest,
+                                                     HttpServletResponse response) {
+        String refreshTokenValue = request != null ? request.getRefreshToken() : null;
         if (refreshTokenValue == null || refreshTokenValue.isEmpty()) {
-            refreshTokenValue = getRefreshTokenFromCookie(httpRequest);
+            refreshTokenValue = JwtCookieUtil.getCookieValue(httpRequest, JwtCookieUtil.REFRESH_COOKIE);
+        }
+        if (refreshTokenValue == null || refreshTokenValue.isEmpty()) {
+            throw new BadRequestException("Missing refresh token");
         }
 
-        AuthResponse response = authService.refreshToken(refreshTokenValue);
-        return ResponseEntity.ok(response);
+        AuthResponse authResponse = authService.refreshToken(refreshTokenValue);
+
+        JwtCookieUtil.addAccessCookie(httpRequest, response, authResponse.getAccessToken(),
+                tokenProvider.getAccessTokenExpiration() / 1000);
+        JwtCookieUtil.addRefreshCookie(httpRequest, response, authResponse.getRefreshToken(),
+                tokenProvider.getRefreshTokenExpiration() / 1000);
+
+        return ResponseEntity.ok(authResponse);
     }
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse> logout(HttpServletRequest request,
                                               HttpServletResponse response) {
         String refreshToken = request.getHeader("X-Refresh-Token");
-
         if (refreshToken == null || refreshToken.isEmpty()) {
-            refreshToken = getRefreshTokenFromCookie(request);
+            refreshToken = JwtCookieUtil.getCookieValue(request, JwtCookieUtil.REFRESH_COOKIE);
         }
 
         authService.logout(refreshToken);
-
-        Cookie clearCookie = new Cookie("refresh_token", "");
-        clearCookie.setPath("/api/auth/refresh");
-        clearCookie.setMaxAge(0);
-        clearCookie.setHttpOnly(true);
-        response.addCookie(clearCookie);
+        JwtCookieUtil.clearAuthCookies(request, response);
 
         return ResponseEntity.ok(ApiResponse.success("Logged out successfully"));
     }
@@ -90,20 +97,36 @@ public class AuthController {
     }
 
     @PostMapping("/oauth2/complete-profile")
-    public ResponseEntity<AuthResponse> completeOAuthProfile(@Valid @RequestBody CompleteProfileRequest request) {
-        AuthResponse authResponse = authService.completeOAuthProfile(request);
+    public ResponseEntity<AuthResponse> completeOAuthProfile(@Valid @RequestBody CompleteProfileRequest request,
+                                                             HttpServletRequest httpRequest,
+                                                             HttpServletResponse response) {
+        String setupToken = JwtCookieUtil.getCookieValue(httpRequest, JwtCookieUtil.SETUP_COOKIE);
+        if (setupToken == null || setupToken.isEmpty()) {
+            throw new BadRequestException("No pending profile setup");
+        }
+
+        AuthResponse authResponse = authService.completeOAuthProfile(setupToken, request);
+
+        JwtCookieUtil.addAccessCookie(httpRequest, response, authResponse.getAccessToken(),
+                tokenProvider.getAccessTokenExpiration() / 1000);
+        JwtCookieUtil.addRefreshCookie(httpRequest, response, authResponse.getRefreshToken(),
+                tokenProvider.getRefreshTokenExpiration() / 1000);
+        JwtCookieUtil.clearSetupCookie(httpRequest, response);
+
         return ResponseEntity.ok(authResponse);
     }
 
-    private String getRefreshTokenFromCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("refresh_token".equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
+    @GetMapping("/oauth2/setup-info")
+    public ResponseEntity<OAuthSetupInfoResponse> oauthSetupInfo(HttpServletRequest request) {
+        String setupToken = JwtCookieUtil.getCookieValue(request, JwtCookieUtil.SETUP_COOKIE);
+        if (setupToken == null || setupToken.isEmpty()) {
+            throw new BadRequestException("No pending profile setup");
         }
-        return null;
+        return ResponseEntity.ok(authService.getOAuthSetupInfo(setupToken));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<AuthResponse> me(Authentication authentication) {
+        return ResponseEntity.ok(authService.getCurrentProfile(authentication));
     }
 }

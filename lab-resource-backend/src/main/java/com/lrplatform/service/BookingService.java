@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -34,6 +35,7 @@ public class BookingService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final InvoiceService invoiceService;
+    private final UsageLogRepository usageLogRepository;
 
     @Transactional(readOnly = true)
     public List<Booking> getFilteredBookings(User user) {
@@ -288,6 +290,8 @@ public class BookingService {
             equipmentRepository.save(equipment);
         }
 
+        logUsage(saved);
+
         try {
             invoiceService.generateInvoiceFromBooking(bookingId);
             log.info("Auto-generated invoice for completed booking {}", bookingId);
@@ -306,6 +310,134 @@ public class BookingService {
 
         promoteFromWaitlist(booking.getEquipment().getId());
         return saved;
+    }
+
+    @Auditable(module = "BOOKING", action = "START_USAGE", entityType = "Booking")
+    @Transactional
+    public Booking startUsage(Long bookingId, Long managerId) {
+        Booking booking = getBookingById(bookingId);
+
+        if (booking.getStatus() != BookingStatus.APPROVED && booking.getStatus() != BookingStatus.CONFIRMED) {
+            throw new BadRequestException("Can only start usage for APPROVED or CONFIRMED bookings");
+        }
+
+        User manager = userRepository.findById(Objects.requireNonNull(managerId))
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        booking.setStatus(BookingStatus.IN_USE);
+        booking.setActualStartTime(LocalDateTime.now());
+        Booking saved = bookingRepository.save(booking);
+
+        BookingHistory history = BookingHistory.builder()
+                .booking(saved)
+                .status(BookingStatus.IN_USE.name())
+                .remarks("Usage started")
+                .updatedBy(manager)
+                .build();
+        bookingHistoryRepository.save(Objects.requireNonNull(history));
+
+        Equipment equipment = booking.getEquipment();
+        if (equipment != null && (equipment.getStatus() == EquipmentStatus.AVAILABLE || equipment.getStatus() == EquipmentStatus.RESERVED)) {
+            equipment.setStatus(EquipmentStatus.IN_USE);
+            equipmentRepository.save(equipment);
+        }
+
+        notificationService.createNotification(
+                booking.getUser(),
+                "Usage Started",
+                "Usage of " + (equipment != null ? equipment.getEquipmentName() : "equipment") +
+                        " has started.",
+                NotificationType.BOOKING_APPROVED,
+                NotificationPriority.MEDIUM
+        );
+
+        return saved;
+    }
+
+    @Auditable(module = "BOOKING", action = "END_USAGE", entityType = "Booking")
+    @Transactional
+    public Booking endUsage(Long bookingId, Long managerId) {
+        Booking booking = getBookingById(bookingId);
+
+        if (booking.getStatus() != BookingStatus.IN_USE) {
+            throw new BadRequestException("Can only end usage for bookings currently IN_USE");
+        }
+
+        User manager = userRepository.findById(Objects.requireNonNull(managerId))
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        booking.setStatus(BookingStatus.COMPLETED);
+        booking.setActualEndTime(LocalDateTime.now());
+        Booking saved = bookingRepository.save(booking);
+
+        BookingHistory history = BookingHistory.builder()
+                .booking(saved)
+                .status(BookingStatus.COMPLETED.name())
+                .remarks("Usage ended")
+                .updatedBy(manager)
+                .build();
+        bookingHistoryRepository.save(Objects.requireNonNull(history));
+
+        Equipment equipment = booking.getEquipment();
+        if (equipment != null && (equipment.getStatus() == EquipmentStatus.IN_USE || equipment.getStatus() == EquipmentStatus.RESERVED)) {
+            equipment.setStatus(EquipmentStatus.AVAILABLE);
+            equipmentRepository.save(equipment);
+        }
+
+        logUsage(saved);
+
+        try {
+            invoiceService.generateInvoiceFromBooking(bookingId);
+            log.info("Auto-generated invoice for ended usage of booking {}", bookingId);
+        } catch (Exception e) {
+            log.warn("Failed to auto-generate invoice for booking {}: {}", bookingId, e.getMessage());
+        }
+
+        notificationService.createNotification(
+                booking.getUser(),
+                "Booking Completed",
+                "Your booking for " + (equipment != null ? equipment.getEquipmentName() : "equipment") +
+                        " on " + booking.getBookingDate() + " has been completed.",
+                NotificationType.BOOKING_APPROVED,
+                NotificationPriority.MEDIUM
+        );
+
+        promoteFromWaitlist(booking.getEquipment().getId());
+        return saved;
+    }
+
+    private void logUsage(Booking booking) {
+        try {
+            if (!usageLogRepository.findByBookingId(booking.getId()).isEmpty()) {
+                return;
+            }
+            LocalDateTime start = booking.getActualStartTime();
+            LocalDateTime end = booking.getActualEndTime();
+            if (start == null) {
+                start = booking.getBookingDate().atTime(booking.getStartTime());
+            }
+            if (end == null) {
+                end = booking.getBookingDate().atTime(booking.getEndTime());
+            }
+            if (booking.getUser() == null || booking.getUser().getInstitution() == null) {
+                return;
+            }
+            long minutes = Duration.between(start, end).toMinutes();
+            if (minutes <= 0) minutes = 60;
+
+            UsageLog usageLog = UsageLog.builder()
+                    .booking(booking)
+                    .equipment(booking.getEquipment())
+                    .institution(booking.getUser().getInstitution())
+                    .startTime(start)
+                    .endTime(end)
+                    .minutes((int) minutes)
+                    .build();
+            usageLogRepository.save(usageLog);
+            log.info("Usage log recorded for booking {} ({} minutes)", booking.getId(), minutes);
+        } catch (Exception e) {
+            log.warn("Failed to record usage log for booking {}: {}", booking.getId(), e.getMessage());
+        }
     }
 
     @Auditable(module = "BOOKING", action = "WAITLIST", entityType = "BookingWaitlist")

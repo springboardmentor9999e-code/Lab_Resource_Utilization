@@ -83,6 +83,23 @@ public class Equipment {
     @Column(name = "calibration_due_date")
     private LocalDate calibrationDueDate;
 
+    @Column(name = "service_interval_months")
+    @Builder.Default
+    private Integer serviceIntervalMonths = 6;
+
+    @Column(name = "last_service_date")
+    private LocalDate lastServiceDate;
+
+    @Column(name = "next_service_due_date")
+    private LocalDate nextServiceDueDate;
+
+    @Column(name = "service_reminder_sent_on")
+    private LocalDate serviceReminderSentOn;
+
+    @Column(name = "calibration_interval_months")
+    @Builder.Default
+    private Integer calibrationIntervalMonths = 12;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 

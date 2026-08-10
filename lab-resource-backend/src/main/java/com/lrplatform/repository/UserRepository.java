@@ -20,6 +20,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByInstitutionId(Long institutionId);
     List<User> findByDepartmentId(Long departmentId);
     List<User> findByRole(UserRole role);
+    List<User> findByRoleAndInstitutionId(UserRole role, Long institutionId);
+    List<User> findByRoleAndDepartmentId(UserRole role, Long departmentId);
 
     Page<User> findByRole(UserRole role, Pageable pageable);
     Page<User> findByInstitutionId(Long institutionId, Pageable pageable);

@@ -166,6 +166,8 @@ export default function InvoiceManagement() {
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Institution</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Equipment</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">User</th>
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Hours Billed</th>
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Rate</th>
                     <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Amount</th>
                     <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Tax</th>
                     <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Paid</th>
@@ -182,6 +184,8 @@ export default function InvoiceManagement() {
                       <td className="py-3 px-4 text-sm text-gray-600">{invoice.institutionName || 'N/A'}</td>
                       <td className="py-3 px-4 text-sm text-gray-600">{invoice.equipmentName || 'N/A'}</td>
                       <td className="py-3 px-4 text-sm text-gray-600">{invoice.userName || 'N/A'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 text-right">{invoice.hoursBilled != null ? `${invoice.hoursBilled} hrs` : 'N/A'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 text-right">{invoice.hourlyRate != null ? formatCurrency(invoice.hourlyRate) : 'N/A'}</td>
                       <td className="py-3 px-4 text-sm text-gray-600 text-right">{formatCurrency(invoice.totalAmount)}</td>
                       <td className="py-3 px-4 text-sm text-gray-600 text-right">{formatCurrency(invoice.taxAmount)}</td>
                       <td className="py-3 px-4 text-sm text-gray-600 text-right">{formatCurrency(invoice.amountPaid)}</td>

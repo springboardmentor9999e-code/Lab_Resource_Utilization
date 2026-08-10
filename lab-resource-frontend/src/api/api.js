@@ -7,9 +7,11 @@ export const authApi = {
   forgotPassword: (data) => api.post('/auth/forgot-password', data),
   resetPassword: (data) => api.post('/auth/reset-password', data),
   getProfile: () => api.get('/auth/profile'),
+  getMe: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/profile', data),
   changePassword: (data) => api.put('/auth/profile/password', data),
   completeOAuthProfile: (data) => api.post('/auth/oauth2/complete-profile', data),
+  getOAuthSetupInfo: () => api.get('/auth/oauth2/setup-info'),
 };
 
 export const userManagementApi = {
@@ -65,6 +67,8 @@ export const bookingApi = {
   reject: (id, data) => api.put(`/bookings/${id}/reject`, data),
   cancel: (id) => api.put(`/bookings/${id}/cancel`),
   complete: (id) => api.put(`/bookings/${id}/complete`),
+  startUsage: (id) => api.put(`/bookings/${id}/start`),
+  endUsage: (id) => api.put(`/bookings/${id}/end`),
   getWaitlist: (params) => api.get('/bookings/waitlist', { params }),
   joinWaitlist: (data) => api.post('/bookings/waitlist', data),
   removeFromWaitlist: (id) => api.delete(`/bookings/waitlist/${id}`),
@@ -78,7 +82,10 @@ export const maintenanceApi = {
   deleteWorkOrder: (id) => api.delete(`/maintenance/work-orders/${id}`),
   getCalibrationRecords: (equipmentId) => api.get(`/maintenance/calibration/${equipmentId}`),
   createCalibrationRecord: (data) => api.post('/maintenance/calibration', data),
+  renewCalibrationRecord: (id, data) => api.put(`/maintenance/calibration/${id}/renew`, data),
+  downloadCertificate: (id) => api.get(`/maintenance/calibration/${id}/certificate`, { responseType: 'blob' }),
   deleteCalibrationRecord: (id) => api.delete(`/maintenance/calibration/${id}`),
+  getServiceSchedule: () => api.get('/maintenance/service-schedule'),
 };
 
 export const analyticsApi = {
@@ -93,6 +100,7 @@ export const notificationApi = {
   delete: (id) => api.delete(`/notifications/${id}`),
   getPreferences: () => api.get('/notifications/preferences'),
   updatePreferences: (data) => api.put('/notifications/preferences', data),
+  getSseTicket: () => api.post('/notifications/ticket'),
 };
 
 export const institutionApi = {
@@ -144,6 +152,7 @@ export const costApi = {
   getBreakdownByInstitution: (institutionId) => api.get(`/costs/breakdown/institution/${institutionId}`),
   getMonthlyRevenue: (year) => api.get(`/costs/monthly-revenue/${year}`),
   getUtilization: (params) => api.get('/costs/utilization', { params }),
+  getUsageCharges: (params) => api.get('/costs/usage-charges', { params }),
   getLifecycle: () => api.get('/costs/lifecycle'),
   getBudgetSummary: () => api.get('/costs/budget-summary'),
 };

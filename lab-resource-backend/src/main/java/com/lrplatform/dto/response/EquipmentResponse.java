@@ -35,6 +35,10 @@ public class EquipmentResponse {
     private String imageUrl;
     private Integer maxBookingHours;
     private LocalDate calibrationDueDate;
+    private Integer serviceIntervalMonths;
+    private LocalDate lastServiceDate;
+    private LocalDate nextServiceDueDate;
+    private Integer calibrationIntervalMonths;
     private String description;
     private Long assignedTechnicianId;
     private Map<String, Object> specifications;

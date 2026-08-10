@@ -1,5 +1,6 @@
 package com.lrplatform.service;
 
+import com.lrplatform.exception.ForbiddenException;
 import com.lrplatform.exception.ResourceNotFoundException;
 import com.lrplatform.model.entity.Notification;
 import com.lrplatform.model.entity.NotificationRetryQueue;
@@ -30,6 +31,7 @@ public class NotificationService {
     private final EmailService emailService;
     private final SmsService smsService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final NotificationSseService notificationSseService;
 
     @Transactional
     @SuppressWarnings("null")
@@ -44,6 +46,8 @@ public class NotificationService {
                 .status("UNREAD")
                 .build();
         Notification saved = notificationRepository.save(Objects.requireNonNull(notification));
+
+        notificationSseService.broadcast(user.getId(), saved);
 
         String typeName = type != null ? type.name() : "GENERAL";
         Long userId = user.getId();
@@ -157,9 +161,12 @@ public class NotificationService {
     }
 
     @Transactional
-    public void markAsRead(Long notificationId) {
+    public void markAsRead(Long notificationId, Long userId) {
         Notification notification = notificationRepository.findById(Objects.requireNonNull(notificationId))
                 .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
+        if (notification.getUser() == null || !notification.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("You are not allowed to modify this notification");
+        }
         notification.setStatus("READ");
         notification.setReadAt(LocalDateTime.now());
         notificationRepository.save(notification);
@@ -178,10 +185,12 @@ public class NotificationService {
     }
 
     @Transactional
-    public void deleteNotification(Long notificationId) {
-        if (!notificationRepository.existsById(Objects.requireNonNull(notificationId))) {
-            throw new ResourceNotFoundException("Notification not found");
+    public void deleteNotification(Long notificationId, Long userId) {
+        Notification notification = notificationRepository.findById(Objects.requireNonNull(notificationId))
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
+        if (notification.getUser() == null || !notification.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("You are not allowed to delete this notification");
         }
-        notificationRepository.deleteById(Objects.requireNonNull(notificationId));
+        notificationRepository.delete(notification);
     }
 }

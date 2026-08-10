@@ -70,8 +70,7 @@ public class DataSeeder implements CommandLineRunner {
         Equipment electronMicro = findByCode(equipmentList, "MIC-001");
         seedMaintenanceWorkOrders(cncMill, cncLathe, printer3d, electronMicro, admin);
         seedAnnouncements(admin);
-        List<Booking> e2eBookings = seedBookings(equipmentList, admin, priya, arun, sneha, selvakumar, suresh);
-        seedInvoices(demoInst, e2eBookings);
+        seedInvoices(demoInst, List.of());
         seedPayments();
         seedDepartmentBudgets(mech, cs);
         seedNotificationPreferences(priya, admin);
@@ -246,11 +245,6 @@ public class DataSeeder implements CommandLineRunner {
                 .email("selvakumark1059.sse@saveetha.com")
                 .password(pw).institution(secInst).role(UserRole.STUDENT).status(true).build());
 
-        userRepository.save(User.builder()
-                .firstName("System").lastName("Admin")
-                .email("admin@lrup.com")
-                .password(pw).institution(demoInst).department(mech).role(UserRole.SYSTEM_ADMIN).status(true).build());
-
         mech.setHod(priya);
         departmentRepository.save(mech);
         cs.setHod(priya);
@@ -259,7 +253,7 @@ public class DataSeeder implements CommandLineRunner {
         ece.setHod(priya);
         departmentRepository.save(ece);
 
-        log.info("Seeded 10 users");
+        log.info("Seeded 9 users");
         return userRepository.findAll();
     }
 
@@ -410,106 +404,6 @@ public class DataSeeder implements CommandLineRunner {
         log.info("Seeded 2 announcements");
     }
 
-    private List<Booking> seedBookings(List<Equipment> equipmentList, User admin, User priya,
-                                       User arun, User sneha, User selvakumar, User suresh) {
-        if (bookingRepository.count() > 0) return List.of();
-
-        Equipment oscilloscope = findByCode(equipmentList, "OSC-001");
-        Equipment printer3d = findByCode(equipmentList, "3DP-001");
-        Equipment gpuServer = findByCode(equipmentList, "GPU-001");
-        Equipment electronMicro = findByCode(equipmentList, "MIC-001");
-        Equipment cncMill = findByCode(equipmentList, "CNC-001");
-
-        bookingRepository.save(Booking.builder()
-                .equipment(oscilloscope).user(sneha)
-                .bookingDate(LocalDate.of(2026, 7, 22))
-                .startTime(LocalTime.of(9, 0)).endTime(LocalTime.of(10, 0))
-                .status(BookingStatus.APPROVED).approvedBy(admin).remarks("Approved").build());
-
-        bookingRepository.save(Booking.builder()
-                .equipment(oscilloscope).user(arun)
-                .bookingDate(LocalDate.of(2026, 7, 23))
-                .startTime(LocalTime.of(9, 0)).endTime(LocalTime.of(10, 0))
-                .status(BookingStatus.REJECTED).approvedBy(admin).remarks("Rejected").build());
-
-        bookingRepository.save(Booking.builder()
-                .equipment(printer3d).user(arun)
-                .bookingDate(LocalDate.of(2026, 7, 23))
-                .startTime(LocalTime.of(9, 0)).endTime(LocalTime.of(10, 0))
-                .status(BookingStatus.APPROVED).approvedBy(admin).remarks("Approved").build());
-
-        bookingRepository.save(Booking.builder()
-                .equipment(electronMicro).user(priya)
-                .bookingDate(LocalDate.of(2026, 7, 23))
-                .startTime(LocalTime.of(9, 0)).endTime(LocalTime.of(10, 0))
-                .status(BookingStatus.APPROVED).approvedBy(suresh).remarks("Approved").build());
-
-        bookingRepository.save(Booking.builder()
-                .equipment(gpuServer).user(arun)
-                .bookingDate(LocalDate.of(2026, 7, 23))
-                .startTime(LocalTime.of(9, 0)).endTime(LocalTime.of(10, 0))
-                .status(BookingStatus.APPROVED).approvedBy(admin).remarks("Approved").build());
-
-        bookingRepository.save(Booking.builder()
-                .equipment(electronMicro).user(arun)
-                .bookingDate(LocalDate.of(2026, 7, 23))
-                .startTime(LocalTime.of(13, 0)).endTime(LocalTime.of(12, 30))
-                .status(BookingStatus.APPROVED).approvedBy(admin).remarks("Approved").build());
-
-        bookingRepository.save(Booking.builder()
-                .equipment(cncMill).user(arun)
-                .bookingDate(LocalDate.of(2026, 7, 25))
-                .startTime(LocalTime.of(10, 0)).endTime(LocalTime.of(12, 0))
-                .purpose("test booking").status(BookingStatus.PENDING_APPROVAL).build());
-
-        bookingRepository.save(Booking.builder()
-                .equipment(oscilloscope).user(arun)
-                .bookingDate(LocalDate.of(2026, 7, 24))
-                .startTime(LocalTime.of(9, 30)).endTime(LocalTime.of(12, 0))
-                .status(BookingStatus.PENDING_APPROVAL).build());
-
-        bookingRepository.save(Booking.builder()
-                .equipment(oscilloscope).user(selvakumar)
-                .bookingDate(LocalDate.of(2026, 7, 24))
-                .startTime(LocalTime.of(14, 0)).endTime(LocalTime.of(15, 0))
-                .status(BookingStatus.APPROVED).approvedBy(admin).remarks("Approved").build());
-
-        bookingRepository.save(Booking.builder()
-                .equipment(oscilloscope).user(arun)
-                .bookingDate(LocalDate.of(2026, 7, 25))
-                .startTime(LocalTime.of(14, 0)).endTime(LocalTime.of(16, 0))
-                .status(BookingStatus.PENDING_APPROVAL).build());
-
-        bookingRepository.save(Booking.builder()
-                .equipment(electronMicro).user(arun)
-                .bookingDate(LocalDate.of(2026, 7, 24))
-                .startTime(LocalTime.of(10, 0)).endTime(LocalTime.of(14, 0))
-                .status(BookingStatus.PENDING_APPROVAL).build());
-
-        bookingRepository.save(Booking.builder()
-                .equipment(printer3d).user(arun)
-                .bookingDate(LocalDate.of(2026, 7, 25))
-                .startTime(LocalTime.of(9, 0)).endTime(LocalTime.of(13, 0))
-                .status(BookingStatus.PENDING_APPROVAL).build());
-
-        Booking e2eCnc = bookingRepository.save(Booking.builder()
-                .equipment(cncMill).user(arun)
-                .bookingDate(LocalDate.of(2026, 7, 28))
-                .startTime(LocalTime.of(10, 0)).endTime(LocalTime.of(12, 0))
-                .purpose("E2E test booking for CNC Milling Machine")
-                .status(BookingStatus.COMPLETED).approvedBy(priya).remarks("Approved for E2E test").build());
-
-        Booking e2eGpu = bookingRepository.save(Booking.builder()
-                .equipment(gpuServer).user(arun)
-                .bookingDate(LocalDate.of(2026, 7, 29))
-                .startTime(LocalTime.of(9, 0)).endTime(LocalTime.of(11, 0))
-                .purpose("E2E test - verify hourly rate calculation")
-                .status(BookingStatus.COMPLETED).approvedBy(priya).remarks("Approved").build());
-
-        log.info("Seeded 14 bookings");
-        return List.of(e2eCnc, e2eGpu);
-    }
-
     private void seedInvoices(Institution demo, List<Booking> e2eBookings) {
         if (invoiceRepository.count() > 0) return;
 
@@ -533,7 +427,7 @@ public class DataSeeder implements CommandLineRunner {
                     .dueDate(LocalDate.of(2026, 8, 26)).build());
         }
 
-        log.info("Seeded 3 invoices");
+        log.info("Seeded {} invoice(s)", e2eBookings.size() >= 2 ? 3 : 1);
     }
 
     private void seedPayments() {

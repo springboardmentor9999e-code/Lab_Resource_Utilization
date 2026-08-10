@@ -44,6 +44,18 @@ export default function CostDashboard() {
     queryFn: async () => { const res = await costApi.getMonthlyRevenue(selectedYear); return res.data; },
   });
 
+  const { data: usageCharges = [] } = useQuery({
+    queryKey: ['cost-usage-charges', institutionFilter, dateFrom, dateTo],
+    queryFn: async () => {
+      const params = {};
+      if (institutionFilter) params.institutionId = institutionFilter;
+      if (dateFrom) params.startDate = dateFrom;
+      if (dateTo) params.endDate = dateTo;
+      const res = await costApi.getUsageCharges(params);
+      return res.data;
+    },
+  });
+
   const { data: institutions = [] } = useQuery({
     queryKey: ['institutions'],
     queryFn: async () => { const res = await institutionApi.getAll(); return res.data; },
@@ -51,7 +63,6 @@ export default function CostDashboard() {
 
   const isLoading = breakdownLoading || monthlyLoading;
   const deptBreakdown = breakdown?.departmentCosts || [];
-  const equipBreakdown = breakdown?.equipmentCosts || [];
 
   if (isLoading) {
     return (
@@ -269,14 +280,14 @@ export default function CostDashboard() {
           )}
         </div>
 
-        {/* Equipment Cost Breakdown */}
+        {/* Equipment Usage & Charges */}
         <div className="card">
           <div className="flex items-center gap-2 mb-4">
             <DollarSign size={18} className="text-purple-600" />
-            <h3 className="text-lg font-semibold text-gray-800">Equipment Cost Breakdown</h3>
+            <h3 className="text-lg font-semibold text-gray-800">Equipment Usage &amp; Charges</h3>
           </div>
-          {equipBreakdown.length === 0 ? (
-            <p className="text-gray-500 text-center py-6">No equipment cost data available</p>
+          {usageCharges.length === 0 ? (
+            <p className="text-gray-500 text-center py-6">No usage data available</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -284,18 +295,20 @@ export default function CostDashboard() {
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-2 text-gray-600 font-medium">Equipment</th>
                     <th className="text-left py-2 text-gray-600 font-medium">Code</th>
-                    <th className="text-right py-2 text-gray-600 font-medium">Total Cost</th>
+                    <th className="text-right py-2 text-gray-600 font-medium">Hours Used</th>
                     <th className="text-right py-2 text-gray-600 font-medium">Hourly Rate</th>
+                    <th className="text-right py-2 text-gray-600 font-medium">Total Charges</th>
                     <th className="text-right py-2 text-gray-600 font-medium">Bookings</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {equipBreakdown.map((eq, idx) => (
+                  {usageCharges.map((eq, idx) => (
                     <tr key={eq.equipmentId || idx} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
                       <td className="py-2.5 text-gray-800 font-medium">{eq.equipmentName || 'Unknown'}</td>
                       <td className="py-2.5 text-gray-500 font-mono text-xs">{eq.equipmentCode || '-'}</td>
-                      <td className="py-2.5 text-right text-gray-800">{formatCurrency(eq.totalCost)}</td>
+                      <td className="py-2.5 text-right text-gray-800">{eq.totalHours}h</td>
                       <td className="py-2.5 text-right text-gray-600">{formatCurrency(eq.hourlyRate)}</td>
+                      <td className="py-2.5 text-right text-gray-800 font-medium">{formatCurrency(eq.totalCharge)}</td>
                       <td className="py-2.5 text-right text-gray-600">{eq.bookingCount || 0}</td>
                     </tr>
                   ))}

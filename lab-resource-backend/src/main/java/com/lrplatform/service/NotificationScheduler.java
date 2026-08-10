@@ -14,8 +14,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -83,11 +85,11 @@ public class NotificationScheduler {
 
         try {
             String sql = """
-                SELECT e.id, e.equipment_name, e.next_calibration_date, u.email, u.id as user_id, u.phone
+                SELECT e.id, e.equipment_name, e.calibration_due_date, u.email, u.id as user_id, u.phone
                 FROM equipment e
                 INNER JOIN laboratories l ON e.laboratory_id = l.id
                 INNER JOIN users u ON l.lab_manager_id = u.id
-                WHERE e.next_calibration_date <= ? AND e.next_calibration_date IS NOT NULL
+                WHERE e.calibration_due_date <= ? AND e.calibration_due_date IS NOT NULL
                 AND e.status != 'RETIRED'
                 """;
 
@@ -98,7 +100,7 @@ public class NotificationScheduler {
                 String equipmentName = (String) row.get("equipment_name");
                 String email = (String) row.get("email");
                 String phone = (String) row.get("phone");
-                LocalDate calibrationDate = ((java.sql.Date) row.get("next_calibration_date")).toLocalDate();
+                LocalDate calibrationDate = ((java.sql.Date) row.get("calibration_due_date")).toLocalDate();
 
                 notificationService.createNotification(
                     findUserById(userId),
@@ -120,6 +122,80 @@ public class NotificationScheduler {
             log.info("Calibration check completed for {} equipment items", dueEquipment.size());
         } catch (Exception e) {
             log.error("Error checking calibration due: {}", e.getMessage());
+        }
+    }
+
+    @Scheduled(cron = "0 15 8 * * *")
+    public void checkServiceDue() {
+        log.info("Running daily service due check");
+        LocalDate checkDate = LocalDate.now().plusDays(30);
+
+        try {
+            String sql = """
+                SELECT e.id, e.equipment_name, e.equipment_code, e.next_service_due_date,
+                       l.lab_manager_id, d.id AS department_id, d.institution_id
+                FROM equipment e
+                INNER JOIN laboratories l ON e.laboratory_id = l.id
+                INNER JOIN departments d ON l.department_id = d.id
+                WHERE e.next_service_due_date IS NOT NULL
+                  AND e.next_service_due_date <= ?
+                  AND e.status != 'RETIRED'
+                  AND e.service_reminder_sent_on IS NULL
+                """;
+
+            List<Map<String, Object>> dueEquipment = jdbcTemplate.queryForList(sql, checkDate);
+
+            int notified = 0;
+            for (Map<String, Object> row : dueEquipment) {
+                Long equipmentId = ((Number) row.get("id")).longValue();
+                String equipmentName = (String) row.get("equipment_name");
+                LocalDate dueDate = ((java.sql.Date) row.get("next_service_due_date")).toLocalDate();
+                Long labManagerId = row.get("lab_manager_id") != null ? ((Number) row.get("lab_manager_id")).longValue() : null;
+                Long departmentId = row.get("department_id") != null ? ((Number) row.get("department_id")).longValue() : null;
+                Long institutionId = row.get("institution_id") != null ? ((Number) row.get("institution_id")).longValue() : null;
+
+                Set<Long> recipientIds = new LinkedHashSet<>();
+                if (labManagerId != null) {
+                    recipientIds.add(labManagerId);
+                }
+                if (departmentId != null) {
+                    recipientIds.addAll(jdbcTemplate.queryForList(
+                            "SELECT id FROM users WHERE role = 'DEPARTMENT_HEAD' AND department_id = ?", Long.class, departmentId));
+                }
+                if (institutionId != null) {
+                    recipientIds.addAll(jdbcTemplate.queryForList(
+                            "SELECT id FROM users WHERE role = 'INSTITUTION_ADMIN' AND institution_id = ?", Long.class, institutionId));
+                }
+
+                for (Long userId : recipientIds) {
+                    User recipient = findUserById(userId);
+                    notificationService.createNotification(
+                        recipient,
+                        "Service Due Reminder",
+                        String.format("Maintenance service for %s is due on %s.", equipmentName, dueDate),
+                        NotificationType.SERVICE_DUE_REMINDER,
+                        NotificationPriority.HIGH
+                    );
+                    if (preferenceService.isEmailEnabled(userId, "SERVICE_DUE_REMINDER")) {
+                        emailService.sendNotificationEmail(recipient.getEmail(),
+                            "Service Due Reminder",
+                            String.format("Maintenance service for %s is due on %s.", equipmentName, dueDate),
+                            "SERVICE_DUE_REMINDER");
+                    }
+                    if (recipient.getPhone() != null && preferenceService.isSmsEnabled(userId, "SERVICE_DUE_REMINDER")) {
+                        smsService.sendSms(recipient.getPhone(),
+                            String.format("Maintenance service for %s is due on %s.", equipmentName, dueDate));
+                    }
+                }
+
+                jdbcTemplate.update("UPDATE equipment SET service_reminder_sent_on = ? WHERE id = ?",
+                        LocalDate.now(), equipmentId);
+                notified++;
+            }
+
+            log.info("Service due check completed for {} equipment items", notified);
+        } catch (Exception e) {
+            log.error("Error checking service due: {}", e.getMessage());
         }
     }
 
@@ -186,6 +262,7 @@ public class NotificationScheduler {
                 .email(rs.getString("email"))
                 .firstName(rs.getString("first_name"))
                 .lastName(rs.getString("last_name"))
+                .phone(rs.getString("phone"))
                 .build(),
             userId
         );

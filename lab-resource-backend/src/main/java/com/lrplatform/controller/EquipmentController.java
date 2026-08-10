@@ -10,6 +10,7 @@ import com.lrplatform.dto.response.AvailabilitySlotResponse;
 import com.lrplatform.dto.response.EquipmentResponse;
 import com.lrplatform.dto.response.PaginatedResponse;
 import com.lrplatform.dto.response.UtilizationIntelligenceResponse.EquipmentUtilization;
+import com.lrplatform.exception.BadRequestException;
 import com.lrplatform.model.entity.Equipment;
 import com.lrplatform.model.entity.EquipmentTag;
 import com.lrplatform.model.entity.User;
@@ -147,9 +148,11 @@ public class EquipmentController {
             }
             equipmentService.uploadImage(id, file);
             return ResponseEntity.ok(ApiResponse.success("Image uploaded successfully"));
+        } catch (BadRequestException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to upload image: " + e.getMessage()));
+                    .body(ApiResponse.error("Failed to upload image"));
         }
     }
 
@@ -257,6 +260,10 @@ public class EquipmentController {
                 .imageUrl(e.getImageUrl())
                 .maxBookingHours(e.getMaxBookingHours())
                 .calibrationDueDate(e.getCalibrationDueDate())
+                .serviceIntervalMonths(e.getServiceIntervalMonths())
+                .lastServiceDate(e.getLastServiceDate())
+                .nextServiceDueDate(e.getNextServiceDueDate())
+                .calibrationIntervalMonths(e.getCalibrationIntervalMonths())
                 .description(e.getDescription())
                 .assignedTechnicianId(e.getAssignedTechnicianId())
                 .specifications(e.getSpecifications())

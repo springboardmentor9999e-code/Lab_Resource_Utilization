@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -55,4 +56,7 @@ public interface EquipmentRepository extends JpaRepository<Equipment, Long> {
     @Query(value = "SELECT e.* FROM equipment e INNER JOIN bookings b ON e.id = b.equipment_id " +
            "WHERE e.status = 'AVAILABLE' GROUP BY e.id ORDER BY COUNT(b.id) DESC LIMIT :limit", nativeQuery = true)
     List<Equipment> findMostBookedEquipment(@Param("limit") int limit);
+
+    @Query("SELECT e FROM Equipment e WHERE e.status <> 'RETIRED' AND e.nextServiceDueDate IS NOT NULL AND e.nextServiceDueDate <= :date")
+    List<Equipment> findServiceDueUpTo(@Param("date") LocalDate date);
 }

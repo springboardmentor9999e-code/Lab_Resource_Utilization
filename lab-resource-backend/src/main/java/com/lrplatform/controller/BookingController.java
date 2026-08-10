@@ -127,6 +127,22 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success("Booking completed and invoice generated"));
     }
 
+    @PutMapping("/{id}/start")
+    @PreAuthorize("hasRole('LAB_MANAGER') or hasRole('DEPARTMENT_HEAD') or hasRole('INSTITUTION_ADMIN') or hasRole('SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse> startUsage(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = currentUserUtil.getCurrentUserId(request);
+        bookingService.startUsage(id, userId);
+        return ResponseEntity.ok(ApiResponse.success("Usage started"));
+    }
+
+    @PutMapping("/{id}/end")
+    @PreAuthorize("hasRole('LAB_MANAGER') or hasRole('DEPARTMENT_HEAD') or hasRole('INSTITUTION_ADMIN') or hasRole('SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse> endUsage(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = currentUserUtil.getCurrentUserId(request);
+        bookingService.endUsage(id, userId);
+        return ResponseEntity.ok(ApiResponse.success("Usage ended, invoice generated"));
+    }
+
     @PostMapping("/waitlist")
     public ResponseEntity<ApiResponse> joinWaitlist(@RequestBody Map<String, Long> body,
                                                      HttpServletRequest request) {

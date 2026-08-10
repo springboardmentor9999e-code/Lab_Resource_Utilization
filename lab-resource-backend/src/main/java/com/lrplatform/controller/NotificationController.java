@@ -2,12 +2,17 @@ package com.lrplatform.controller;
 
 import com.lrplatform.dto.response.ApiResponse;
 import com.lrplatform.dto.response.NotificationResponse;
+import com.lrplatform.exception.BadRequestException;
 import com.lrplatform.security.CurrentUserUtil;
+import com.lrplatform.security.SseTicketService;
 import com.lrplatform.service.NotificationService;
+import com.lrplatform.service.NotificationSseService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +24,8 @@ class NotificationController {
 
     private final NotificationService notificationService;
     private final CurrentUserUtil currentUserUtil;
+    private final SseTicketService sseTicketService;
+    private final NotificationSseService notificationSseService;
 
     @GetMapping
     public ResponseEntity<List<NotificationResponse>> getAll(HttpServletRequest request) {
@@ -33,8 +40,9 @@ class NotificationController {
     }
 
     @PutMapping("/{id}/read")
-    public ResponseEntity<ApiResponse> markAsRead(@PathVariable Long id) {
-        notificationService.markAsRead(id);
+    public ResponseEntity<ApiResponse> markAsRead(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = currentUserUtil.getCurrentUserId(request);
+        notificationService.markAsRead(id, userId);
         return ResponseEntity.ok(ApiResponse.success("Notification marked as read"));
     }
 
@@ -46,9 +54,25 @@ class NotificationController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse> delete(@PathVariable Long id) {
-        notificationService.deleteNotification(id);
+    public ResponseEntity<ApiResponse> delete(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = currentUserUtil.getCurrentUserId(request);
+        notificationService.deleteNotification(id, userId);
         return ResponseEntity.ok(ApiResponse.success("Notification deleted"));
+    }
+
+    @PostMapping("/ticket")
+    public ResponseEntity<Map<String, String>> createSseTicket(HttpServletRequest request) {
+        Long userId = currentUserUtil.getCurrentUserId(request);
+        return ResponseEntity.ok(Map.of("ticket", sseTicketService.create(userId)));
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter stream(@RequestParam("ticket") String ticket) {
+        Long userId = sseTicketService.consume(ticket);
+        if (userId == null) {
+            throw new BadRequestException("Invalid or expired ticket");
+        }
+        return notificationSseService.subscribe(userId);
     }
 
     private NotificationResponse toDto(com.lrplatform.model.entity.Notification n) {

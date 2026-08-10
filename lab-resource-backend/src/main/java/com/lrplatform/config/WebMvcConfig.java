@@ -32,9 +32,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(requestMetricsInterceptor)
                 .addPathPatterns("/api/**");
         registry.addInterceptor(rateLimitInterceptor)
-                .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/auth/login", "/api/auth/register",
-                        "/api/auth/forgot-password", "/api/auth/reset-password");
+                .addPathPatterns("/api/**");
     }
 
     @Override

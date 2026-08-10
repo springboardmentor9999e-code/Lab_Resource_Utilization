@@ -86,7 +86,7 @@ export default function Layout() {
   if (isSystemAdmin) allNavItems = [...allNavItems, ...systemAdminNavItems];
 
   if (isSystemAdmin) {
-    const operationalPaths = ['/bookings/waitlist', '/bookings/approvals', '/maintenance', '/admin/calibration'];
+    const operationalPaths = ['/bookings/waitlist'];
     allNavItems = allNavItems.filter(item => !operationalPaths.includes(item.path));
   }
 

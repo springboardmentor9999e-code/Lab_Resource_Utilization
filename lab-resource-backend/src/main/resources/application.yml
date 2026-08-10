@@ -93,7 +93,7 @@ spring:
       write-dates-as-timestamps: false
 
 jwt:
-  secret: ${JWT_SECRET:ZWxhYm9yYXRlaGViYWx5YmF0cmlwcm9kdWN0aW9uc2VjcmV0a2V5Zm9yamF3YXBwbGljYXRpb24=}
+  secret: ${JWT_SECRET:}
   access-token-expiration: 3600000
   refresh-token-expiration: 604800000
   token-prefix: "Bearer "
@@ -148,7 +148,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
   datasource:
-    url: jdbc:h2:mem:lrup;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:file:./data/lrup;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE
     username: sa
     password:
     driver-class-name: org.h2.Driver
@@ -165,6 +165,9 @@ spring:
       on-profile: prod
   jpa:
     show-sql: false
+
+server:
+  forward-headers-strategy: framework
 
 jwt:
   secret: ${JWT_SECRET}

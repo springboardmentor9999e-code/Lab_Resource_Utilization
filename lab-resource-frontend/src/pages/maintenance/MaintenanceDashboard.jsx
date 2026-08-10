@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { Wrench, Clock, CheckCircle, Plus, Trash2 } from 'lucide-react';
+import { Wrench, Clock, CheckCircle, Plus, Trash2, CalendarClock, AlertTriangle, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { maintenanceApi } from '../../api/api';
 import { useAuth } from '../../context/AuthContext';
@@ -15,6 +15,14 @@ const statusConfig = {
   'UNDER_INSPECTION': { color: 'badge-warning', label: 'Under Inspection' },
   'COMPLETED': { color: 'badge-success', label: 'Completed' },
   'CANCELLED': { color: 'badge-danger', label: 'Cancelled' },
+};
+
+const serviceStatusConfig = {
+  'OVERDUE': { color: 'badge-danger', label: 'Overdue' },
+  'DUE_SOON': { color: 'badge-warning', label: 'Due Soon' },
+  'UPCOMING': { color: 'badge-info', label: 'Upcoming' },
+  'CURRENT': { color: 'badge-success', label: 'Current' },
+  'NEVER_SERVICED': { color: 'badge-secondary', label: 'Never Serviced' },
 };
 
 const priorityConfig = {
@@ -54,6 +62,14 @@ export default function MaintenanceDashboard() {
     },
   });
 
+  const { data: serviceSchedule = [], isLoadingSchedule } = useQuery({
+    queryKey: ['serviceSchedule'],
+    queryFn: async () => {
+      const res = await maintenanceApi.getServiceSchedule();
+      return res.data;
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: (data) => maintenanceApi.createWorkOrder({
       equipment: { id: parseInt(data.equipmentId) },
@@ -80,6 +96,7 @@ export default function MaintenanceDashboard() {
       queryClient.invalidateQueries(['workOrders']);
       queryClient.invalidateQueries(['equipment']);
       queryClient.invalidateQueries(['myBookings']);
+      queryClient.invalidateQueries(['serviceSchedule']);
     },
     onError: (err) => toast.error(err.response?.data?.message || 'Failed to update status'),
   });
@@ -106,6 +123,17 @@ export default function MaintenanceDashboard() {
     { label: 'Active Work Orders', value: activeCount, icon: Wrench, color: 'bg-blue-100 text-blue-700' },
     { label: 'Awaiting Assignment', value: createdCount, icon: Clock, color: 'bg-yellow-100 text-yellow-700' },
     { label: 'Completed', value: completedCount, icon: CheckCircle, color: 'bg-green-100 text-green-700' },
+  ];
+
+  const overdueServiceCount = serviceSchedule.filter(s => s.status === 'OVERDUE').length;
+  const dueSoonServiceCount = serviceSchedule.filter(s => s.status === 'DUE_SOON').length;
+  const upcomingServiceCount = serviceSchedule.filter(s => s.status === 'UPCOMING').length;
+  const servicedCount = serviceSchedule.filter(s => s.serviceCount > 0).length;
+
+  const serviceStats = [
+    { label: 'Service Overdue', value: overdueServiceCount, icon: AlertTriangle, color: 'bg-red-100 text-red-700' },
+    { label: 'Due Within 30 Days', value: dueSoonServiceCount, icon: CalendarClock, color: 'bg-yellow-100 text-yellow-700' },
+    { label: 'Serviced (All Time)', value: servicedCount, icon: RefreshCw, color: 'bg-blue-100 text-blue-700' },
   ];
 
   if (isLoading) {
@@ -139,6 +167,75 @@ export default function MaintenanceDashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {serviceStats.map((stat) => (
+          <div key={stat.label} className="card flex items-center gap-4">
+            <div className={`p-3 rounded-xl ${stat.color}`}>
+              <stat.icon size={24} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+              <p className="text-sm text-gray-500">{stat.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="card mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Service Schedule</h3>
+          {upcomingServiceCount > 0 && (
+            <span className="text-sm text-gray-500">
+              {upcomingServiceCount} upcoming within 90 days
+            </span>
+          )}
+        </div>
+        {isLoadingSchedule ? (
+          <div className="flex justify-center py-6">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+          </div>
+        ) : serviceSchedule.length === 0 ? (
+          <p className="text-gray-500 text-center py-6">No equipment to schedule</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-gray-500">
+                  <th className="py-2 pr-4">Equipment</th>
+                  <th className="py-2 pr-4">Laboratory</th>
+                  <th className="py-2 pr-4">Last Service</th>
+                  <th className="py-2 pr-4">Next Due</th>
+                  <th className="py-2 pr-4">Interval</th>
+                  <th className="py-2 pr-4">Services</th>
+                  <th className="py-2">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {serviceSchedule.map((s) => {
+                  const sc = serviceStatusConfig[s.status] || { color: 'badge-info', label: s.status };
+                  return (
+                    <tr key={s.equipmentId} className="border-b hover:bg-gray-50">
+                      <td className="py-2 pr-4 font-medium">
+                        {s.equipmentName}
+                        <span className="block text-xs text-gray-400">{s.equipmentCode}</span>
+                      </td>
+                      <td className="py-2 pr-4 text-gray-600">{s.laboratoryName || '-'}</td>
+                      <td className="py-2 pr-4 text-gray-600">{s.lastServiceDate || '-'}</td>
+                      <td className="py-2 pr-4 text-gray-600">{s.nextServiceDueDate || '-'}</td>
+                      <td className="py-2 pr-4 text-gray-600">{s.serviceIntervalMonths || '-'} mo</td>
+                      <td className="py-2 pr-4 text-gray-600">{s.serviceCount}</td>
+                      <td className="py-2">
+                        <span className={sc.color}>{sc.label}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="card">

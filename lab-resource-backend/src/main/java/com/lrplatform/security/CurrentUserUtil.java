@@ -32,9 +32,13 @@ public class CurrentUserUtil {
 
     private String extractToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        if (bearerToken == null || !bearerToken.startsWith("Bearer ")) {
-            throw new UnauthorizedException("Missing or invalid Authorization header");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
         }
-        return bearerToken.substring(7);
+        String cookieToken = JwtCookieUtil.getCookieValue(request, JwtCookieUtil.ACCESS_COOKIE);
+        if (cookieToken != null && !cookieToken.isEmpty()) {
+            return cookieToken;
+        }
+        throw new UnauthorizedException("Missing or invalid authentication");
     }
 }

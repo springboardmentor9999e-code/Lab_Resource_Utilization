@@ -2,7 +2,17 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { maintenanceApi, equipmentApi } from '../../api/api';
 import toast from 'react-hot-toast';
-import { ShieldCheck, AlertTriangle, Clock, Plus, X, Trash2 } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Clock, Plus, X, Trash2, RefreshCw, Download } from 'lucide-react';
+
+const addMonths = (dateStr, months) => {
+  if (!dateStr || !months) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(y, m - 1 + months, d);
+  const yy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+};
 
 export default function CalibrationDashboard() {
   const { user } = useAuth();
@@ -17,8 +27,10 @@ export default function CalibrationDashboard() {
     nextDueDate: '',
     calibratedBy: '',
     notes: '',
-    certificateUrl: '',
   });
+  const [selectedInterval, setSelectedInterval] = useState(null);
+  const [renewingId, setRenewingId] = useState(null);
+  const [renewNotes, setRenewNotes] = useState('');
 
   useEffect(() => {
     fetchEquipment();
@@ -82,11 +94,10 @@ export default function CalibrationDashboard() {
         nextDueDate: formData.nextDueDate,
         calibratedBy: formData.calibratedBy,
         notes: formData.notes,
-        certificateUrl: formData.certificateUrl,
       });
       toast.success('Calibration record created');
       setShowForm(false);
-      setFormData({ equipmentId: '', calibrationDate: '', nextDueDate: '', calibratedBy: '', notes: '', certificateUrl: '' });
+      setFormData({ equipmentId: '', calibrationDate: '', nextDueDate: '', calibratedBy: '', notes: '' });
       if (selectedEquipment) fetchCalibrationRecords(selectedEquipment);
       else fetchAllRecords();
     } catch (err) {
@@ -103,6 +114,39 @@ export default function CalibrationDashboard() {
       else fetchAllRecords();
     } catch (err) {
       toast.error('Failed to delete record');
+    }
+  };
+
+  const handleDownloadCertificate = async (id, certNo) => {
+    try {
+      const res = await maintenanceApi.downloadCertificate(id);
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${certNo || `certificate-${id}`}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to download certificate');
+    }
+  };
+
+  const handleRenew = async () => {
+    if (!renewingId) return;
+    try {
+      await maintenanceApi.renewCalibrationRecord(renewingId, {
+        calibratedBy: user?.fullName || '',
+        notes: renewNotes,
+      });
+      toast.success('Calibration renewed. New certificate generated.');
+      setRenewingId(null);
+      setRenewNotes('');
+      if (selectedEquipment) fetchCalibrationRecords(selectedEquipment);
+      else fetchAllRecords();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to renew calibration');
     }
   };
 
@@ -145,6 +189,40 @@ export default function CalibrationDashboard() {
           <Plus size={16} /> Add Record
         </button>
       </div>
+
+      {stats.overdue > 0 && (
+        <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
+          <AlertTriangle size={20} className="text-red-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-red-800">
+              {stats.overdue} calibration record{stats.overdue > 1 ? 's are' : ' is'} overdue
+            </p>
+            <p className="text-sm text-red-600 mt-1">
+              {records.filter(r => r.nextDueDate && new Date(r.nextDueDate) < new Date()).map(r => r.equipmentName || `Equipment #${r.equipmentId}`).slice(0, 3).join(', ')}
+              {records.filter(r => r.nextDueDate && new Date(r.nextDueDate) < new Date()).length > 3 && ' ...'}
+            </p>
+          </div>
+        </div>
+      )}
+      {stats.overdue === 0 && stats.dueSoon > 0 && (
+        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <Clock size={20} className="text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-800">
+              {stats.dueSoon} calibration record{stats.dueSoon > 1 ? 's are' : ' is'} due within 30 days
+            </p>
+            <p className="text-sm text-amber-600 mt-1">
+              {records.filter(r => {
+                if (!r.nextDueDate) return false;
+                const d = new Date(r.nextDueDate);
+                const days = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+                return days >= 0 && days <= 30;
+              }).map(r => r.equipmentName || `Equipment #${r.equipmentId}`).slice(0, 3).join(', ')}
+              {stats.dueSoon > 3 && ' ...'}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border p-4">
@@ -197,7 +275,17 @@ export default function CalibrationDashboard() {
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Equipment *</label>
-                <select required value={formData.equipmentId} onChange={(e) => setFormData({ ...formData, equipmentId: e.target.value })} className="input-field w-full">
+                <select required value={formData.equipmentId} onChange={(e) => {
+                  const id = e.target.value;
+                  const eq = equipmentList.find(x => String(x.id) === id);
+                  const interval = eq?.calibrationIntervalMonths || null;
+                  setSelectedInterval(interval);
+                  setFormData(prev => ({
+                    ...prev,
+                    equipmentId: id,
+                    nextDueDate: prev.calibrationDate && interval ? addMonths(prev.calibrationDate, interval) : prev.nextDueDate,
+                  }));
+                }} className="input-field w-full">
                   <option value="">Select equipment</option>
                   {equipmentList.map(eq => (
                     <option key={eq.id} value={eq.id}>{eq.equipmentName}</option>
@@ -207,30 +295,58 @@ export default function CalibrationDashboard() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Calibration Date *</label>
-                  <input type="date" required value={formData.calibrationDate} onChange={(e) => setFormData({ ...formData, calibrationDate: e.target.value })} className="input-field w-full" />
+                  <input type="date" required value={formData.calibrationDate} onChange={(e) => {
+                    const date = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      calibrationDate: date,
+                      nextDueDate: date && selectedInterval ? addMonths(date, selectedInterval) : prev.nextDueDate,
+                    }));
+                  }} className="input-field w-full" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Next Due Date *</label>
                   <input type="date" required value={formData.nextDueDate} onChange={(e) => setFormData({ ...formData, nextDueDate: e.target.value })} className="input-field w-full" />
+                  {selectedInterval && (
+                    <p className="text-xs text-gray-500 mt-1">Auto-suggested from {selectedInterval}-month interval. A certificate number is generated automatically.</p>
+                  )}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Calibrated By</label>
-                <input type="text" value={formData.calibratedBy} onChange={(e) => setFormData({ ...formData, calibratedBy: e.target.value })} className="input-field w-full" placeholder="Technician or lab name" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Calibrated By *</label>
+                <input type="text" required value={formData.calibratedBy} onChange={(e) => setFormData({ ...formData, calibratedBy: e.target.value })} className="input-field w-full" placeholder="Technician or lab name" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Certificate URL</label>
-                <input type="url" value={formData.certificateUrl} onChange={(e) => setFormData({ ...formData, certificateUrl: e.target.value })} className="input-field w-full" placeholder="https://..." />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input-field w-full" rows={3} placeholder="Additional notes..." />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes *</label>
+                <textarea required value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="input-field w-full" rows={3} placeholder="Additional notes..." />
               </div>
               <div className="flex justify-end gap-3">
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
                 <button type="submit" className="btn-primary">Create Record</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {renewingId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Renew Calibration</h3>
+              <button onClick={() => setRenewingId(null)} className="p-1 hover:bg-gray-100 rounded"><X size={18} /></button>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Renewing creates a new certificate dated today with the due date advanced by the equipment's calibration interval.
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <textarea value={renewNotes} onChange={(e) => setRenewNotes(e.target.value)} className="input-field w-full" rows={3} placeholder="Optional renewal notes..." />
+            </div>
+            <div className="flex justify-end gap-3 mt-5">
+              <button onClick={() => setRenewingId(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+              <button onClick={handleRenew} className="btn-primary">Renew</button>
+            </div>
           </div>
         </div>
       )}
@@ -244,15 +360,16 @@ export default function CalibrationDashboard() {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Next Due</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Calibrated By</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Certificate No.</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Certificate</th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
             {loading ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
             ) : records.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">No calibration records found</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">No calibration records found</td></tr>
             ) : records.map((record) => {
               const status = getStatus(record.nextDueDate);
               return (
@@ -267,13 +384,15 @@ export default function CalibrationDashboard() {
                     <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${status.bg} ${status.color}`}>{status.label}</span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700">{record.calibratedBy || '—'}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-gray-700">{record.certificateNumber || '—'}</td>
                   <td className="px-4 py-3">
-                    {record.certificateUrl ? (
-                      <a href={record.certificateUrl} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline text-sm">View</a>
-                    ) : <span className="text-gray-400 text-sm">—</span>}
+                    <button onClick={() => handleDownloadCertificate(record.id, record.certificateNumber)} className="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 text-sm">
+                      <Download size={14} /> Download
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => handleDelete(record.id)} className="p-1 text-red-500 hover:bg-red-50 rounded"><Trash2 size={14} /></button>
+                    <button onClick={() => { setRenewingId(record.id); setRenewNotes(''); }} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Renew calibration"><RefreshCw size={14} /></button>
+                    <button onClick={() => handleDelete(record.id)} className="p-1 text-red-500 hover:bg-red-50 rounded" title="Delete"><Trash2 size={14} /></button>
                   </td>
                 </tr>
               );

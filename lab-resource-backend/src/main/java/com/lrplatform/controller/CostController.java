@@ -4,6 +4,7 @@ import com.lrplatform.dto.request.CostAllocationRequest;
 import com.lrplatform.dto.response.BudgetSummaryResponse;
 import com.lrplatform.dto.response.CostBreakdownResponse;
 import com.lrplatform.dto.response.EquipmentLifecycleResponse;
+import com.lrplatform.dto.response.EquipmentUsageChargesResponse;
 import com.lrplatform.dto.response.UtilizationIntelligenceResponse;
 import com.lrplatform.exception.ForbiddenException;
 import com.lrplatform.model.entity.User;
@@ -149,5 +150,18 @@ public class CostController {
             return ResponseEntity.ok(equipmentLifecycleService.getEquipmentLifecycleByDepartment(departmentId));
         }
         return ResponseEntity.ok(equipmentLifecycleService.getEquipmentLifecycle());
+    }
+
+    @GetMapping("/usage-charges")
+    @PreAuthorize("hasRole('SYSTEM_ADMIN') or hasRole('INSTITUTION_ADMIN') or hasRole('DEPARTMENT_HEAD')")
+    public ResponseEntity<List<EquipmentUsageChargesResponse>> getEquipmentUsageCharges(
+            HttpServletRequest httpRequest,
+            @RequestParam(required = false) Long institutionId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        Long scopedInstitutionId = getInstitutionIdIfInstitutionAdmin(httpRequest);
+        Long departmentId = getDepartmentIdIfDepartmentHead(httpRequest);
+        Long effectiveInstitutionId = scopedInstitutionId != null ? scopedInstitutionId : institutionId;
+        return ResponseEntity.ok(costTrackingService.getEquipmentUsageCharges(effectiveInstitutionId, departmentId, startDate, endDate));
     }
 }

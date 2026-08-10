@@ -3,39 +3,51 @@ import { authApi } from '../api/api';
 
 const AuthContext = createContext(null);
 
+const toUser = (d) => ({
+  userId: d.userId,
+  email: d.email,
+  role: d.role,
+  fullName: d.fullName,
+  institutionId: d.institutionId || null,
+  departmentId: d.departmentId || null,
+});
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const userData = localStorage.getItem('user');
-    if (token && userData) {
-      setUser(JSON.parse(userData));
-    }
-    setLoading(false);
+    let mounted = true;
+    authApi
+      .getMe()
+      .then((res) => {
+        if (mounted) setUser(toUser(res.data));
+      })
+      .catch(() => {
+        if (mounted) setUser(null);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const login = async (email, password, rememberMe = false) => {
     const response = await authApi.login({ email, password, rememberMe });
-    const data = response.data;
-    localStorage.setItem('accessToken', data.accessToken);
-    localStorage.setItem('refreshToken', data.refreshToken);
-    const userData = {
-      userId: data.userId,
-      email: data.email,
-      role: data.role,
-      fullName: data.fullName,
-      institutionId: data.institutionId || null,
-      departmentId: data.departmentId || null,
-    };
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
-    return data;
+    setUser(toUser(response.data));
+    return response.data;
   };
 
   const register = async (formData) => {
     await authApi.register(formData);
+  };
+
+  const completeOAuthProfile = async (payload) => {
+    const response = await authApi.completeOAuthProfile(payload);
+    setUser(toUser(response.data));
+    return response.data;
   };
 
   const logout = async () => {
@@ -44,9 +56,6 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       // Logout even if API fails
     }
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
     setUser(null);
   };
 
@@ -59,7 +68,7 @@ export const AuthProvider = ({ children }) => {
   const isManager = user?.role === 'LAB_MANAGER' || isDepartmentHead || isAdmin;
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, isAuthenticated, isAdmin, isSystemAdmin, isInstitutionAdmin, isDepartmentHead, isManager, isTechnician }}>
+    <AuthContext.Provider value={{ user, login, register, completeOAuthProfile, logout, loading, isAuthenticated, isAdmin, isSystemAdmin, isInstitutionAdmin, isDepartmentHead, isManager, isTechnician }}>
       {children}
     </AuthContext.Provider>
   );

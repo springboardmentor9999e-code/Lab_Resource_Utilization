@@ -131,9 +131,9 @@ export default function BookingCalendarPage() {
       return {
         id: b.id.toString(),
         title: `${b.equipmentName || 'Equipment'} — ${b.userFullName || 'Unknown'} [${roleDisplay}]`,
-        date: b.bookingDate,
-        startTime: b.startTime?.substring(0, 5),
-        endTime: b.endTime?.substring(0, 5),
+        start: `${b.bookingDate}T${b.startTime?.substring(0, 5)}`,
+        end: `${b.bookingDate}T${b.endTime?.substring(0, 5)}`,
+        allDay: false,
         backgroundColor: statusColor,
         borderColor: statusColor,
         extendedProps: {

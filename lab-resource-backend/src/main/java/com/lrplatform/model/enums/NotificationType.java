@@ -15,5 +15,6 @@ public enum NotificationType {
     ANNOUNCEMENT,
     PASSWORD_RESET,
     IDLE_EQUIPMENT_ALERT,
+    SERVICE_DUE_REMINDER,
     GENERAL
 }

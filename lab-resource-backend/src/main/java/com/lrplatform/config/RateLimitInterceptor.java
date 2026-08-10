@@ -11,7 +11,9 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.util.Arrays;
 import java.util.Deque;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -27,6 +29,9 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
     @Value("${rate-limit.requests-per-hour:1000}")
     private int requestsPerHour;
+
+    @Value("${rate-limit.trusted-proxies:}")
+    private String trustedProxies;
 
     private final Map<String, Deque<Long>> minuteWindow = new ConcurrentHashMap<>();
     private final Map<String, Deque<Long>> hourWindow = new ConcurrentHashMap<>();
@@ -77,11 +82,20 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            return xForwardedFor.split(",")[0].trim();
+        String remoteAddr = request.getRemoteAddr();
+        if (trustedProxies != null && !trustedProxies.isBlank()) {
+            List<String> trusted = Arrays.stream(trustedProxies.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList();
+            if (trusted.contains(remoteAddr)) {
+                String xForwardedFor = request.getHeader("X-Forwarded-For");
+                if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+                    return xForwardedFor.split(",")[0].trim();
+                }
+            }
         }
-        return request.getRemoteAddr();
+        return remoteAddr;
     }
 
     public Map<String, Object> getMetrics() {

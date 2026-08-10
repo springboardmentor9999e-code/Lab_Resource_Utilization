@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Calendar, Clock, CheckCircle, XCircle, AlertTriangle, CheckSquare, Download } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, AlertTriangle, CheckSquare, Download, Play, Square } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { bookingApi, reportApi } from '../../api/api';
+import { useAuth } from '../../context/AuthContext';
 
 const statusConfig = {
   'DRAFT': { color: 'badge-info', icon: Clock, label: 'Draft' },
@@ -18,6 +19,7 @@ const statusConfig = {
 
 export default function MyBookingsPage() {
   const queryClient = useQueryClient();
+  const { isManager } = useAuth();
 
   const { data: bookings = [], isLoading, error } = useQuery({
     queryKey: ['myBookings'],
@@ -46,6 +48,28 @@ export default function MyBookingsPage() {
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || 'Failed to complete booking');
+    },
+  });
+
+  const startUsageMutation = useMutation({
+    mutationFn: (id) => bookingApi.startUsage(id),
+    onSuccess: () => {
+      toast.success('Usage started');
+      queryClient.invalidateQueries(['myBookings']);
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Failed to start usage');
+    },
+  });
+
+  const endUsageMutation = useMutation({
+    mutationFn: (id) => bookingApi.endUsage(id),
+    onSuccess: () => {
+      toast.success('Usage ended! Invoice generated.');
+      queryClient.invalidateQueries(['myBookings']);
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Failed to end usage');
     },
   });
 
@@ -132,7 +156,25 @@ export default function MyBookingsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={config.color}>{config.label}</span>
-                    {(booking.status === 'APPROVED' || booking.status === 'CONFIRMED' || booking.status === 'IN_USE') && (
+                    {(isManager && (booking.status === 'APPROVED' || booking.status === 'CONFIRMED')) && (
+                      <button
+                        onClick={() => startUsageMutation.mutate(booking.id)}
+                        className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                        disabled={startUsageMutation.isLoading}
+                      >
+                        <Play size={14} /> Start Usage
+                      </button>
+                    )}
+                    {(isManager && booking.status === 'IN_USE') && (
+                      <button
+                        onClick={() => endUsageMutation.mutate(booking.id)}
+                        className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                        disabled={endUsageMutation.isLoading}
+                      >
+                        <Square size={14} /> End Usage
+                      </button>
+                    )}
+                    {(isManager && (booking.status === 'APPROVED' || booking.status === 'CONFIRMED' || booking.status === 'IN_USE')) && (
                       <button
                         onClick={() => completeMutation.mutate(booking.id)}
                         className="text-sm text-green-600 hover:text-green-700 flex items-center gap-1"

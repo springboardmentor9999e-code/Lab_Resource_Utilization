@@ -1,6 +1,7 @@
 package com.lrplatform.service;
 
 import com.lrplatform.annotation.Auditable;
+import com.lrplatform.exception.BadRequestException;
 import com.lrplatform.exception.DuplicateResourceException;
 import com.lrplatform.exception.ResourceNotFoundException;
 import com.lrplatform.model.entity.Equipment;
@@ -21,7 +22,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -87,6 +90,15 @@ public class EquipmentService {
         equipment.setCategory(updated.getCategory());
         equipment.setLaboratory(updated.getLaboratory());
         equipment.setSpecifications(updated.getSpecifications());
+        if (updated.getServiceIntervalMonths() != null) {
+            equipment.setServiceIntervalMonths(updated.getServiceIntervalMonths());
+            if (equipment.getLastServiceDate() != null) {
+                equipment.setNextServiceDueDate(equipment.getLastServiceDate().plusMonths(updated.getServiceIntervalMonths()));
+            }
+        }
+        if (updated.getCalibrationIntervalMonths() != null) {
+            equipment.setCalibrationIntervalMonths(updated.getCalibrationIntervalMonths());
+        }
         if (updated.getTags() != null) {
             equipment.setTags(getOrCreateTags(updated.getTags()));
         }
@@ -115,6 +127,7 @@ public class EquipmentService {
     @SuppressWarnings("null")
     @Transactional
     public Equipment uploadImage(Long id, MultipartFile file) throws IOException {
+        validateImageFile(file);
         Equipment equipment = getEquipmentById(id);
 
         Path equipmentDir = Paths.get(uploadDir, "equipment").toAbsolutePath().normalize();
@@ -125,7 +138,7 @@ public class EquipmentService {
         String originalFilename = file.getOriginalFilename();
         String extension = "";
         if (originalFilename != null && originalFilename.contains(".")) {
-            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase(Locale.ROOT);
         }
         String filename = "equipment_" + id + "_" + UUID.randomUUID().toString().substring(0, 8) + extension;
         Path filePath = equipmentDir.resolve(filename);
@@ -135,6 +148,29 @@ public class EquipmentService {
         log.info("Image uploaded for equipment {}: {}", id, filename);
         return equipmentRepository.save(equipment);
     }
+
+    private void validateImageFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("File is empty");
+        }
+
+        String extension = "";
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase(Locale.ROOT);
+        }
+
+        if (!ALLOWED_IMAGE_EXTENSIONS.contains(extension)) {
+            throw new BadRequestException("Unsupported file type. Allowed extensions: .jpg, .jpeg, .png, .gif, .webp");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
+            throw new BadRequestException("Unsupported content type. Only image files are allowed");
+        }
+    }
+
+    private static final Set<String> ALLOWED_IMAGE_EXTENSIONS = Set.of(".jpg", ".jpeg", ".png", ".gif", ".webp");
 
     @Transactional(readOnly = true)
     public List<EquipmentTag> searchTags(String query) {

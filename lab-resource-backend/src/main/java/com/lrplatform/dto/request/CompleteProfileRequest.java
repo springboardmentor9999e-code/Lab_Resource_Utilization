@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CompleteProfileRequest {
-    @NotBlank(message = "Setup token is required")
-    private String setupToken;
-
     @NotBlank(message = "Role is required")
     private String role;
 

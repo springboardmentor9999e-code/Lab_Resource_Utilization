@@ -2,6 +2,7 @@ package com.lrplatform.controller;
 
 import com.lrplatform.security.*;
 import com.lrplatform.service.NotificationService;
+import com.lrplatform.service.NotificationSseService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,12 +25,14 @@ class NotificationControllerTest {
     @Autowired MockMvc mockMvc;
 
     @MockBean NotificationService notificationService;
+    @MockBean NotificationSseService notificationSseService;
     @MockBean CurrentUserUtil currentUserUtil;
     @MockBean JwtTokenProvider jwtTokenProvider;
     @MockBean CustomUserDetailsService customUserDetailsService;
     @MockBean CustomOAuth2UserService customOAuth2UserService;
     @MockBean OAuth2AuthenticationSuccessHandler oauth2SuccessHandler;
     @MockBean CookieOAuth2AuthorizationRequestRepository cookieRepository;
+    @MockBean SseTicketService sseTicketService;
 
     @Test
     void listNotifications_returnsList() throws Exception {

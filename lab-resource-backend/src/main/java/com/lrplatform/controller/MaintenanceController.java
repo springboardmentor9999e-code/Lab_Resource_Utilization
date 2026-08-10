@@ -2,6 +2,7 @@ package com.lrplatform.controller;
 
 import com.lrplatform.dto.response.ApiResponse;
 import com.lrplatform.dto.response.MaintenanceWorkOrderResponse;
+import com.lrplatform.dto.response.ServiceScheduleResponse;
 import com.lrplatform.exception.ForbiddenException;
 import com.lrplatform.model.entity.MaintenanceWorkOrder;
 import com.lrplatform.model.entity.CalibrationRecord;
@@ -11,11 +12,16 @@ import com.lrplatform.security.CurrentUserUtil;
 import com.lrplatform.service.MaintenanceService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -129,6 +135,37 @@ public class MaintenanceController {
     public ResponseEntity<ApiResponse> deleteCalibrationRecord(@PathVariable Long id) {
         maintenanceService.deleteCalibrationRecord(id);
         return ResponseEntity.ok(ApiResponse.success("Calibration record deleted successfully"));
+    }
+
+    @GetMapping("/service-schedule")
+    @PreAuthorize("hasRole('LAB_MANAGER') or hasRole('DEPARTMENT_HEAD') or hasRole('INSTITUTION_ADMIN') or hasRole('SYSTEM_ADMIN')")
+    public ResponseEntity<List<ServiceScheduleResponse>> getServiceSchedule(HttpServletRequest request) {
+        User currentUser = currentUserUtil.getCurrentUser(request);
+        return ResponseEntity.ok(maintenanceService.getServiceSchedule(currentUser));
+    }
+
+    @PutMapping("/calibration/{id}/renew")
+    @PreAuthorize("hasRole('LAB_TECHNICIAN') or hasRole('LAB_MANAGER') or hasRole('INSTITUTION_ADMIN') or hasRole('SYSTEM_ADMIN')")
+    public ResponseEntity<ApiResponse> renewCalibrationRecord(@PathVariable Long id,
+                                                               @RequestBody(required = false) Map<String, String> body) {
+        String calibratedBy = body != null ? body.get("calibratedBy") : null;
+        String notes = body != null ? body.get("notes") : null;
+        maintenanceService.renewCalibrationRecord(id, calibratedBy, notes);
+        return ResponseEntity.ok(ApiResponse.success("Calibration renewed successfully"));
+    }
+
+    @GetMapping("/calibration/{id}/certificate")
+    @PreAuthorize("hasRole('LAB_TECHNICIAN') or hasRole('LAB_MANAGER') or hasRole('DEPARTMENT_HEAD') or hasRole('INSTITUTION_ADMIN') or hasRole('SYSTEM_ADMIN')")
+    public ResponseEntity<Resource> downloadCalibrationCertificate(@PathVariable Long id) {
+        CalibrationRecord record = maintenanceService.getCalibrationRecordById(id);
+        File file = maintenanceService.getCalibrationCertificateFile(id);
+        FileSystemResource resource = new FileSystemResource(file);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .contentLength(file.length())
+                .body(resource);
     }
 
     private MaintenanceWorkOrderResponse toDto(MaintenanceWorkOrder w) {

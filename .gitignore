@@ -16,6 +16,10 @@ build/
 client_secret_*.json
 application-dev.yml
 
+# Database backups (may contain live tokens, password hashes, and PII - never commit)
+/lrup_backup.sql
+/*_backup.sql
+
 # Logs
 *.log
 hs_err_pid*.log
@@ -50,3 +54,6 @@ start.ps1
 
 # Uploads
 lab-resource-backend/uploads/
+
+# Dev H2 file database
+lab-resource-backend/data/

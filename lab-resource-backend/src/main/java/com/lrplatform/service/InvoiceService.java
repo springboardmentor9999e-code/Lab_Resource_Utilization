@@ -41,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -165,12 +166,12 @@ public class InvoiceService {
 
         Equipment equipment = booking.getEquipment();
         BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal hoursBilled = BigDecimal.ZERO;
 
         BigDecimal rate = equipment.getHourlyRate() != null ? equipment.getHourlyRate() : equipment.getPurchaseCost();
         if (rate != null) {
-            long hours = Duration.between(booking.getStartTime(), booking.getEndTime()).toHours();
-            if (hours <= 0) hours = 1;
-            totalAmount = rate.multiply(BigDecimal.valueOf(hours));
+            hoursBilled = calculateBilledHours(booking);
+            totalAmount = rate.multiply(hoursBilled);
         }
 
         String invoiceNumber = generateInvoiceNumber();
@@ -181,6 +182,8 @@ public class InvoiceService {
                 .institution(institution)
                 .booking(booking)
                 .totalAmount(totalAmount)
+                .hoursBilled(hoursBilled)
+                .hourlyRate(rate)
                 .taxAmount(BigDecimal.ZERO)
                 .paymentStatus(PaymentStatus.PENDING)
                 .dueDate(LocalDate.now().plusDays(30))
@@ -189,6 +192,23 @@ public class InvoiceService {
         invoiceRepository.save(invoice);
         log.info("Invoice generated from booking {} with amount: {}", bookingId, totalAmount);
         return toResponse(invoice);
+    }
+
+    private BigDecimal calculateBilledHours(Booking booking) {
+        LocalDateTime start;
+        LocalDateTime end;
+        if (booking.getActualStartTime() != null && booking.getActualEndTime() != null
+                && booking.getActualEndTime().isAfter(booking.getActualStartTime())) {
+            start = booking.getActualStartTime();
+            end = booking.getActualEndTime();
+        } else {
+            start = booking.getBookingDate().atTime(booking.getStartTime());
+            end = booking.getBookingDate().atTime(booking.getEndTime());
+        }
+        long minutes = Duration.between(start, end).toMinutes();
+        if (minutes <= 0) minutes = 60;
+        return BigDecimal.valueOf(minutes)
+                .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
     }
 
     @Transactional(readOnly = true)
@@ -238,6 +258,8 @@ public class InvoiceService {
                 .bookingUser(invoice.getBooking() != null && invoice.getBooking().getUser() != null
                         ? invoice.getBooking().getUser().getFullName() : null)
                 .totalAmount(invoice.getTotalAmount())
+                .hoursBilled(invoice.getHoursBilled())
+                .hourlyRate(invoice.getHourlyRate())
                 .taxAmount(invoice.getTaxAmount())
                 .amountPaid(amountPaid)
                 .amountDue(totalAmount.subtract(amountPaid))
@@ -286,6 +308,12 @@ public class InvoiceService {
             if (response.getBookingUser() != null) {
                 addInfoRow(infoTable, "Booked By:", response.getBookingUser());
             }
+            if (response.getHoursBilled() != null) {
+                addInfoRow(infoTable, "Hours Billed:", response.getHoursBilled().stripTrailingZeros().toPlainString() + " hrs");
+            }
+            if (response.getHourlyRate() != null) {
+                addInfoRow(infoTable, "Hourly Rate:", "₹" + response.getHourlyRate().stripTrailingZeros().toPlainString());
+            }
             addInfoRow(infoTable, "Status:", response.getPaymentStatus());
             addInfoRow(infoTable, "Due Date:", response.getDueDate() != null ? response.getDueDate().toString() : "N/A");
             addInfoRow(infoTable, "Generated:", response.getGeneratedAt() != null ? response.getGeneratedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "N/A");
@@ -298,8 +326,15 @@ public class InvoiceService {
             Table amountTable = new Table(UnitValue.createPercentArray(new float[]{5, 5})).useAllAvailableWidth();
             amountTable.addHeaderCell(new Cell().add(new Paragraph("Description").setFont(boldFont)));
             amountTable.addHeaderCell(new Cell().add(new Paragraph("Amount").setFont(boldFont)).setTextAlignment(TextAlignment.RIGHT));
-            amountTable.addCell("Total Amount");
-            amountTable.addCell(response.getTotalAmount() != null ? "₹" + response.getTotalAmount() : "₹0").setTextAlignment(TextAlignment.RIGHT);
+            if (response.getHoursBilled() != null && response.getHourlyRate() != null) {
+                String usageLabel = "Usage (" + response.getHoursBilled().stripTrailingZeros().toPlainString()
+                        + " hrs x ₹" + response.getHourlyRate().stripTrailingZeros().toPlainString() + ")";
+                amountTable.addCell(usageLabel);
+                amountTable.addCell(response.getTotalAmount() != null ? "₹" + response.getTotalAmount() : "₹0").setTextAlignment(TextAlignment.RIGHT);
+            } else {
+                amountTable.addCell("Usage Charges");
+                amountTable.addCell(response.getTotalAmount() != null ? "₹" + response.getTotalAmount() : "₹0").setTextAlignment(TextAlignment.RIGHT);
+            }
             amountTable.addCell("Tax");
             amountTable.addCell(response.getTaxAmount() != null ? "₹" + response.getTaxAmount() : "₹0").setTextAlignment(TextAlignment.RIGHT);
             amountTable.addCell("Amount Paid");

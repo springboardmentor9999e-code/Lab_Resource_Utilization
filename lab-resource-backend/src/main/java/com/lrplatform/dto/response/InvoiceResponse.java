@@ -21,6 +21,8 @@ public class InvoiceResponse {
     private String equipmentName;
     private String bookingUser;
     private BigDecimal totalAmount;
+    private BigDecimal hoursBilled;
+    private BigDecimal hourlyRate;
     private BigDecimal taxAmount;
     private BigDecimal amountPaid;
     private BigDecimal amountDue;

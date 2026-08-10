@@ -4,8 +4,10 @@ import com.lrplatform.dto.request.CompleteProfileRequest;
 import com.lrplatform.dto.request.LoginRequest;
 import com.lrplatform.dto.request.RegisterRequest;
 import com.lrplatform.dto.response.AuthResponse;
+import com.lrplatform.dto.response.OAuthSetupInfoResponse;
 import com.lrplatform.exception.BadRequestException;
 import com.lrplatform.exception.DuplicateResourceException;
+import com.lrplatform.exception.UnauthorizedException;
 import com.lrplatform.model.entity.Department;
 import com.lrplatform.model.entity.Institution;
 import com.lrplatform.model.entity.PasswordResetToken;
@@ -226,12 +228,12 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse completeOAuthProfile(CompleteProfileRequest request) {
+    public AuthResponse completeOAuthProfile(String setupToken, CompleteProfileRequest request) {
         String email;
         String tokenType;
         try {
-            email = tokenProvider.getEmailFromToken(request.getSetupToken());
-            tokenType = tokenProvider.getClaimFromToken(request.getSetupToken(), "type");
+            email = tokenProvider.getEmailFromToken(setupToken);
+            tokenType = tokenProvider.getClaimFromToken(setupToken, "type");
         } catch (JwtException e) {
             throw new BadRequestException("Invalid or expired setup token");
         }
@@ -300,6 +302,43 @@ public class AuthService {
                 .userId(user.getId())
                 .institutionId(institution.getId())
                 .departmentId(user.getDepartment() != null ? user.getDepartment().getId() : null)
+                .build();
+    }
+
+    public AuthResponse getCurrentProfile(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedException("Not authenticated");
+        }
+        User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new BadRequestException("User not found"));
+        return AuthResponse.builder()
+                .tokenType("Bearer")
+                .role(user.getRole().name())
+                .email(user.getEmail())
+                .fullName(user.getFirstName() + " " + user.getLastName())
+                .userId(user.getId())
+                .institutionId(user.getInstitution() != null ? user.getInstitution().getId() : null)
+                .departmentId(user.getDepartment() != null ? user.getDepartment().getId() : null)
+                .build();
+    }
+
+    public OAuthSetupInfoResponse getOAuthSetupInfo(String setupToken) {
+        String email;
+        String tokenType;
+        try {
+            email = tokenProvider.getEmailFromToken(setupToken);
+            tokenType = tokenProvider.getClaimFromToken(setupToken, "type");
+        } catch (JwtException e) {
+            throw new BadRequestException("Invalid or expired setup token");
+        }
+        if (!"setup".equals(tokenType)) {
+            throw new BadRequestException("Invalid setup token");
+        }
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException("User not found"));
+        return OAuthSetupInfoResponse.builder()
+                .email(user.getEmail())
+                .fullName(user.getFirstName() + " " + user.getLastName())
                 .build();
     }
 }

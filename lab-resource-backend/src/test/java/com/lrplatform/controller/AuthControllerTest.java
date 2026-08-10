@@ -9,12 +9,17 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -32,9 +37,13 @@ class AuthControllerTest {
     @MockBean OAuth2AuthenticationSuccessHandler oauth2SuccessHandler;
     @MockBean CookieOAuth2AuthorizationRequestRepository cookieRepository;
 
-    @Test
-    void login_validCredentials_returnsToken() throws Exception {
-        AuthResponse authResponse = AuthResponse.builder()
+    private void stubTokenExpirations() {
+        when(jwtTokenProvider.getAccessTokenExpiration()).thenReturn(3600000L);
+        when(jwtTokenProvider.getRefreshTokenExpiration()).thenReturn(604800000L);
+    }
+
+    private AuthResponse authResponse() {
+        return AuthResponse.builder()
                 .accessToken("test-access-token")
                 .refreshToken("test-refresh-token")
                 .tokenType("Bearer")
@@ -43,13 +52,22 @@ class AuthControllerTest {
                 .fullName("Admin System")
                 .userId(1L)
                 .build();
-        when(authService.login(any())).thenReturn(authResponse);
+    }
+
+    @Test
+    void login_validCredentials_setsHttpOnlyCookies() throws Exception {
+        stubTokenExpirations();
+        when(authService.login(any())).thenReturn(authResponse());
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content("{\"email\":\"admin@demouniversity.edu\",\"password\":\"Password@123\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").value("test-access-token"))
+                .andExpect(cookie().value("lrp_access_token", "test-access-token"))
+                .andExpect(cookie().value("lrp_refresh_token", "test-refresh-token"))
+                .andExpect(cookie().httpOnly("lrp_access_token", true))
+                .andExpect(jsonPath("$.accessToken").doesNotExist())
+                .andExpect(jsonPath("$.refreshToken").doesNotExist())
                 .andExpect(jsonPath("$.role").value("SYSTEM_ADMIN"))
                 .andExpect(jsonPath("$.email").value("admin@demouniversity.edu"));
     }
@@ -98,7 +116,8 @@ class AuthControllerTest {
     }
 
     @Test
-    void refreshToken_validToken_returnsNewToken() throws Exception {
+    void refreshToken_validToken_returnsNewTokensAsCookies() throws Exception {
+        stubTokenExpirations();
         AuthResponse authResponse = AuthResponse.builder()
                 .accessToken("new-access-token")
                 .refreshToken("new-refresh-token")
@@ -109,7 +128,9 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content("{\"refreshToken\":\"valid-refresh-token\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").value("new-access-token"));
+                .andExpect(cookie().value("lrp_access_token", "new-access-token"))
+                .andExpect(cookie().value("lrp_refresh_token", "new-refresh-token"))
+                .andExpect(jsonPath("$.accessToken").doesNotExist());
     }
 
     @Test
@@ -125,7 +146,23 @@ class AuthControllerTest {
         mockMvc.perform(post("/auth/logout")
                         .header("X-Refresh-Token", "some-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Logged out successfully"));
+                .andExpect(jsonPath("$.message").value("Logged out successfully"))
+                .andExpect(cookie().maxAge("lrp_access_token", 0))
+                .andExpect(cookie().maxAge("lrp_refresh_token", 0));
+    }
+
+    @Test
+    void me_authenticated_returnsProfile() throws Exception {
+        when(authService.getCurrentProfile(any())).thenReturn(authResponse());
+
+        mockMvc.perform(get("/auth/me")
+                        .with(authentication(
+                                new UsernamePasswordAuthenticationToken(
+                                        "admin@demouniversity.edu", null, List.of()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("SYSTEM_ADMIN"))
+                .andExpect(jsonPath("$.email").value("admin@demouniversity.edu"))
+                .andExpect(jsonPath("$.accessToken").doesNotExist());
     }
 
     @Test

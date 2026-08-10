@@ -2,19 +2,26 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { notificationApi } from '../api/api';
+
+const SSE_URL = 'http://localhost:8081/api/notifications/stream';
 
 export function useNotificationWebSocket() {
   const queryClient = useQueryClient();
-  const { user, token } = useAuth();
-  const wsRef = useRef(null);
+  const { user } = useAuth();
+  const esRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const connectingRef = useRef(false);
 
-  const connect = useCallback(() => {
-    if (!user || !token) return;
+  const openStream = useCallback(async () => {
+    if (!user || connectingRef.current) return;
+    connectingRef.current = true;
 
     try {
-      const wsUrl = `http://localhost:8081/ws?token=${token}`;
-      const eventSource = new EventSource(wsUrl);
+      const res = await notificationApi.getSseTicket();
+      const ticket = res.data.ticket;
+
+      const eventSource = new EventSource(`${SSE_URL}?ticket=${ticket}`);
 
       eventSource.onmessage = (event) => {
         try {
@@ -32,24 +39,28 @@ export function useNotificationWebSocket() {
 
       eventSource.onerror = () => {
         eventSource.close();
-        reconnectTimeoutRef.current = setTimeout(connect, 5000);
+        esRef.current = null;
+        connectingRef.current = false;
+        reconnectTimeoutRef.current = setTimeout(() => openStream(), 5000);
       };
 
-      wsRef.current = eventSource;
+      esRef.current = eventSource;
+      connectingRef.current = false;
     } catch (e) {
-      // WebSocket connection not available, relying on polling fallback
+      connectingRef.current = false;
+      reconnectTimeoutRef.current = setTimeout(() => openStream(), 15000);
     }
-  }, [user, token, queryClient]);
+  }, [user, queryClient]);
 
   useEffect(() => {
-    connect();
+    openStream();
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
+      if (esRef.current) {
+        esRef.current.close();
       }
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
-  }, [connect]);
+  }, [openStream]);
 }
