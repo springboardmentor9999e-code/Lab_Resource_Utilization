@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { usePermissions } from '../context/PermissionsContext';
 
@@ -125,7 +125,7 @@ export default function Dashboard({ user, onLogout }) {
   const [loadingRenewalList, setLoadingRenewalList] = useState(false);
   const [loadingRenewalSubmit, setLoadingRenewalSubmit] = useState(false);
 
-  const fetchRenewalEquipmentList = (isManual = false) => {
+  const fetchRenewalEquipmentList = useCallback((isManual = false) => {
     setLoadingRenewalList(true);
     fetch('http://localhost:8080/api/equipment/needs-renewal', {
       headers: getAuthHeaders()
@@ -158,7 +158,7 @@ export default function Dashboard({ user, onLogout }) {
       setRenewalEquipmentList([]);
     })
     .finally(() => setLoadingRenewalList(false));
-  };
+  }, [getAuthHeaders, triggerToast]);
 
   const handleOpenRenewalModal = (eq) => {
     setSelectedRenewalEquipment(eq);
@@ -228,7 +228,7 @@ export default function Dashboard({ user, onLogout }) {
   };
 
   // Load backend token
-  const getAuthHeaders = () => {
+  const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem('token');
     return token ? {
       'Authorization': `Bearer ${token}`,
@@ -236,15 +236,15 @@ export default function Dashboard({ user, onLogout }) {
     } : {
       'Content-Type': 'application/json'
     };
-  };
+  }, []);
 
-  const triggerToast = (msg) => {
+  const triggerToast = useCallback((msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 4000);
-  };
+  }, []);
 
   // Resource Sharing & Notification API Handlers
-  const fetchNotifications = (filterType = notificationFilter) => {
+  const fetchNotifications = useCallback((filterType = notificationFilter) => {
     fetch(`http://localhost:8080/api/user-notifications?type=${filterType}`, {
       headers: getAuthHeaders()
     })
@@ -255,7 +255,7 @@ export default function Dashboard({ user, onLogout }) {
       setUnreadNotificationCount(unread);
     })
     .catch(() => {});
-  };
+  }, [getAuthHeaders, notificationFilter]);
 
   const markNotificationRead = (notifId) => {
     fetch(`http://localhost:8080/api/user-notifications/${notifId}/read`, {
@@ -410,10 +410,10 @@ export default function Dashboard({ user, onLogout }) {
       fetchRenewalEquipmentList();
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchNotifications, fetchRenewalEquipmentList]);
 
   // Load data from Backend (with Mock fallbacks for demo safety)
-  const loadEquipment = () => {
+  const loadEquipment = useCallback(() => {
     setLoadingEquipments(true);
     fetch('http://localhost:8080/api/equipment/search', {
       headers: getAuthHeaders()
@@ -432,9 +432,9 @@ export default function Dashboard({ user, onLogout }) {
       ]);
     })
     .finally(() => setLoadingEquipments(false));
-  };
+  }, [getAuthHeaders]);
 
-  const loadMaintenanceRecords = () => {
+  const loadMaintenanceRecords = useCallback(() => {
     setLoadingMaintenance(true);
     fetch('http://localhost:8080/api/maintenance', {
       headers: getAuthHeaders()
@@ -448,7 +448,7 @@ export default function Dashboard({ user, onLogout }) {
       setMaintenanceRecords([]);
     })
     .finally(() => setLoadingMaintenance(false));
-  };
+  }, [getAuthHeaders]);
 
   const handleOpenPutInMaintenanceModal = (eq) => {
     setSelectedEquipmentForMaintenance(eq);
@@ -581,7 +581,7 @@ export default function Dashboard({ user, onLogout }) {
     });
   };
 
-  const loadDepartments = () => {
+  const loadDepartments = useCallback(() => {
     setLoadingDepartments(true);
     fetch('http://localhost:8080/api/departments/my', {
       headers: getAuthHeaders()
@@ -602,9 +602,9 @@ export default function Dashboard({ user, onLogout }) {
       ]);
     })
     .finally(() => setLoadingDepartments(false));
-  };
+  }, [getAuthHeaders]);
 
-  const loadLabs = () => {
+  const loadLabs = useCallback(() => {
     setLoadingLabs(true);
     fetch('http://localhost:8080/api/labs/my', {
       headers: getAuthHeaders()
@@ -632,9 +632,9 @@ export default function Dashboard({ user, onLogout }) {
       ]);
     })
     .finally(() => setLoadingLabs(false));
-  };
+  }, [getAuthHeaders, equipments]);
 
-  const loadPendingApprovals = () => {
+  const loadPendingApprovals = useCallback(() => {
     setLoadingApprovals(true);
     fetch('http://localhost:8080/api/users/pending-approvals', {
       headers: getAuthHeaders()
@@ -659,9 +659,9 @@ export default function Dashboard({ user, onLogout }) {
       }
     })
     .finally(() => setLoadingApprovals(false));
-  };
+  }, [getAuthHeaders, hasPermission]);
 
-  const loadPendingBookings = () => {
+  const loadPendingBookings = useCallback(() => {
     fetch('http://localhost:8080/api/bookings/pending', {
       headers: getAuthHeaders()
     })
@@ -710,7 +710,7 @@ export default function Dashboard({ user, onLogout }) {
         setPendingBookings([]);
       }
     });
-  };
+  }, [getAuthHeaders, hasPermission]);
 
   // Initial loading
   useEffect(() => {
@@ -720,18 +720,13 @@ export default function Dashboard({ user, onLogout }) {
     loadPendingApprovals();
     loadPendingBookings();
     loadMaintenanceRecords();
-    
-    
-    if (user?.labId) {
-      setEqForm(prev => ({ ...prev, labId: user.labId }));
-    }
-  }, [user]);
+  }, [user, loadEquipment, loadDepartments, loadLabs, loadPendingApprovals, loadPendingBookings, loadMaintenanceRecords]);
 
   useEffect(() => {
     if (activeSubTab === 'maintenance') {
       loadMaintenanceRecords();
     }
-  }, [activeSubTab]);
+  }, [activeSubTab, loadMaintenanceRecords]);
 
   // Mock data fallbacks for reports
   const getMockHeatmapData = (deptId, range) => {
@@ -897,7 +892,7 @@ export default function Dashboard({ user, onLogout }) {
     };
   };
 
-  const loadReportData = (deptId, range, category) => {
+  const loadReportData = useCallback((deptId, range, category) => {
     if (!deptId) return;
 
     fetch(`http://localhost:8080/api/utilization/department/${deptId}?range=${range}`, {
@@ -959,9 +954,9 @@ export default function Dashboard({ user, onLogout }) {
     .catch(() => {
       setEquipmentStatusSummary(getEquipmentStatusSummaryLocal(equipments, deptId, category));
     });
-  };
+  }, [getAuthHeaders, equipments]);
 
-  const loadOverviewHeatmap = (deptId, range = overviewRange) => {
+  const loadOverviewHeatmap = useCallback((deptId, range = overviewRange) => {
     if (!deptId) return;
     fetch(`http://localhost:8080/api/utilization/department/${deptId}?range=${range}`, {
       headers: getAuthHeaders()
@@ -974,7 +969,7 @@ export default function Dashboard({ user, onLogout }) {
     .catch(() => {
       setOverviewHeatmapData(getMockHeatmapData(deptId, range));
     });
-  };
+  }, [getAuthHeaders, overviewRange]);
 
   useEffect(() => {
     let deptId = user?.departmentId;
@@ -984,7 +979,7 @@ export default function Dashboard({ user, onLogout }) {
     if (deptId) {
       loadOverviewHeatmap(deptId);
     }
-  }, [user, departments]);
+  }, [user, departments, loadOverviewHeatmap]);
 
   useEffect(() => {
     if (activeSidebar === 'report') {
@@ -1002,7 +997,7 @@ export default function Dashboard({ user, onLogout }) {
         loadReportData(deptId, selectedReportRange, selectedReportCategory);
       }
     }
-  }, [activeSidebar, selectedReportDeptId, selectedReportRange, selectedReportCategory, user, departments]);
+  }, [activeSidebar, selectedReportDeptId, selectedReportRange, selectedReportCategory, user, departments, loadReportData]);
 
   const handleTriggerBatch = (e) => {
     e.preventDefault();

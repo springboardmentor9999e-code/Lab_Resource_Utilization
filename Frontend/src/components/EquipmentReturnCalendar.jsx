@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -10,7 +10,7 @@ export default function EquipmentReturnCalendar({ user, getAuthHeaders, triggerT
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [returningId, setReturningId] = useState(null);
 
-  const fetchMyBookings = () => {
+  const fetchMyBookings = useCallback(() => {
     setLoading(true);
     fetch('http://localhost:8080/api/bookings/my', {
       headers: getAuthHeaders()
@@ -24,11 +24,11 @@ export default function EquipmentReturnCalendar({ user, getAuthHeaders, triggerT
       setBookings([]);
     })
     .finally(() => setLoading(false));
-  };
+  }, [getAuthHeaders, triggerToast]);
 
   useEffect(() => {
     fetchMyBookings();
-  }, []);
+  }, [fetchMyBookings]);
 
   const handleReturnEquipment = (bookingId) => {
     if (!bookingId) return;
