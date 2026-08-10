@@ -52,6 +52,12 @@ images/
 *.webp
 start.ps1
 
+# Internal audit/planning docs (local only - never publish)
+DEPLOYMENT_PLAN.md
+SECURITY_REPORT.md
+TEST_REPORT.md
+SECURITY AUDIT PROMPT.md
+
 # Uploads
 lab-resource-backend/uploads/
 

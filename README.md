@@ -410,8 +410,7 @@ lab_resource_management/
 │       └── styles/globals.css            # Tailwind + component classes
 │
 ├── docker-compose.yml                    # postgres + redis + backend + frontend
-├── PRD_Lab_Resource_Utilization_Platform.md
-├── TEST_REPORT.md / SECURITY_REPORT.md / DEPLOYMENT_PLAN.md
+├── .env.example                          # required env vars (copy to .env locally)
 └── README.md
 ```
 
@@ -504,7 +503,7 @@ docker-compose up --build
 | `postgres` | 5432 | Postgres 16, database `lrup` |
 | `redis` | 6379 | Redis 7 (reserved for future caching/rate-limit store) |
 
-> **Note:** the backend `Dockerfile` references a Maven wrapper (`mvnw`) that is not present in the repo. Until fixed (see `DEPLOYMENT_PLAN.md` §A.1), build the backend image with `mvn` directly, e.g. `mvn package -DskipTests` then adjust the Dockerfile, or build locally and run the JAR.
+> **Note:** the backend `Dockerfile` builds with a Maven image (`maven:3.9-eclipse-temurin-17`); no Maven wrapper is required.
 
 ---
 
@@ -522,7 +521,6 @@ docker-compose up --build
 |-------|---------|--------|
 | Backend unit/integration tests | `mvn test` (in `lab-resource-backend`) | ✅ 64 tests, 0 failures |
 | Frontend production build | `npm run build` (in `lab-resource-frontend`) | ✅ success (2480 modules) |
-| End-to-end verification | See `TEST_REPORT.md` | 332/340 baseline |
 
 `AuthControllerTest` asserts cookie attributes (HttpOnly, SameSite, path) and that token fields never appear in JSON responses.
 
@@ -538,8 +536,6 @@ docker-compose up --build
 - **Rate limiting** (60 req/min/IP), request metrics, parameterized queries (no SQL injection), single-use password-reset tokens.
 - CSRF disabled by design (stateless cookies mitigated by `SameSite=Strict`).
 
-Full two-pass audit results and open items: **`SECURITY_REPORT.md`**.
-
 ---
 
 ## 15. Related Documents
@@ -547,9 +543,6 @@ Full two-pass audit results and open items: **`SECURITY_REPORT.md`**.
 | Document | Description |
 |----------|-------------|
 | `PRD_Lab_Resource_Utilization_Platform.md` | Full product requirements (roles, workflows, UI, acceptance criteria) |
-| `TEST_REPORT.md` | End-to-end manual verification report |
-| `SECURITY_REPORT.md` | Security audit findings, fixes, and verification evidence |
-| `DEPLOYMENT_PLAN.md` | Netlify + Render + Neon deployment plan |
 
 ---
 
