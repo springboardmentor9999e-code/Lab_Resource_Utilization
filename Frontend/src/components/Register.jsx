@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
-import microscope from '../assets/microscope.png';
+
+import microscope from '../../public/microscope.png'
 
 const ROLES = [
   { id: '1', name: 'Research/Student' },

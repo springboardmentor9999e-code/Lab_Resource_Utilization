@@ -21,32 +21,56 @@ public class MaintenanceController {
 
     @PostMapping("/put")
     @PreAuthorize("hasAuthority('update_equipment_status') or hasAuthority('manage_maintenance_requests') or hasAuthority('manage_maintenance') or hasAuthority('manage_equipment')")
-    public ResponseEntity<MaintenanceDTO.Response> putInMaintenance(
+    public ResponseEntity<?> putInMaintenance(
             @RequestBody MaintenanceDTO.Request request,
             Principal principal) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(maintenanceService.putInMaintenance(request, principal != null ? principal.getName() : null));
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(maintenanceService.putInMaintenance(request, principal != null ? principal.getName() : null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", e.getClass().getSimpleName(), "message", e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
     }
 
     @PostMapping("/{recordId}/make-available")
     @PreAuthorize("hasAuthority('update_equipment_status') or hasAuthority('manage_maintenance_requests') or hasAuthority('manage_maintenance') or hasAuthority('manage_equipment')")
-    public ResponseEntity<MaintenanceDTO.Response> makeAvailable(
+    public ResponseEntity<?> makeAvailable(
             @PathVariable Long recordId,
             Principal principal) {
-        return ResponseEntity.ok(maintenanceService.makeAvailable(recordId, principal != null ? principal.getName() : null));
+        try {
+            return ResponseEntity.ok(maintenanceService.makeAvailable(recordId, principal != null ? principal.getName() : null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", e.getClass().getSimpleName(), "message", e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
     }
 
     @PutMapping("/{recordId}/start-time")
     @PreAuthorize("hasAuthority('update_equipment_status') or hasAuthority('manage_maintenance_requests') or hasAuthority('manage_maintenance') or hasAuthority('manage_equipment')")
-    public ResponseEntity<MaintenanceDTO.Response> updateStartTime(
+    public ResponseEntity<?> updateStartTime(
             @PathVariable Long recordId,
             @RequestBody MaintenanceDTO.UpdateTimeRequest request) {
-        return ResponseEntity.ok(maintenanceService.updateStartTime(recordId, request));
+        try {
+            return ResponseEntity.ok(maintenanceService.updateStartTime(recordId, request));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", e.getClass().getSimpleName(), "message", e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('view_equipment') or hasAuthority('update_equipment_status') or hasAuthority('manage_maintenance')")
-    public ResponseEntity<List<MaintenanceDTO.Response>> getMaintenanceRecords(Principal principal) {
-        return ResponseEntity.ok(maintenanceService.getMaintenanceRecords(principal != null ? principal.getName() : null));
+    public ResponseEntity<?> getMaintenanceRecords(Principal principal) {
+        try {
+            return ResponseEntity.ok(maintenanceService.getMaintenanceRecords(principal != null ? principal.getName() : null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", e.getClass().getSimpleName(), "message", e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
     }
 }

@@ -40,7 +40,7 @@ public class DowntimeRecord {
     @Column(name = "end_time")
     private Instant endTime;
 
-    @Column(name = "status", nullable = false, length = 50)
+    @Column(name = "status", nullable = false, length = 255)
     private String status;
 
     @Column(name = "quantity")

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { usePermissions } from '../context/PermissionsContext';
 
@@ -61,39 +61,38 @@ export default function Dashboard({ user, onLogout }) {
   const [loadingMaintenance, setLoadingMaintenance] = useState(true);
   const [showPutInMaintenanceModal, setShowPutInMaintenanceModal] = useState(false);
   const [selectedEquipmentForMaintenance, setSelectedEquipmentForMaintenance] = useState(null);
-  const [maintenanceForm, setMaintenanceForm] = useState({
-    isAll: true,
-    quantity: 1,
-    startTime: '',
-    reason: ''
-  });
+  const [maintenanceIsAll, setMaintenanceIsAll] = useState(true);
+
+  // Maintenance Form Refs (Uncontrolled - zero re-renders while typing)
+  const maintQuantityRef = useRef(null);
+  const maintStartTimeRef = useRef(null);
+  const maintReasonRef = useRef(null);
+  const editStartTimeRef = useRef(null);
+
   const [actionLoading, setActionLoading] = useState({});
   const setButtonLoading = (key, isLoading) => setActionLoading(prev => ({ ...prev, [key]: isLoading }));
   const canManageMaintenance = (user?.roleId === 2 || user?.roleId === 3 || hasPermission('update_equipment_status') || hasPermission('manage_maintenance_requests')) && user?.roleId !== 4;
 
   const [showEditTimeModal, setShowEditTimeModal] = useState(false);
   const [selectedRecordForTimeEdit, setSelectedRecordForTimeEdit] = useState(null);
-  const [editStartTimeValue, setEditStartTimeValue] = useState('');
 
-  // Form values
-  const [eqForm, setEqForm] = useState({ 
-    name: '', 
-    category: 'Microscope', 
-    model: '', 
-    serialNumber: '', 
-    manufacturer: '', 
-    purchaseDate: '2026-07-18', 
-    purchaseCost: '', 
-    amount: 1, 
-    imageUrl: '', 
-    cost: '', 
-    location: '', 
-    description: '', 
-    manual: '',
-    labId: '' 
-  });
-  const [deptForm, setDeptForm] = useState({ name: '' });
-  const [labForm, setLabForm] = useState({ name: '' });
+  // Form Refs for Add Equipment, Department, Lab
+  const eqNameRef = useRef(null);
+  const eqCategoryRef = useRef(null);
+  const eqModelRef = useRef(null);
+  const eqSerialRef = useRef(null);
+  const eqManufRef = useRef(null);
+  const eqPurchDateRef = useRef(null);
+  const eqPurchCostRef = useRef(null);
+  const eqAmountRef = useRef(null);
+  const eqCostRef = useRef(null);
+  const eqLocRef = useRef(null);
+  const eqDescRef = useRef(null);
+  const eqManualRef = useRef(null);
+  const eqLabIdRef = useRef(null);
+
+  const deptNameRef = useRef(null);
+  const labNameRef = useRef(null);
 
   // Resource Sharing & In-App Notifications State
   const [inAppNotifications, setInAppNotifications] = useState([]);
@@ -116,17 +115,17 @@ export default function Dashboard({ user, onLogout }) {
 
   const [sharingLoading, setSharingLoading] = useState(false);
 
-  // Equipment Renewal State
+  // Equipment Renewal State & Refs
   const [renewalEquipmentList, setRenewalEquipmentList] = useState([]);
   const [showRenewalModal, setShowRenewalModal] = useState(false);
   const [selectedRenewalEquipment, setSelectedRenewalEquipment] = useState(null);
-  const [renewalExpiryDate, setRenewalExpiryDate] = useState('');
-  const [renewalNotes, setRenewalNotes] = useState('');
-  const [renewalStatus, setRenewalStatus] = useState('AVAILABLE');
+  const renewalExpiryDateRef = useRef(null);
+  const renewalNotesRef = useRef(null);
+  const renewalStatusRef = useRef(null);
   const [loadingRenewalList, setLoadingRenewalList] = useState(false);
   const [loadingRenewalSubmit, setLoadingRenewalSubmit] = useState(false);
 
-  const fetchRenewalEquipmentList = (isManual = false) => {
+  const fetchRenewalEquipmentList = useCallback((isManual = false) => {
     setLoadingRenewalList(true);
     fetch('http://localhost:8080/api/equipment/needs-renewal', {
       headers: getAuthHeaders()
@@ -159,22 +158,26 @@ export default function Dashboard({ user, onLogout }) {
       setRenewalEquipmentList([]);
     })
     .finally(() => setLoadingRenewalList(false));
-  };
+  }, [getAuthHeaders, triggerToast]);
 
   const handleOpenRenewalModal = (eq) => {
     setSelectedRenewalEquipment(eq);
-    const nextYear = new Date();
-    nextYear.setFullYear(nextYear.getFullYear() + 1);
-    setRenewalExpiryDate(nextYear.toISOString().split('T')[0]);
-    setRenewalNotes('');
-    setRenewalStatus(eq.status || 'AVAILABLE');
     setShowRenewalModal(true);
+    setTimeout(() => {
+      const nextYear = new Date();
+      nextYear.setFullYear(nextYear.getFullYear() + 1);
+      if (renewalExpiryDateRef.current) renewalExpiryDateRef.current.value = nextYear.toISOString().split('T')[0];
+      if (renewalNotesRef.current) renewalNotesRef.current.value = '';
+      if (renewalStatusRef.current) renewalStatusRef.current.value = eq.status || 'AVAILABLE';
+    }, 50);
   };
 
   const handleApplyPresetExpiry = (months) => {
     const d = new Date();
     d.setMonth(d.getMonth() + months);
-    setRenewalExpiryDate(d.toISOString().split('T')[0]);
+    if (renewalExpiryDateRef.current) {
+      renewalExpiryDateRef.current.value = d.toISOString().split('T')[0];
+    }
   };
 
   const handleSubmitRenewal = (e) => {
@@ -185,14 +188,18 @@ export default function Dashboard({ user, onLogout }) {
       return;
     }
 
+    const newExpiryDate = renewalExpiryDateRef.current?.value || '';
+    const notes = renewalNotesRef.current?.value || '';
+    const status = renewalStatusRef.current?.value || 'Available';
+
     setLoadingRenewalSubmit(true);
     fetch(`http://localhost:8080/api/equipment/${eqId}/renew`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({
-        newExpiryDate: String(renewalExpiryDate || ''),
-        notes: String(renewalNotes || ''),
-        status: String(renewalStatus || 'Available')
+        newExpiryDate: String(newExpiryDate),
+        notes: String(notes),
+        status: String(status)
       })
     })
     .then(async res => {
@@ -210,7 +217,7 @@ export default function Dashboard({ user, onLogout }) {
       return res.json();
     })
     .then(data => {
-      triggerToast(`Successfully renewed ${data.name || 'equipment'}! New Expiry: ${data.expiryDate || renewalExpiryDate}`);
+      triggerToast(`Successfully renewed ${data.name || 'equipment'}! New Expiry: ${data.expiryDate || newExpiryDate}`);
       setShowRenewalModal(false);
       fetchRenewalEquipmentList();
       loadEquipment();
@@ -221,7 +228,7 @@ export default function Dashboard({ user, onLogout }) {
   };
 
   // Load backend token
-  const getAuthHeaders = () => {
+  const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem('token');
     return token ? {
       'Authorization': `Bearer ${token}`,
@@ -229,15 +236,15 @@ export default function Dashboard({ user, onLogout }) {
     } : {
       'Content-Type': 'application/json'
     };
-  };
+  }, []);
 
-  const triggerToast = (msg) => {
+  const triggerToast = useCallback((msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 4000);
-  };
+  }, []);
 
   // Resource Sharing & Notification API Handlers
-  const fetchNotifications = (filterType = notificationFilter) => {
+  const fetchNotifications = useCallback((filterType = notificationFilter) => {
     fetch(`http://localhost:8080/api/user-notifications?type=${filterType}`, {
       headers: getAuthHeaders()
     })
@@ -248,7 +255,7 @@ export default function Dashboard({ user, onLogout }) {
       setUnreadNotificationCount(unread);
     })
     .catch(() => {});
-  };
+  }, [getAuthHeaders, notificationFilter]);
 
   const markNotificationRead = (notifId) => {
     fetch(`http://localhost:8080/api/user-notifications/${notifId}/read`, {
@@ -403,10 +410,10 @@ export default function Dashboard({ user, onLogout }) {
       fetchRenewalEquipmentList();
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchNotifications, fetchRenewalEquipmentList]);
 
   // Load data from Backend (with Mock fallbacks for demo safety)
-  const loadEquipment = () => {
+  const loadEquipment = useCallback(() => {
     setLoadingEquipments(true);
     fetch('http://localhost:8080/api/equipment/search', {
       headers: getAuthHeaders()
@@ -425,9 +432,9 @@ export default function Dashboard({ user, onLogout }) {
       ]);
     })
     .finally(() => setLoadingEquipments(false));
-  };
+  }, [getAuthHeaders]);
 
-  const loadMaintenanceRecords = () => {
+  const loadMaintenanceRecords = useCallback(() => {
     setLoadingMaintenance(true);
     fetch('http://localhost:8080/api/maintenance', {
       headers: getAuthHeaders()
@@ -441,18 +448,18 @@ export default function Dashboard({ user, onLogout }) {
       setMaintenanceRecords([]);
     })
     .finally(() => setLoadingMaintenance(false));
-  };
+  }, [getAuthHeaders]);
 
   const handleOpenPutInMaintenanceModal = (eq) => {
     setSelectedEquipmentForMaintenance(eq);
-    const nowLocal = new Date(Date.now() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-    setMaintenanceForm({
-      isAll: true,
-      quantity: eq.amount || 1,
-      startTime: nowLocal,
-      reason: ''
-    });
+    setMaintenanceIsAll(true);
     setShowPutInMaintenanceModal(true);
+    setTimeout(() => {
+      const nowLocal = new Date(Date.now() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+      if (maintStartTimeRef.current) maintStartTimeRef.current.value = nowLocal;
+      if (maintQuantityRef.current) maintQuantityRef.current.value = eq.amount || 1;
+      if (maintReasonRef.current) maintReasonRef.current.value = '';
+    }, 50);
   };
 
   const handleSubmitPutInMaintenance = (e) => {
@@ -460,12 +467,16 @@ export default function Dashboard({ user, onLogout }) {
     if (!selectedEquipmentForMaintenance) return;
 
     const eqId = selectedEquipmentForMaintenance.equipmentId || selectedEquipmentForMaintenance.id;
+    const qtyVal = maintQuantityRef.current?.value ? parseInt(maintQuantityRef.current.value, 10) : 1;
+    const startTimeVal = maintStartTimeRef.current?.value ? new Date(maintStartTimeRef.current.value).toISOString() : new Date().toISOString();
+    const reasonVal = maintReasonRef.current?.value || '';
+
     const payload = {
       equipmentId: eqId,
-      isAll: maintenanceForm.isAll,
-      quantity: maintenanceForm.isAll ? (selectedEquipmentForMaintenance.amount || 1) : parseInt(maintenanceForm.quantity, 10),
-      startTime: maintenanceForm.startTime ? new Date(maintenanceForm.startTime).toISOString() : new Date().toISOString(),
-      reason: maintenanceForm.reason
+      isAll: maintenanceIsAll,
+      quantity: maintenanceIsAll ? (selectedEquipmentForMaintenance.amount || 1) : qtyVal,
+      startTime: startTimeVal,
+      reason: reasonVal
     };
 
     const key = `put-maint-${eqId}`;
@@ -476,8 +487,18 @@ export default function Dashboard({ user, onLogout }) {
       headers: getAuthHeaders(),
       body: JSON.stringify(payload)
     })
-    .then(res => {
-      if (!res.ok) throw new Error('Failed to put equipment into maintenance');
+    .then(async res => {
+      if (!res.ok) {
+        let errStr = 'Failed to put equipment into maintenance';
+        try {
+          const json = await res.json();
+          errStr = json.message || json.error || errStr;
+        } catch {
+          const text = await res.text().catch(() => '');
+          if (text) errStr = text;
+        }
+        throw new Error(errStr);
+      }
       return res.json();
     })
     .then(() => {
@@ -522,19 +543,23 @@ export default function Dashboard({ user, onLogout }) {
 
   const handleOpenEditTimeModal = (record) => {
     setSelectedRecordForTimeEdit(record);
-    const timeStr = record.startTime 
-      ? new Date(new Date(record.startTime).getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16)
-      : new Date(Date.now() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-    setEditStartTimeValue(timeStr);
     setShowEditTimeModal(true);
+    setTimeout(() => {
+      const timeStr = record.startTime 
+        ? new Date(new Date(record.startTime).getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16)
+        : new Date(Date.now() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+      if (editStartTimeRef.current) editStartTimeRef.current.value = timeStr;
+    }, 50);
   };
 
   const handleSubmitEditTime = (e) => {
     e.preventDefault();
     if (!selectedRecordForTimeEdit) return;
 
+    const startTimeVal = editStartTimeRef.current?.value ? new Date(editStartTimeRef.current.value).toISOString() : new Date().toISOString();
+
     const payload = {
-      startTime: new Date(editStartTimeValue).toISOString()
+      startTime: startTimeVal
     };
 
     fetch(`http://localhost:8080/api/maintenance/${selectedRecordForTimeEdit.recordId}/start-time`, {
@@ -556,7 +581,7 @@ export default function Dashboard({ user, onLogout }) {
     });
   };
 
-  const loadDepartments = () => {
+  const loadDepartments = useCallback(() => {
     setLoadingDepartments(true);
     fetch('http://localhost:8080/api/departments/my', {
       headers: getAuthHeaders()
@@ -577,9 +602,9 @@ export default function Dashboard({ user, onLogout }) {
       ]);
     })
     .finally(() => setLoadingDepartments(false));
-  };
+  }, [getAuthHeaders]);
 
-  const loadLabs = () => {
+  const loadLabs = useCallback(() => {
     setLoadingLabs(true);
     fetch('http://localhost:8080/api/labs/my', {
       headers: getAuthHeaders()
@@ -607,9 +632,9 @@ export default function Dashboard({ user, onLogout }) {
       ]);
     })
     .finally(() => setLoadingLabs(false));
-  };
+  }, [getAuthHeaders, equipments]);
 
-  const loadPendingApprovals = () => {
+  const loadPendingApprovals = useCallback(() => {
     setLoadingApprovals(true);
     fetch('http://localhost:8080/api/users/pending-approvals', {
       headers: getAuthHeaders()
@@ -634,9 +659,9 @@ export default function Dashboard({ user, onLogout }) {
       }
     })
     .finally(() => setLoadingApprovals(false));
-  };
+  }, [getAuthHeaders, hasPermission]);
 
-  const loadPendingBookings = () => {
+  const loadPendingBookings = useCallback(() => {
     fetch('http://localhost:8080/api/bookings/pending', {
       headers: getAuthHeaders()
     })
@@ -685,7 +710,7 @@ export default function Dashboard({ user, onLogout }) {
         setPendingBookings([]);
       }
     });
-  };
+  }, [getAuthHeaders, hasPermission]);
 
   // Initial loading
   useEffect(() => {
@@ -695,18 +720,13 @@ export default function Dashboard({ user, onLogout }) {
     loadPendingApprovals();
     loadPendingBookings();
     loadMaintenanceRecords();
-    
-    
-    if (user?.labId) {
-      setEqForm(prev => ({ ...prev, labId: user.labId }));
-    }
-  }, [user]);
+  }, [user, loadEquipment, loadDepartments, loadLabs, loadPendingApprovals, loadPendingBookings, loadMaintenanceRecords]);
 
   useEffect(() => {
     if (activeSubTab === 'maintenance') {
       loadMaintenanceRecords();
     }
-  }, [activeSubTab]);
+  }, [activeSubTab, loadMaintenanceRecords]);
 
   // Mock data fallbacks for reports
   const getMockHeatmapData = (deptId, range) => {
@@ -872,7 +892,7 @@ export default function Dashboard({ user, onLogout }) {
     };
   };
 
-  const loadReportData = (deptId, range, category) => {
+  const loadReportData = useCallback((deptId, range, category) => {
     if (!deptId) return;
 
     fetch(`http://localhost:8080/api/utilization/department/${deptId}?range=${range}`, {
@@ -934,9 +954,9 @@ export default function Dashboard({ user, onLogout }) {
     .catch(() => {
       setEquipmentStatusSummary(getEquipmentStatusSummaryLocal(equipments, deptId, category));
     });
-  };
+  }, [getAuthHeaders, equipments]);
 
-  const loadOverviewHeatmap = (deptId, range = overviewRange) => {
+  const loadOverviewHeatmap = useCallback((deptId, range = overviewRange) => {
     if (!deptId) return;
     fetch(`http://localhost:8080/api/utilization/department/${deptId}?range=${range}`, {
       headers: getAuthHeaders()
@@ -949,7 +969,7 @@ export default function Dashboard({ user, onLogout }) {
     .catch(() => {
       setOverviewHeatmapData(getMockHeatmapData(deptId, range));
     });
-  };
+  }, [getAuthHeaders, overviewRange]);
 
   useEffect(() => {
     let deptId = user?.departmentId;
@@ -959,7 +979,7 @@ export default function Dashboard({ user, onLogout }) {
     if (deptId) {
       loadOverviewHeatmap(deptId);
     }
-  }, [user, departments]);
+  }, [user, departments, loadOverviewHeatmap]);
 
   useEffect(() => {
     if (activeSidebar === 'report') {
@@ -977,7 +997,7 @@ export default function Dashboard({ user, onLogout }) {
         loadReportData(deptId, selectedReportRange, selectedReportCategory);
       }
     }
-  }, [activeSidebar, selectedReportDeptId, selectedReportRange, selectedReportCategory, user, departments]);
+  }, [activeSidebar, selectedReportDeptId, selectedReportRange, selectedReportCategory, user, departments, loadReportData]);
 
   const handleTriggerBatch = (e) => {
     e.preventDefault();
@@ -1039,21 +1059,36 @@ export default function Dashboard({ user, onLogout }) {
   // CRUD handlers
   const handleAddEquipment = (e) => {
     e.preventDefault();
+    const nameVal = eqNameRef.current?.value || '';
+    const catVal = eqCategoryRef.current?.value || 'Microscope';
+    const modelVal = eqModelRef.current?.value || '';
+    const serialVal = eqSerialRef.current?.value || '';
+    const manufVal = eqManufRef.current?.value || '';
+    const purchDateVal = eqPurchDateRef.current?.value || '2026-07-18';
+    const purchCostVal = eqPurchCostRef.current?.value ? Number(eqPurchCostRef.current.value) : null;
+    const amountVal = eqAmountRef.current?.value ? Number(eqAmountRef.current.value) : 1;
+    const imgUrlVal = eqManufRef.current?.value || 'https://images.unsplash.com/photo-1532187643603-ba119ca4109e?w=500';
+    const costVal = eqCostRef.current?.value ? Number(eqCostRef.current.value) : null;
+    const locVal = eqLocRef.current?.value || '';
+    const descVal = eqDescRef.current?.value || '';
+    const manualVal = eqManualRef.current?.value || '';
+    const labIdVal = eqLabIdRef.current?.value ? Number(eqLabIdRef.current.value) : null;
+
     const payload = {
-      name: eqForm.name,
-      category: eqForm.category,
-      model: eqForm.model,
-      serialNumber: eqForm.serialNumber,
-      manufacturer: eqForm.manufacturer,
-      purchaseDate: eqForm.purchaseDate,
-      purchaseCost: eqForm.purchaseCost ? Number(eqForm.purchaseCost) : null,
-      amount: eqForm.amount ? Number(eqForm.amount) : 1,
-      imageUrl: eqForm.imageUrl || 'https://images.unsplash.com/photo-1532187643603-ba119ca4109e?w=500',
-      cost: eqForm.cost ? Number(eqForm.cost) : null,
-      location: eqForm.location,
-      description: eqForm.description,
-      manual: eqForm.manual,
-      labId: eqForm.labId ? Number(eqForm.labId) : null
+      name: nameVal,
+      category: catVal,
+      model: modelVal,
+      serialNumber: serialVal,
+      manufacturer: manufVal,
+      purchaseDate: purchDateVal,
+      purchaseCost: purchCostVal,
+      amount: amountVal,
+      imageUrl: imgUrlVal,
+      cost: costVal,
+      location: locVal,
+      description: descVal,
+      manual: manualVal,
+      labId: labIdVal
     };
 
     fetch('http://localhost:8080/api/equipment/add', {
@@ -1069,38 +1104,23 @@ export default function Dashboard({ user, onLogout }) {
       setEquipments([data, ...equipments]);
       triggerToast(`Equipment ${data.name} added!`);
       setShowAddEquipmentModal(false);
-      setEqForm({
-        name: '',
-        category: 'Microscope',
-        model: '',
-        serialNumber: '',
-        manufacturer: '',
-        purchaseDate: '2026-07-18',
-        purchaseCost: '',
-        amount: 1,
-        imageUrl: '',
-        cost: '',
-        location: '',
-        description: '',
-        labId: user?.labId || ''
-      });
     })
     .catch(() => {
       const newEq = {
         id: Math.floor(Math.random() * 1000 + 100),
-        name: eqForm.name,
-        category: eqForm.category,
-        model: eqForm.model,
-        serialNumber: eqForm.serialNumber,
-        manufacturer: eqForm.manufacturer,
-        purchaseDate: eqForm.purchaseDate,
-        purchaseCost: Number(eqForm.purchaseCost) || 12000,
-        amount: Number(eqForm.amount) || 1,
-        imageUrl: eqForm.imageUrl || 'https://images.unsplash.com/photo-1532187643603-ba119ca4109e?w=500',
-        cost: Number(eqForm.cost) || 1500,
-        location: eqForm.location,
-        description: eqForm.description,
-        labId: Number(eqForm.labId) || 1,
+        name: nameVal,
+        category: catVal,
+        model: modelVal,
+        serialNumber: serialVal,
+        manufacturer: manufVal,
+        purchaseDate: purchDateVal,
+        purchaseCost: purchCostVal || 12000,
+        amount: amountVal || 1,
+        imageUrl: imgUrlVal,
+        cost: costVal || 1500,
+        location: locVal,
+        description: descVal,
+        labId: labIdVal || 1,
         status: 'Operational'
       };
       setEquipments([newEq, ...equipments]);
@@ -1127,10 +1147,11 @@ export default function Dashboard({ user, onLogout }) {
 
   const handleAddDepartment = (e) => {
     e.preventDefault();
+    const deptName = deptNameRef.current?.value || '';
     fetch('http://localhost:8080/api/departments', {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ name: deptForm.name })
+      body: JSON.stringify({ name: deptName })
     })
     .then(res => {
       if (!res.ok) throw new Error();
@@ -1140,10 +1161,9 @@ export default function Dashboard({ user, onLogout }) {
       setDepartments([...departments, { ...data, id: data.departmentId, availableCount: 0, maintenanceCount: 0 }]);
       triggerToast('Department added successfully!');
       setShowAddDepartmentModal(false);
-      setDeptForm({ name: '' });
     })
     .catch(() => {
-      setDepartments([...departments, { id: Math.random(), name: deptForm.name, availableCount: 5, maintenanceCount: 0 }]);
+      setDepartments([...departments, { id: Math.random(), name: deptName, availableCount: 5, maintenanceCount: 0 }]);
       triggerToast('Department added (mock fallback)!');
       setShowAddDepartmentModal(false);
     });
@@ -1167,10 +1187,11 @@ export default function Dashboard({ user, onLogout }) {
 
   const handleAddLab = (e) => {
     e.preventDefault();
+    const labName = labNameRef.current?.value || '';
     fetch('http://localhost:8080/api/labs', {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ name: labForm.name })
+      body: JSON.stringify({ name: labName })
     })
     .then(res => {
       if (!res.ok) throw new Error();
@@ -1180,10 +1201,9 @@ export default function Dashboard({ user, onLogout }) {
       setLabs([...labs, { ...data, id: data.labId, availableCount: 0, maintenanceCount: 0, bookedCount: 0 }]);
       triggerToast('Lab added successfully!');
       setShowAddLabModal(false);
-      setLabForm({ name: '' });
     })
     .catch(() => {
-      setLabs([...labs, { id: Math.random(), name: labForm.name, availableCount: 4, maintenanceCount: 1, bookedCount: 0 }]);
+      setLabs([...labs, { id: Math.random(), name: labName, availableCount: 4, maintenanceCount: 1, bookedCount: 0 }]);
       triggerToast('Lab added (mock fallback)!');
       setShowAddLabModal(false);
     });
@@ -2760,8 +2780,7 @@ export default function Dashboard({ user, onLogout }) {
               <input
                 type="date"
                 required
-                value={renewalExpiryDate}
-                onChange={(e) => setRenewalExpiryDate(e.target.value)}
+                ref={renewalExpiryDateRef}
                 className="w-full px-3 py-2 border rounded-lg text-xs font-mono text-slate-800 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
               />
             </div>
@@ -2770,8 +2789,8 @@ export default function Dashboard({ user, onLogout }) {
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Status After Renewal</label>
               <select
-                value={renewalStatus}
-                onChange={(e) => setRenewalStatus(e.target.value)}
+                ref={renewalStatusRef}
+                defaultValue="Available"
                 className="w-full px-3 py-2 border rounded-lg text-xs text-slate-800 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
               >
                 <option value="Available">Available / Operational</option>
@@ -2785,8 +2804,8 @@ export default function Dashboard({ user, onLogout }) {
               <textarea
                 rows={2}
                 placeholder="Enter calibration vendor info, warranty certificate number, or maintenance log details..."
-                value={renewalNotes}
-                onChange={(e) => setRenewalNotes(e.target.value)}
+                ref={renewalNotesRef}
+                defaultValue=""
                 className="w-full px-3 py-2 border rounded-lg text-xs text-slate-800 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
               />
             </div>
@@ -3150,7 +3169,7 @@ export default function Dashboard({ user, onLogout }) {
                     Labs
                   </button>
                 )}
-                {hasPermission('manage_maintenance')&&(
+                {(hasPermission('manage_maintenance') || hasPermission('manage_maintenance_requests') ) &&(
                 <button
                   onClick={() => setActiveSubTab('maintenance')}
                   className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
@@ -3802,8 +3821,8 @@ export default function Dashboard({ user, onLogout }) {
                 <input
                   type="text"
                   placeholder="e.g. Zeiss Axio Imager 2"
-                  value={eqForm.name}
-                  onChange={(e) => setEqForm({ ...eqForm, name: e.target.value })}
+                  ref={eqNameRef}
+                  defaultValue=""
                   className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:border-primary text-sm font-medium"
                   required
                 />
@@ -3813,8 +3832,8 @@ export default function Dashboard({ user, onLogout }) {
                 <div className="space-y-1">
                   <label className="block uppercase text-slate-500 font-bold">Category</label>
                   <select
-                    value={eqForm.category}
-                    onChange={(e) => setEqForm({ ...eqForm, category: e.target.value })}
+                    ref={eqCategoryRef}
+                    defaultValue="Microscope"
                     className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium bg-white"
                   >
                     <option value="Microscope">Microscope</option>
@@ -3830,8 +3849,8 @@ export default function Dashboard({ user, onLogout }) {
                   <input
                     type="text"
                     placeholder="e.g. Zeiss / Thermo Fisher"
-                    value={eqForm.manufacturer}
-                    onChange={(e) => setEqForm({ ...eqForm, manufacturer: e.target.value })}
+                    ref={eqManufRef}
+                    defaultValue=""
                     className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium"
                     required
                   />
@@ -3844,8 +3863,8 @@ export default function Dashboard({ user, onLogout }) {
                   <input
                     type="text"
                     placeholder="e.g. Axiolab 5"
-                    value={eqForm.model}
-                    onChange={(e) => setEqForm({ ...eqForm, model: e.target.value })}
+                    ref={eqModelRef}
+                    defaultValue=""
                     className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium"
                     required
                   />
@@ -3855,8 +3874,8 @@ export default function Dashboard({ user, onLogout }) {
                   <input
                     type="text"
                     placeholder="e.g. SN-88902-X"
-                    value={eqForm.serialNumber}
-                    onChange={(e) => setEqForm({ ...eqForm, serialNumber: e.target.value })}
+                    ref={eqSerialRef}
+                    defaultValue=""
                     className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium"
                     required
                   />
@@ -3868,8 +3887,8 @@ export default function Dashboard({ user, onLogout }) {
                   <label className="block uppercase text-slate-500 font-bold">Purchase Date</label>
                   <input
                     type="date"
-                    value={eqForm.purchaseDate}
-                    onChange={(e) => setEqForm({ ...eqForm, purchaseDate: e.target.value })}
+                    ref={eqPurchDateRef}
+                    defaultValue="2026-07-18"
                     className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium"
                     required
                   />
@@ -3879,8 +3898,8 @@ export default function Dashboard({ user, onLogout }) {
                   <input
                     type="number"
                     placeholder="e.g. 12000"
-                    value={eqForm.purchaseCost}
-                    onChange={(e) => setEqForm({ ...eqForm, purchaseCost: e.target.value })}
+                    ref={eqPurchCostRef}
+                    defaultValue=""
                     className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium"
                     required
                   />
@@ -3893,8 +3912,8 @@ export default function Dashboard({ user, onLogout }) {
                   <input
                     type="number"
                     placeholder="e.g. 25"
-                    value={eqForm.cost}
-                    onChange={(e) => setEqForm({ ...eqForm, cost: e.target.value })}
+                    ref={eqCostRef}
+                    defaultValue=""
                     className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium"
                     required
                   />
@@ -3903,8 +3922,8 @@ export default function Dashboard({ user, onLogout }) {
                   <label className="block uppercase text-slate-500 font-bold">Quantity</label>
                   <input
                     type="number"
-                    value={eqForm.amount}
-                    onChange={(e) => setEqForm({ ...eqForm, amount: e.target.value })}
+                    ref={eqAmountRef}
+                    defaultValue="1"
                     className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium"
                     required
                   />
@@ -3914,8 +3933,8 @@ export default function Dashboard({ user, onLogout }) {
                   <input
                     type="number"
                     placeholder="Prefilled"
-                    value={eqForm.labId}
-                    onChange={(e) => setEqForm({ ...eqForm, labId: e.target.value })}
+                    ref={eqLabIdRef}
+                    defaultValue={user?.labId || ""}
                     className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium"
                     required
                   />
@@ -3928,8 +3947,8 @@ export default function Dashboard({ user, onLogout }) {
                   <input
                     type="text"
                     placeholder="e.g. Room 402"
-                    value={eqForm.location}
-                    onChange={(e) => setEqForm({ ...eqForm, location: e.target.value })}
+                    ref={eqLocRef}
+                    defaultValue=""
                     className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium"
                     required
                   />
@@ -3939,8 +3958,8 @@ export default function Dashboard({ user, onLogout }) {
                   <input
                     type="text"
                     placeholder="Unsplash / custom link"
-                    value={eqForm.imageUrl}
-                    onChange={(e) => setEqForm({ ...eqForm, imageUrl: e.target.value })}
+                    ref={eqManufRef}
+                    defaultValue=""
                     className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium"
                   />
                 </div>
@@ -3951,8 +3970,8 @@ export default function Dashboard({ user, onLogout }) {
                 <input
                   type="text"
                   placeholder="e.g. https://www.manufacturer.com/manual.pdf"
-                  value={eqForm.manual}
-                  onChange={(e) => setEqForm({ ...eqForm, manual: e.target.value })}
+                  ref={eqManualRef}
+                  defaultValue=""
                   className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium"
                 />
               </div>
@@ -3961,8 +3980,8 @@ export default function Dashboard({ user, onLogout }) {
                 <label className="block uppercase text-slate-500 font-bold">Description</label>
                 <textarea
                   placeholder="Details about calibration and operational usage limits..."
-                  value={eqForm.description}
-                  onChange={(e) => setEqForm({ ...eqForm, description: e.target.value })}
+                  ref={eqDescRef}
+                  defaultValue=""
                   className="w-full border rounded-lg px-4 py-2 focus:outline-none text-sm font-medium h-16 resize-none"
                   required
                 />
@@ -3991,8 +4010,8 @@ export default function Dashboard({ user, onLogout }) {
                 <input
                   type="text"
                   placeholder="e.g. Molecular Biology"
-                  value={deptForm.name}
-                  onChange={(e) => setDeptForm({ name: e.target.value })}
+                  ref={deptNameRef}
+                  defaultValue=""
                   className="w-full border rounded-lg px-4 py-2 focus:outline-none"
                   required
                 />
@@ -4020,8 +4039,8 @@ export default function Dashboard({ user, onLogout }) {
                 <input
                   type="text"
                   placeholder="e.g. Advanced Nanotech Lab"
-                  value={labForm.name}
-                  onChange={(e) => setLabForm({ name: e.target.value })}
+                  ref={labNameRef}
+                  defaultValue=""
                   className="w-full border rounded-lg px-4 py-2 focus:outline-none"
                   required
                 />
@@ -4064,8 +4083,8 @@ export default function Dashboard({ user, onLogout }) {
                     <input
                       type="radio"
                       name="isAll"
-                      checked={maintenanceForm.isAll === true}
-                      onChange={() => setMaintenanceForm({ ...maintenanceForm, isAll: true })}
+                      checked={maintenanceIsAll === true}
+                      onChange={() => setMaintenanceIsAll(true)}
                       className="text-primary focus:ring-primary"
                     />
                     <span>All Units ({selectedEquipmentForMaintenance.amount || 1})</span>
@@ -4074,23 +4093,23 @@ export default function Dashboard({ user, onLogout }) {
                     <input
                       type="radio"
                       name="isAll"
-                      checked={maintenanceForm.isAll === false}
-                      onChange={() => setMaintenanceForm({ ...maintenanceForm, isAll: false })}
+                      checked={maintenanceIsAll === false}
+                      onChange={() => setMaintenanceIsAll(false)}
                       className="text-primary focus:ring-primary"
                     />
                     <span>Specific Quantity</span>
                   </label>
                 </div>
 
-                {!maintenanceForm.isAll && (
+                {!maintenanceIsAll && (
                   <div className="pt-2">
                     <label className="block text-[11px] text-slate-600 mb-1">Select Quantity (1 to {selectedEquipmentForMaintenance.amount || 1}):</label>
                     <input
                       type="number"
                       min="1"
                       max={selectedEquipmentForMaintenance.amount || 1}
-                      value={maintenanceForm.quantity}
-                      onChange={(e) => setMaintenanceForm({ ...maintenanceForm, quantity: e.target.value })}
+                      ref={maintQuantityRef}
+                      defaultValue={selectedEquipmentForMaintenance.amount || 1}
                       className="w-full border rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:border-primary"
                       required
                     />
@@ -4103,8 +4122,8 @@ export default function Dashboard({ user, onLogout }) {
                 <label className="block uppercase text-slate-500 font-bold">Maintenance Start / Created Time</label>
                 <input
                   type="datetime-local"
-                  value={maintenanceForm.startTime}
-                  onChange={(e) => setMaintenanceForm({ ...maintenanceForm, startTime: e.target.value })}
+                  ref={maintStartTimeRef}
+                  defaultValue={new Date(Date.now() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16)}
                   className="w-full border rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:border-primary"
                   required
                 />
@@ -4117,8 +4136,8 @@ export default function Dashboard({ user, onLogout }) {
                 <input
                   type="text"
                   placeholder="e.g. Scheduled sensor recalibration or hardware defect"
-                  value={maintenanceForm.reason}
-                  onChange={(e) => setMaintenanceForm({ ...maintenanceForm, reason: e.target.value })}
+                  ref={maintReasonRef}
+                  defaultValue=""
                   className="w-full border rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:border-primary"
                 />
               </div>
@@ -4175,8 +4194,7 @@ export default function Dashboard({ user, onLogout }) {
                 <label className="block uppercase text-slate-500 font-bold">New Start / Created Time</label>
                 <input
                   type="datetime-local"
-                  value={editStartTimeValue}
-                  onChange={(e) => setEditStartTimeValue(e.target.value)}
+                  ref={editStartTimeRef}
                   className="w-full border rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:border-primary"
                   required
                 />

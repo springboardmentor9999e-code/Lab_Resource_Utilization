@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Skeleton from "react-loading-skeleton";
 import { usePermissions } from "../context/PermissionsContext";
-import microscope from "../assets/microscope.png";
+import microscope from '/microscope.png'
 import EquipmentReturnCalendar from "./EquipmentReturnCalendar";
 
 export default function StudentDashboard({ user, onLogout }) {
@@ -40,21 +40,21 @@ export default function StudentDashboard({ user, onLogout }) {
   const [actionLoading, setActionLoading] = useState({});
   const setButtonLoading = (key, isLoading) => setActionLoading(prev => ({ ...prev, [key]: isLoading }));
 
-  // Form values
-  const [bookingPurpose, setBookingPurpose] = useState("");
-  const [bookingDate, setBookingDate] = useState("2026-07-21");
-  const [bookingStart, setBookingStart] = useState("09:00");
-  const [bookingEnd, setBookingEnd] = useState("11:00");
+  // Form refs (Uncontrolled components - zero re-renders while typing)
+  const bookingPurposeRef = useRef(null);
+  const bookingDateRef = useRef(null);
+  const bookingStartRef = useRef(null);
+  const bookingEndRef = useRef(null);
 
-  const [waitlistDate, setWaitlistDate] = useState("2026-07-21");
-  const [waitlistStart, setWaitlistStart] = useState("09:00");
-  const [waitlistEnd, setWaitlistEnd] = useState("11:00");
+  const waitlistDateRef = useRef(null);
+  const waitlistStartRef = useRef(null);
+  const waitlistEndRef = useRef(null);
 
   useEffect(() => {
     setViewedEquipment(null);
   }, [activeTab]);
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem("token");
     return token
       ? {
@@ -64,14 +64,14 @@ export default function StudentDashboard({ user, onLogout }) {
       : {
           "Content-Type": "application/json",
         };
-  };
+  }, []);
 
-  const triggerToast = (msg) => {
+  const triggerToast = useCallback((msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 4000);
-  };
+  }, []);
 
-  const loadEquipment = () => {
+  const loadEquipment = useCallback(() => {
     setLoadingEquipments(true);
     fetch("http://localhost:8080/api/equipment/search", {
       headers: getAuthHeaders(),
@@ -85,9 +85,9 @@ export default function StudentDashboard({ user, onLogout }) {
         setEquipments([]);
       })
       .finally(() => setLoadingEquipments(false));
-  };
+  }, [getAuthHeaders]);
 
-  const loadBookings = () => {
+  const loadBookings = useCallback(() => {
     setLoadingBookings(true);
     fetch("http://localhost:8080/api/bookings/my", {
       headers: getAuthHeaders(),
@@ -101,9 +101,9 @@ export default function StudentDashboard({ user, onLogout }) {
         setBookings([]);
       })
       .finally(() => setLoadingBookings(false));
-  };
+  }, [getAuthHeaders]);
 
-  const loadWaitlists = () => {
+  const loadWaitlists = useCallback(() => {
     setLoadingWaitlists(true);
     fetch("http://localhost:8080/api/waitlist/my", {
       headers: getAuthHeaders(),
@@ -117,9 +117,9 @@ export default function StudentDashboard({ user, onLogout }) {
         setWaitlists([]);
       })
       .finally(() => setLoadingWaitlists(false));
-  };
+  }, [getAuthHeaders]);
 
-  const loadActiveNotifications = () => {
+  const loadActiveNotifications = useCallback(() => {
     fetch("http://localhost:8080/api/waitlist/active-notifications", {
       headers: getAuthHeaders(),
     })
@@ -131,20 +131,21 @@ export default function StudentDashboard({ user, onLogout }) {
       .catch(() => {
         setActiveNotifications([]);
       });
-  };
+  }, [getAuthHeaders]);
 
-  const fetchInAppNotifications = (filterType = notificationFilter) => {
+  const fetchInAppNotifications = useCallback((filterType = notificationFilter) => {
     fetch(`http://localhost:8080/api/user-notifications?type=${filterType}`, {
       headers: getAuthHeaders(),
     })
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
-        setInAppNotifications(data);
-        const unread = data.filter((n) => !n.isRead).length;
+        const list = Array.isArray(data) ? data : [];
+        setInAppNotifications(list);
+        const unread = list.filter((n) => !n.isRead).length;
         setUnreadNotificationCount(unread);
       })
       .catch(() => setInAppNotifications([]));
-  };
+  }, [getAuthHeaders, notificationFilter]);
 
   const markNotificationRead = (notifId) => {
     fetch(`http://localhost:8080/api/user-notifications/${notifId}/read`, {
@@ -166,7 +167,7 @@ export default function StudentDashboard({ user, onLogout }) {
     loadWaitlists();
     loadActiveNotifications();
     fetchInAppNotifications();
-  }, [user]);
+  }, [user, loadEquipment, loadBookings, loadWaitlists, loadActiveNotifications, fetchInAppNotifications]);
 
   // Poll for live notifications and equipment status every 10 seconds
   useEffect(() => {
@@ -178,7 +179,7 @@ export default function StudentDashboard({ user, onLogout }) {
       loadEquipment();
     }, 10000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, loadActiveNotifications, fetchInAppNotifications, loadWaitlists, loadEquipment]);
 
   const filteredEquipments = equipments
     .filter((eq) => {
@@ -215,6 +216,11 @@ export default function StudentDashboard({ user, onLogout }) {
     e.preventDefault();
     if (!selectedEquipment) return;
 
+    const bookingDate = bookingDateRef.current?.value || "2026-07-21";
+    const bookingStart = bookingStartRef.current?.value || "09:00";
+    const bookingEnd = bookingEndRef.current?.value || "11:00";
+    const bookingPurpose = bookingPurposeRef.current?.value || "General Student Lab Research run";
+
     const key = `book-confirm-${selectedEquipment.id || selectedEquipment.equipmentId}`;
     setButtonLoading(key, true);
 
@@ -222,7 +228,7 @@ export default function StudentDashboard({ user, onLogout }) {
       equipmentId: selectedEquipment.equipmentId || selectedEquipment.id,
       startTime: `${bookingDate}T${bookingStart}:00Z`,
       endTime: `${bookingDate}T${bookingEnd}:00Z`,
-      purpose: bookingPurpose || "General Student Lab Research run",
+      purpose: bookingPurpose,
     };
 
     fetch("http://localhost:8080/api/bookings", {
@@ -246,7 +252,7 @@ export default function StudentDashboard({ user, onLogout }) {
           startTime: `${bookingDate}T${bookingStart}:00Z`,
           endTime: `${bookingDate}T${bookingEnd}:00Z`,
           createdAt: new Date().toISOString(),
-          purpose: bookingPurpose || "General Student Lab Research run",
+          purpose: bookingPurpose,
           status: "Pending Approval",
         };
         setBookings([newBooking, ...bookings]);
@@ -263,6 +269,10 @@ export default function StudentDashboard({ user, onLogout }) {
   const handleConfirmWaitlist = (e) => {
     e.preventDefault();
     if (!selectedWaitlistEquipment) return;
+
+    const waitlistDate = waitlistDateRef.current?.value || "2026-07-21";
+    const waitlistStart = waitlistStartRef.current?.value || "09:00";
+    const waitlistEnd = waitlistEndRef.current?.value || "11:00";
 
     const startISO = `${waitlistDate}T${waitlistStart}:00Z`;
     const endISO = `${waitlistDate}T${waitlistEnd}:00Z`;
@@ -371,11 +381,13 @@ export default function StudentDashboard({ user, onLogout }) {
     const endInstant = new Date(notif.requestedEnd);
     const endTimeStr = endInstant.toTimeString().substring(0, 5);
 
-    setBookingDate(dateStr);
-    setBookingStart(startTimeStr);
-    setBookingEnd(endTimeStr);
-    setBookingPurpose("Waitlist Priority Fulfillment");
     setSelectedEquipment(eq);
+    setTimeout(() => {
+      if (bookingDateRef.current) bookingDateRef.current.value = dateStr;
+      if (bookingStartRef.current) bookingStartRef.current.value = startTimeStr;
+      if (bookingEndRef.current) bookingEndRef.current.value = endTimeStr;
+      if (bookingPurposeRef.current) bookingPurposeRef.current.value = "Waitlist Priority Fulfillment";
+    }, 50);
   };
 
   const renderEquipmentDetailView = (eq) => {
@@ -555,8 +567,8 @@ export default function StudentDashboard({ user, onLogout }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant/20 text-sm">
-                  {waitlists.map((w) => {
-                    const idVal = w.waitlistId || w.id;
+                  {waitlists.map((w, idx) => {
+                    const idVal = w.waitlistId || w.id || `wl-${idx}`;
                     return (
                       <tr key={idVal} className="hover:bg-surface-low/50 transition">
                         <td className="py-4 px-6">
@@ -733,9 +745,9 @@ export default function StudentDashboard({ user, onLogout }) {
                       No notifications found under this filter.
                     </div>
                   ) : (
-                    inAppNotifications.map(n => (
+                    inAppNotifications.map((n, idx) => (
                       <div
-                        key={n.notificationId}
+                        key={n.notificationId || n.id || `notif-${idx}`}
                         onClick={() => markNotificationRead(n.notificationId)}
                         className={`p-3.5 hover:bg-slate-50 transition cursor-pointer space-y-1.5 ${
                           !n.isRead ? 'bg-cyan-50/40 font-semibold' : ''
@@ -797,14 +809,14 @@ export default function StudentDashboard({ user, onLogout }) {
             ) : (
               <>
                 {/* Active Waitlist Notifications Banner */}
-                {activeNotifications.map((notif) => {
+                {activeNotifications.map((notif, idx) => {
                   const notifiedTime = new Date(notif.notifiedAt).getTime();
                   const expireTime = notifiedTime + 10 * 60 * 1000;
                   const timeLeftMs = expireTime - Date.now();
                   const timeLeftMins = Math.max(0, Math.ceil(timeLeftMs / 1000 / 60));
 
                   return (
-                    <div key={notif.waitlistId} className="bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fadeIn">
+                    <div key={notif.waitlistId || notif.id || `act-notif-${idx}`} className="bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fadeIn">
                       <div className="flex items-start gap-3.5">
                         <span className="text-2xl mt-0.5">📢</span>
                         <div className="text-left">
@@ -898,9 +910,9 @@ export default function StudentDashboard({ user, onLogout }) {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredEquipments.map((eq) => (
+                    {filteredEquipments.map((eq, index) => (
                     <div
-                      key={eq.id}
+                      key={eq.equipmentId ? `eq-${eq.equipmentId}` : (eq.id ? `eq-${eq.id}` : `eq-idx-${index}`)}
                       onClick={(e) => handleCardClick(e, eq)}
                       className="bg-white border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-primary/20 transition flex flex-col h-[480px] cursor-pointer"
                     >
@@ -1128,9 +1140,9 @@ export default function StudentDashboard({ user, onLogout }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-outline-variant/20 text-sm">
-                      {bookings.map((bk) => (
+                      {bookings.map((bk, idx) => (
                         <tr
-                          key={bk.bookingId || bk.id}
+                          key={bk.bookingId ? `bk-${bk.bookingId}` : (bk.id ? `bk-${bk.id}` : `bk-idx-${idx}`)}
                           className="hover:bg-surface-low/50 transition"
                         >
                           <td className="py-4 px-6 font-mono font-bold text-primary">
@@ -1346,8 +1358,8 @@ export default function StudentDashboard({ user, onLogout }) {
                 </label>
                 <input
                   type="date"
-                  value={bookingDate}
-                  onChange={(e) => setBookingDate(e.target.value)}
+                  ref={bookingDateRef}
+                  defaultValue="2026-07-21"
                   className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold"
                   required
                 />
@@ -1360,8 +1372,8 @@ export default function StudentDashboard({ user, onLogout }) {
                   </label>
                   <input
                     type="time"
-                    value={bookingStart}
-                    onChange={(e) => setBookingStart(e.target.value)}
+                    ref={bookingStartRef}
+                    defaultValue="09:00"
                     className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold"
                     required
                   />
@@ -1372,8 +1384,8 @@ export default function StudentDashboard({ user, onLogout }) {
                   </label>
                   <input
                     type="time"
-                    value={bookingEnd}
-                    onChange={(e) => setBookingEnd(e.target.value)}
+                    ref={bookingEndRef}
+                    defaultValue="11:00"
                     className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold"
                     required
                   />
@@ -1386,8 +1398,8 @@ export default function StudentDashboard({ user, onLogout }) {
                 </label>
                 <textarea
                   placeholder="Explain the project or research scope..."
-                  value={bookingPurpose}
-                  onChange={(e) => setBookingPurpose(e.target.value)}
+                  ref={bookingPurposeRef}
+                  defaultValue=""
                   className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold h-20"
                   required
                 />
@@ -1452,8 +1464,8 @@ export default function StudentDashboard({ user, onLogout }) {
                 </label>
                 <input
                   type="date"
-                  value={waitlistDate}
-                  onChange={(e) => setWaitlistDate(e.target.value)}
+                  ref={waitlistDateRef}
+                  defaultValue="2026-07-21"
                   className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold font-sans"
                   required
                 />
@@ -1466,8 +1478,8 @@ export default function StudentDashboard({ user, onLogout }) {
                   </label>
                   <input
                     type="time"
-                    value={waitlistStart}
-                    onChange={(e) => setWaitlistStart(e.target.value)}
+                    ref={waitlistStartRef}
+                    defaultValue="09:00"
                     className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold"
                     required
                   />
@@ -1478,8 +1490,8 @@ export default function StudentDashboard({ user, onLogout }) {
                   </label>
                   <input
                     type="time"
-                    value={waitlistEnd}
-                    onChange={(e) => setWaitlistEnd(e.target.value)}
+                    ref={waitlistEndRef}
+                    defaultValue="11:00"
                     className="w-full border border-outline rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold"
                     required
                   />

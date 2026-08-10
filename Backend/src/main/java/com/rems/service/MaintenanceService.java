@@ -58,11 +58,24 @@ public class MaintenanceService {
         Instant startTime = request.getStartTime() != null ? request.getStartTime() : Instant.now();
         String reasonStatus = "Under Maintenance";
         if (request.getReason() != null && !request.getReason().trim().isEmpty()) {
-            reasonStatus = "Maintenance: " + request.getReason().trim();
+            String fullReason = "Maintenance: " + request.getReason().trim();
+            reasonStatus = fullReason.length() > 250 ? fullReason.substring(0, 250) : fullReason;
         }
 
         // Update equipment status
         equipment.setStatus(EquipmentStatus.MAINTENANCE);
+
+        if (equipment.getInstitution() == null && equipment.getDepartment() != null) {
+            equipment.setInstitution(equipment.getDepartment().getInstitution());
+        }
+        if (equipment.getInstitution() == null && userEmail != null) {
+            userRepository.findByEmail(userEmail).ifPresent(u -> {
+                if (u.getInstitution() != null) {
+                    equipment.setInstitution(u.getInstitution());
+                }
+            });
+        }
+
         equipmentRepository.save(equipment);
 
         // Create DowntimeRecord
@@ -78,9 +91,12 @@ public class MaintenanceService {
 
         // Notify department staff of equipment maintenance
         if (equipment.getDepartment() != null) {
-            List<User> staffMembers = userRepository.findByDepartmentDepartmentId(equipment.getDepartment().getDepartmentId());
-            for (User staff : staffMembers) {
-                inAppNotificationService.createNotification(staff, "Equipment Maintenance Alert", equipment.getName() + " has been placed under maintenance (" + reasonStatus + ").", NotificationType.MAINTENANCE, equipment.getEquipmentId());
+            try {
+                List<User> staffMembers = userRepository.findByDepartmentDepartmentId(equipment.getDepartment().getDepartmentId());
+                for (User staff : staffMembers) {
+                    inAppNotificationService.createNotification(staff, "Equipment Maintenance Alert", equipment.getName() + " has been placed under maintenance (" + reasonStatus + ").", NotificationType.MAINTENANCE, equipment.getEquipmentId());
+                }
+            } catch (Exception ignored) {
             }
         }
 
