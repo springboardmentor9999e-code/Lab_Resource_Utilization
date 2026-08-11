@@ -15,4 +15,7 @@ public class CompleteProfileRequest {
     private Long institutionId;
     private Long departmentId;
     private String customInstitutionName;
+
+    @NotBlank(message = "Setup token is required")
+    private String setupToken;
 }

@@ -29,6 +29,10 @@ public class RegisterRequest {
     )
     private String password;
 
+    @NotBlank(message = "Role is required")
+    private String role;
+
     private Long institutionId;
+    private String customInstitutionName;
     private Long departmentId;
 }

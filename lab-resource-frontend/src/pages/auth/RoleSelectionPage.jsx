@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authApi, institutionApi, departmentApi } from '../../api/api';
 import toast from 'react-hot-toast';
@@ -14,6 +14,7 @@ const ROLES = [
 
 export default function RoleSelectionPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { completeOAuthProfile } = useAuth();
   const [checking, setChecking] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -28,11 +29,20 @@ export default function RoleSelectionPage() {
   const [departmentId, setDepartmentId] = useState('');
   const [customInstitutionName, setCustomInstitutionName] = useState('');
 
+  // Extract token from location state
+  const setupToken = location.state?.token;
+
   useEffect(() => {
+    if (!setupToken) {
+      toast.error('Invalid setup link');
+      navigate('/login', { replace: true });
+      return;
+    }
+
     let mounted = true;
     const load = async () => {
       try {
-        const res = await authApi.getOAuthSetupInfo();
+        const res = await authApi.getOAuthSetupInfo(setupToken);
         if (!mounted) return;
         setFullName(res.data.fullName || '');
         setEmail(res.data.email || '');
@@ -49,7 +59,7 @@ export default function RoleSelectionPage() {
     return () => {
       mounted = false;
     };
-  }, [navigate]);
+  }, [navigate, setupToken]);
 
   useEffect(() => {
     if (institutionId) {
@@ -91,6 +101,7 @@ export default function RoleSelectionPage() {
         role,
         institutionId: isOther ? null : parseInt(institutionId),
         departmentId: isOther ? null : (departmentId ? parseInt(departmentId) : null),
+        setupToken,
       };
       if (isOther) {
         payload.customInstitutionName = customInstitutionName.trim();

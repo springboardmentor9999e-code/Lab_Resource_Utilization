@@ -11,7 +11,8 @@ export const authApi = {
   updateProfile: (data) => api.put('/auth/profile', data),
   changePassword: (data) => api.put('/auth/profile/password', data),
   completeOAuthProfile: (data) => api.post('/auth/oauth2/complete-profile', data),
-  getOAuthSetupInfo: () => api.get('/auth/oauth2/setup-info'),
+  getOAuthSetupInfo: (token) => api.get(`/auth/oauth2/setup-info?token=${token}`),
+  oauth2Success: (data) => api.post('/auth/oauth2/success', data),
 };
 
 export const userManagementApi = {

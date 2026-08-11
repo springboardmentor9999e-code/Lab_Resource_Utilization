@@ -44,9 +44,8 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
         if (needsSetup) {
             String setupToken = tokenProvider.generateSetupToken(email);
-            JwtCookieUtil.addSetupCookie(request, response, setupToken);
             log.info("OAuth2 user needs profile setup: {}", email);
-            response.sendRedirect(frontendUrl + "/oauth2/callback?mode=setup");
+            response.sendRedirect(frontendUrl + "/oauth2/callback?mode=setup#token=" + setupToken);
         } else {
             String accessToken = tokenProvider.generateAccessTokenFromEmail(email);
             String refreshToken = tokenProvider.generateRefreshTokenFromEmail(email);
@@ -58,13 +57,8 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                     .build();
             refreshTokenRepository.save(Objects.requireNonNull(refreshEntity));
 
-            JwtCookieUtil.addAccessCookie(request, response, accessToken,
-                    tokenProvider.getAccessTokenExpiration() / 1000);
-            JwtCookieUtil.addRefreshCookie(request, response, refreshToken,
-                    tokenProvider.getRefreshTokenExpiration() / 1000);
-
             log.info("OAuth2 login successful for user: {}", email);
-            response.sendRedirect(frontendUrl + "/oauth2/callback?mode=login");
+            response.sendRedirect(frontendUrl + "/oauth2/callback?mode=login#access_token=" + accessToken + "&refresh_token=" + refreshToken);
         }
     }
 }

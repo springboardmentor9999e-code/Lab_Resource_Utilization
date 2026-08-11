@@ -16,19 +16,22 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const checkAuth = async () => {
+    try {
+      const res = await authApi.getMe();
+      setUser(toUser(res.data));
+    } catch (err) {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
-    authApi
-      .getMe()
-      .then((res) => {
-        if (mounted) setUser(toUser(res.data));
-      })
-      .catch(() => {
-        if (mounted) setUser(null);
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
+    checkAuth().then(() => {
+      if (!mounted) return;
+    });
     return () => {
       mounted = false;
     };
@@ -68,7 +71,7 @@ export const AuthProvider = ({ children }) => {
   const isManager = user?.role === 'LAB_MANAGER' || isDepartmentHead || isAdmin;
 
   return (
-    <AuthContext.Provider value={{ user, login, register, completeOAuthProfile, logout, loading, isAuthenticated, isAdmin, isSystemAdmin, isInstitutionAdmin, isDepartmentHead, isManager, isTechnician }}>
+    <AuthContext.Provider value={{ user, login, register, completeOAuthProfile, logout, loading, isAuthenticated, isAdmin, isSystemAdmin, isInstitutionAdmin, isDepartmentHead, isManager, isTechnician, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

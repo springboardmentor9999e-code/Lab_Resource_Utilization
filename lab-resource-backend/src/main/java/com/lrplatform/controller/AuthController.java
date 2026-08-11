@@ -100,7 +100,7 @@ public class AuthController {
     public ResponseEntity<AuthResponse> completeOAuthProfile(@Valid @RequestBody CompleteProfileRequest request,
                                                              HttpServletRequest httpRequest,
                                                              HttpServletResponse response) {
-        String setupToken = JwtCookieUtil.getCookieValue(httpRequest, JwtCookieUtil.SETUP_COOKIE);
+        String setupToken = request.getSetupToken();
         if (setupToken == null || setupToken.isEmpty()) {
             throw new BadRequestException("No pending profile setup");
         }
@@ -117,12 +117,22 @@ public class AuthController {
     }
 
     @GetMapping("/oauth2/setup-info")
-    public ResponseEntity<OAuthSetupInfoResponse> oauthSetupInfo(HttpServletRequest request) {
-        String setupToken = JwtCookieUtil.getCookieValue(request, JwtCookieUtil.SETUP_COOKIE);
-        if (setupToken == null || setupToken.isEmpty()) {
+    public ResponseEntity<OAuthSetupInfoResponse> oauthSetupInfo(@RequestParam String token) {
+        if (token == null || token.isEmpty()) {
             throw new BadRequestException("No pending profile setup");
         }
-        return ResponseEntity.ok(authService.getOAuthSetupInfo(setupToken));
+        return ResponseEntity.ok(authService.getOAuthSetupInfo(token));
+    }
+
+    @PostMapping("/oauth2/success")
+    public ResponseEntity<ApiResponse> oauth2Success(@Valid @RequestBody OAuth2SuccessRequest request,
+                                                     HttpServletRequest httpRequest,
+                                                     HttpServletResponse response) {
+        JwtCookieUtil.addAccessCookie(httpRequest, response, request.getAccessToken(),
+                tokenProvider.getAccessTokenExpiration() / 1000);
+        JwtCookieUtil.addRefreshCookie(httpRequest, response, request.getRefreshToken(),
+                tokenProvider.getRefreshTokenExpiration() / 1000);
+        return ResponseEntity.ok(ApiResponse.success("Cookies set successfully"));
     }
 
     @GetMapping("/me")

@@ -71,7 +71,8 @@ public class SecurityConfig {
                             "/auth/forgot-password",
                             "/auth/reset-password",
                             "/auth/oauth2/complete-profile",
-                            "/auth/oauth2/setup-info"
+                            "/auth/oauth2/setup-info",
+                            "/auth/oauth2/success"
                     ).permitAll()
                     .requestMatchers("/oauth2/**").permitAll()
                     .requestMatchers("/uploads/**").permitAll()
