@@ -99,15 +99,15 @@ public class AuthController {
     @PostMapping("/oauth2/complete-profile")
     public ResponseEntity<AuthResponse> completeOAuthProfile(@Valid @RequestBody CompleteProfileRequest request,
                                                              Authentication authentication) {
-        Long userId = ((com.lrplatform.security.CustomUserDetails) authentication.getPrincipal()).getId();
-        AuthResponse authResponse = authService.completeOAuthProfile(userId, request);
+        String email = authentication.getName();
+        AuthResponse authResponse = authService.completeOAuthProfile(email, request);
         return ResponseEntity.ok(authResponse);
     }
 
     @GetMapping("/oauth2/setup-info")
     public ResponseEntity<OAuthSetupInfoResponse> oauthSetupInfo(Authentication authentication) {
-        Long userId = ((com.lrplatform.security.CustomUserDetails) authentication.getPrincipal()).getId();
-        return ResponseEntity.ok(authService.getOAuthSetupInfo(userId));
+        String email = authentication.getName();
+        return ResponseEntity.ok(authService.getOAuthSetupInfo(email));
     }
 
     @PostMapping("/oauth2/success")

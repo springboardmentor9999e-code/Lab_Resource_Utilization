@@ -228,8 +228,8 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse completeOAuthProfile(Long userId, CompleteProfileRequest request) {
-        User user = userRepository.findById(userId)
+    public AuthResponse completeOAuthProfile(String email, CompleteProfileRequest request) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadRequestException("User not found"));
 
         try {
@@ -280,21 +280,6 @@ public class AuthService {
                 .build();
     }
 
-        log.info("OAuth2 profile completed for user: {}, role: {}", email, user.getRole().name());
-
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .role(user.getRole().name())
-                .email(user.getEmail())
-                .fullName(user.getFirstName() + " " + user.getLastName())
-                .userId(user.getId())
-                .institutionId(institution.getId())
-                .departmentId(user.getDepartment() != null ? user.getDepartment().getId() : null)
-                .build();
-    }
-
     public AuthResponse getCurrentProfile(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new UnauthorizedException("Not authenticated");
@@ -312,8 +297,8 @@ public class AuthService {
                 .build();
     }
 
-    public OAuthSetupInfoResponse getOAuthSetupInfo(Long userId) {
-        User user = userRepository.findById(userId)
+    public OAuthSetupInfoResponse getOAuthSetupInfo(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadRequestException("User not found"));
 
         return OAuthSetupInfoResponse.builder()
