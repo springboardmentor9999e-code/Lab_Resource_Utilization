@@ -29,27 +29,18 @@ export default function RoleSelectionPage() {
   const [departmentId, setDepartmentId] = useState('');
   const [customInstitutionName, setCustomInstitutionName] = useState('');
 
-  // Extract token from location state
-  const setupToken = location.state?.token;
-
   useEffect(() => {
-    if (!setupToken) {
-      toast.error('Invalid setup link');
-      navigate('/login', { replace: true });
-      return;
-    }
-
     let mounted = true;
     const load = async () => {
       try {
-        const res = await authApi.getOAuthSetupInfo(setupToken);
+        const res = await authApi.getOAuthSetupInfo();
         if (!mounted) return;
         setFullName(res.data.fullName || '');
         setEmail(res.data.email || '');
         institutionApi.getAll().then(r => { if (mounted) setInstitutions(r.data || []); }).catch(() => {});
       } catch (err) {
         if (!mounted) return;
-        toast.error('Your profile setup link has expired. Please log in again.');
+        toast.error('Session expired. Please log in again.');
         navigate('/login', { replace: true });
       } finally {
         if (mounted) setChecking(false);
@@ -59,7 +50,7 @@ export default function RoleSelectionPage() {
     return () => {
       mounted = false;
     };
-  }, [navigate, setupToken]);
+  }, [navigate]);
 
   useEffect(() => {
     if (institutionId) {
@@ -101,7 +92,6 @@ export default function RoleSelectionPage() {
         role,
         institutionId: isOther ? null : parseInt(institutionId),
         departmentId: isOther ? null : (departmentId ? parseInt(departmentId) : null),
-        setupToken,
       };
       if (isOther) {
         payload.customInstitutionName = customInstitutionName.trim();

@@ -114,50 +114,20 @@ public class AuthService {
             throw new DuplicateResourceException("Phone number already registered: " + request.getPhone());
         }
 
-        UserRole role;
-        try {
-            role = UserRole.valueOf(request.getRole());
-        } catch (IllegalArgumentException e) {
-            throw new BadRequestException("Invalid role: " + request.getRole());
-        }
-
-        Institution institution;
-        if (request.getInstitutionId() != null) {
-            institution = institutionRepository.findById(request.getInstitutionId())
-                    .orElseThrow(() -> new BadRequestException("Institution not found"));
-        } else if (request.getCustomInstitutionName() != null && !request.getCustomInstitutionName().trim().isEmpty()) {
-            institution = Institution.builder()
-                    .institutionCode("CUSTOM-" + System.currentTimeMillis() % 100000)
-                    .institutionName(request.getCustomInstitutionName().trim())
-                    .status(true)
-                    .build();
-            institution = institutionRepository.save(institution);
-        } else {
-            throw new BadRequestException("Please select an institution or enter a custom institution name");
-        }
-
-        Department department = null;
-        if (request.getDepartmentId() != null) {
-            department = departmentRepository.findById(request.getDepartmentId())
-                    .orElseThrow(() -> new BadRequestException("Department not found"));
-        }
-
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(role)
-                .institution(institution)
-                .department(department)
+                .role(UserRole.RESEARCHER)
                 .status(true)
                 .build();
 
         userRepository.save(Objects.requireNonNull(user));
-        log.info("User registered successfully: {}, role: {}", request.getEmail(), role.name());
+        log.info("User registered successfully: {}", request.getEmail());
         auditLogService.log(user, "AUTH", "REGISTER", "User", user.getId(),
-                null, "User registered with role " + role.name(), getRequest());
+                null, "User registered with role RESEARCHER", getRequest());
     }
 
     @Transactional
@@ -258,21 +228,8 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse completeOAuthProfile(String setupToken, CompleteProfileRequest request) {
-        String email;
-        String tokenType;
-        try {
-            email = tokenProvider.getEmailFromToken(setupToken);
-            tokenType = tokenProvider.getClaimFromToken(setupToken, "type");
-        } catch (JwtException e) {
-            throw new BadRequestException("Invalid or expired setup token");
-        }
-
-        if (!"setup".equals(tokenType)) {
-            throw new BadRequestException("Invalid setup token");
-        }
-
-        User user = userRepository.findByEmail(email)
+    public AuthResponse completeOAuthProfile(Long userId, CompleteProfileRequest request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("User not found"));
 
         try {
@@ -307,18 +264,21 @@ public class AuthService {
 
         userRepository.save(user);
 
-        String accessToken = tokenProvider.generateAccessTokenFromEmail(email);
-        String refreshToken = tokenProvider.generateRefreshTokenFromEmail(email);
-
-        RefreshToken refreshEntity = RefreshToken.builder()
-                .user(user)
-                .token(refreshToken)
-                .expiryDate(LocalDateTime.now().plusSeconds(tokenProvider.getRefreshTokenExpiration() / 1000))
-                .build();
-        refreshTokenRepository.save(Objects.requireNonNull(refreshEntity));
-
         auditLogService.log(user, "AUTH", "OAUTH_SETUP_COMPLETE", "User", user.getId(),
                 null, "Role set to " + user.getRole().name(), getRequest());
+
+        log.info("Profile completed for user: {}, role: {}", user.getEmail(), user.getRole().name());
+
+        return AuthResponse.builder()
+                .tokenType("Bearer")
+                .role(user.getRole().name())
+                .email(user.getEmail())
+                .fullName(user.getFirstName() + " " + user.getLastName())
+                .userId(user.getId())
+                .institutionId(institution.getId())
+                .departmentId(user.getDepartment() != null ? user.getDepartment().getId() : null)
+                .build();
+    }
 
         log.info("OAuth2 profile completed for user: {}, role: {}", email, user.getRole().name());
 
@@ -352,20 +312,10 @@ public class AuthService {
                 .build();
     }
 
-    public OAuthSetupInfoResponse getOAuthSetupInfo(String setupToken) {
-        String email;
-        String tokenType;
-        try {
-            email = tokenProvider.getEmailFromToken(setupToken);
-            tokenType = tokenProvider.getClaimFromToken(setupToken, "type");
-        } catch (JwtException e) {
-            throw new BadRequestException("Invalid or expired setup token");
-        }
-        if (!"setup".equals(tokenType)) {
-            throw new BadRequestException("Invalid setup token");
-        }
-        User user = userRepository.findByEmail(email)
+    public OAuthSetupInfoResponse getOAuthSetupInfo(Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("User not found"));
+
         return OAuthSetupInfoResponse.builder()
                 .email(user.getEmail())
                 .fullName(user.getFirstName() + " " + user.getLastName())

@@ -39,26 +39,17 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         String email = oauth2User.getEmail();
         User user = oauth2User.getUser();
 
-        boolean needsSetup = user.getRole().name().equals("RESEARCHER")
-                && user.getInstitution() == null && user.getDepartment() == null;
+        String accessToken = tokenProvider.generateAccessTokenFromEmail(email);
+        String refreshToken = tokenProvider.generateRefreshTokenFromEmail(email);
 
-        if (needsSetup) {
-            String setupToken = tokenProvider.generateSetupToken(email);
-            log.info("OAuth2 user needs profile setup: {}", email);
-            response.sendRedirect(frontendUrl + "/oauth2/callback?mode=setup#token=" + setupToken);
-        } else {
-            String accessToken = tokenProvider.generateAccessTokenFromEmail(email);
-            String refreshToken = tokenProvider.generateRefreshTokenFromEmail(email);
+        RefreshToken refreshEntity = RefreshToken.builder()
+                .user(user)
+                .token(refreshToken)
+                .expiryDate(LocalDateTime.now().plusSeconds(tokenProvider.getRefreshTokenExpiration() / 1000))
+                .build();
+        refreshTokenRepository.save(Objects.requireNonNull(refreshEntity));
 
-            RefreshToken refreshEntity = RefreshToken.builder()
-                    .user(user)
-                    .token(refreshToken)
-                    .expiryDate(LocalDateTime.now().plusSeconds(tokenProvider.getRefreshTokenExpiration() / 1000))
-                    .build();
-            refreshTokenRepository.save(Objects.requireNonNull(refreshEntity));
-
-            log.info("OAuth2 login successful for user: {}", email);
-            response.sendRedirect(frontendUrl + "/oauth2/callback?mode=login#access_token=" + accessToken + "&refresh_token=" + refreshToken);
-        }
+        log.info("OAuth2 login successful for user: {}", email);
+        response.sendRedirect(frontendUrl + "/oauth2/callback?mode=login#access_token=" + accessToken + "&refresh_token=" + refreshToken);
     }
 }

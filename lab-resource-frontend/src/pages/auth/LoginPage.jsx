@@ -31,9 +31,13 @@ export default function LoginPage() {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      await login(data.email, data.password, rememberMe);
+      const response = await login(data.email, data.password, rememberMe);
       toast.success('Login successful!');
-      navigate('/dashboard');
+      if (!response.institutionId) {
+        navigate('/oauth2/complete-profile');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       const msg = error.response?.data?.message || 'Login failed';
       if (error.response?.data?.code === 'ACCOUNT_DISABLED') {

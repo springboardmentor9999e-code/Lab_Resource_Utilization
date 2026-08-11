@@ -26,17 +26,6 @@ export default function OAuth2CallbackPage() {
       const hash = window.location.hash.substring(1);
       const hashParams = new URLSearchParams(hash);
 
-      if (mode === 'setup') {
-        const token = hashParams.get('token');
-        if (!token) {
-          toast.error('Invalid setup link');
-          if (mounted) navigate('/login', { replace: true });
-          return;
-        }
-        if (mounted) navigate('/oauth2/complete-profile', { state: { token }, replace: true });
-        return;
-      }
-
       if (mode === 'login') {
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
@@ -44,11 +33,21 @@ export default function OAuth2CallbackPage() {
         if (accessToken && refreshToken) {
           try {
             await authApi.oauth2Success({ accessToken, refreshToken });
+            let currentUser = user;
             if (checkAuth) {
               await checkAuth();
+              // After checkAuth, the user state will be updated in the context,
+              // but we need the actual user object to check institutionId immediately.
+              const meRes = await authApi.getMe();
+              currentUser = meRes.data;
             }
+            
             if (mounted) {
-              window.location.href = '/dashboard';
+              if (!currentUser.institutionId) {
+                navigate('/oauth2/complete-profile', { replace: true });
+              } else {
+                window.location.href = '/dashboard';
+              }
             }
           } catch (err) {
             toast.error('Failed to complete authentication.');

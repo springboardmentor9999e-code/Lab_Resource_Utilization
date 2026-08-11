@@ -98,30 +98,16 @@ public class AuthController {
 
     @PostMapping("/oauth2/complete-profile")
     public ResponseEntity<AuthResponse> completeOAuthProfile(@Valid @RequestBody CompleteProfileRequest request,
-                                                             HttpServletRequest httpRequest,
-                                                             HttpServletResponse response) {
-        String setupToken = request.getSetupToken();
-        if (setupToken == null || setupToken.isEmpty()) {
-            throw new BadRequestException("No pending profile setup");
-        }
-
-        AuthResponse authResponse = authService.completeOAuthProfile(setupToken, request);
-
-        JwtCookieUtil.addAccessCookie(httpRequest, response, authResponse.getAccessToken(),
-                tokenProvider.getAccessTokenExpiration() / 1000);
-        JwtCookieUtil.addRefreshCookie(httpRequest, response, authResponse.getRefreshToken(),
-                tokenProvider.getRefreshTokenExpiration() / 1000);
-        JwtCookieUtil.clearSetupCookie(httpRequest, response);
-
+                                                             Authentication authentication) {
+        Long userId = ((com.lrplatform.security.CustomUserDetails) authentication.getPrincipal()).getId();
+        AuthResponse authResponse = authService.completeOAuthProfile(userId, request);
         return ResponseEntity.ok(authResponse);
     }
 
     @GetMapping("/oauth2/setup-info")
-    public ResponseEntity<OAuthSetupInfoResponse> oauthSetupInfo(@RequestParam String token) {
-        if (token == null || token.isEmpty()) {
-            throw new BadRequestException("No pending profile setup");
-        }
-        return ResponseEntity.ok(authService.getOAuthSetupInfo(token));
+    public ResponseEntity<OAuthSetupInfoResponse> oauthSetupInfo(Authentication authentication) {
+        Long userId = ((com.lrplatform.security.CustomUserDetails) authentication.getPrincipal()).getId();
+        return ResponseEntity.ok(authService.getOAuthSetupInfo(userId));
     }
 
     @PostMapping("/oauth2/success")
