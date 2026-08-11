@@ -27,6 +27,14 @@ public class MaintenanceController {
         return maintenanceService.getMaintenanceById(id);
     }
 
+    // "Every equipment needs continuous maintenance": surfaces equipment that
+    // has NO maintenance record at all, past or future - a gap in coverage
+    // worth flagging on its own, separate from the recurring-schedule feature.
+    @GetMapping("/uncovered-equipment")
+    public List<Long> getEquipmentIdsWithNoMaintenanceHistory(){
+        return maintenanceService.getEquipmentIdsWithNoMaintenanceHistory();
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'INSTITUTION_ADMINISTRATOR', 'LAB_MANAGER', 'LAB_TECHNICIAN')")
     public Maintenance createMaintenance(@RequestBody Maintenance maintenance){

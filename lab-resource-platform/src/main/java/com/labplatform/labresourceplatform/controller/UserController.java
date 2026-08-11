@@ -63,11 +63,20 @@ public class UserController {
     @PostMapping
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'INSTITUTION_ADMINISTRATOR')")
     public User createUser(@RequestBody User user){
-        return userService.createUser(user);
+        User currentUser = currentUserService.getCurrentUser();
+        return userService.createUser(user, currentUser.getRole());
     }
 
     // Matrix: INSTITUTION_ADMINISTRATOR can only "Update own" institution's users;
     // SYSTEM_ADMINISTRATOR has full CRUD. Everyone else has no write access to users.
+    //
+    // Two layers of restriction apply to INSTITUTION_ADMINISTRATOR here:
+    // (1) institution boundary, checked below - they may only touch users in
+    //     their own institution; (2) role ceiling, enforced inside
+    //     userService.updateUser() - they may never assign, or edit, a
+    //     SYSTEM_ADMINISTRATOR account. Previously only (1) was enforced, which
+    //     let an INSTITUTION_ADMINISTRATOR promote any user in their own
+    //     institution straight to SYSTEM_ADMINISTRATOR.
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SYSTEM_ADMINISTRATOR', 'INSTITUTION_ADMINISTRATOR')")
     public User updateUser(@PathVariable Long id, @RequestBody User user){
@@ -81,7 +90,7 @@ public class UserController {
                 throw new AccessDeniedException("You may only update users within your own institution");
             }
         }
-        return userService.updateUser(id, user);
+        return userService.updateUser(id, user, currentUser.getRole());
     }
 
     @DeleteMapping("/{id}")

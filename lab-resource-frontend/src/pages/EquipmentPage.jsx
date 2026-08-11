@@ -4,6 +4,7 @@ import { can } from "../auth/permissions";
 import { equipmentApi } from "../api/equipment";
 import { labsApi } from "../api/labs";
 import { bookingsApi } from "../api/bookings";
+import { calibrationRecordsApi } from "../api/calibrationRecords";
 import { Card, LoadingState, ErrorState, PageHeader, EmptyState } from "../components/ui";
 import { StatusDial } from "../components/StatusDial";
 import { DocIcon } from "../components/DocIcon";
@@ -288,7 +289,7 @@ function EquipmentRow({ item, canUpdateStatus, canManage, onStatusChange, onView
             <option value="" disabled>
               Change status…
             </option>
-            {["Available", "Booked", "Under Maintenance", "Out of Service", "Retired"].map((s) => (
+            {["Pending Calibration", "Available", "Booked", "Under Maintenance", "Out of Service", "Retired"].map((s) => (
               <option key={s} value={s}>
                 {s}
               </option>
@@ -306,10 +307,26 @@ function EquipmentDetails({ item }) {
   // STUDENT/RESEARCHER would get a 403 from that endpoint, so skip the section
   // (and the request) entirely for them rather than showing an error.
   const canViewWaitlist = can(user?.role, "bookings:approve");
+  const canLogCalibration = can(user?.role, "calibration:log");
 
   const [waitlist, setWaitlist] = useState([]);
   const [waitlistLoading, setWaitlistLoading] = useState(canViewWaitlist);
   const [waitlistError, setWaitlistError] = useState(null);
+
+  const [calibrations, setCalibrations] = useState([]);
+  const [calibrationsLoading, setCalibrationsLoading] = useState(true);
+  const [calibrationsError, setCalibrationsError] = useState(null);
+  const [logFormOpen, setLogFormOpen] = useState(false);
+
+  function loadCalibrations() {
+    setCalibrationsLoading(true);
+    setCalibrationsError(null);
+    return calibrationRecordsApi
+      .historyFor(item.equipmentId)
+      .then(setCalibrations)
+      .catch((err) => setCalibrationsError(err.response?.data?.message || "Couldn't load calibration history."))
+      .finally(() => setCalibrationsLoading(false));
+  }
 
   useEffect(() => {
     if (!canViewWaitlist) {
@@ -334,6 +351,24 @@ function EquipmentDetails({ item }) {
     };
   }, [item.equipmentId, canViewWaitlist]);
 
+  useEffect(() => {
+    let cancelled = false;
+    calibrationRecordsApi
+      .historyFor(item.equipmentId)
+      .then((data) => {
+        if (!cancelled) setCalibrations(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setCalibrationsError(err.response?.data?.message || "Couldn't load calibration history.");
+      })
+      .finally(() => {
+        if (!cancelled) setCalibrationsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [item.equipmentId]);
+
   return (
     <div className="space-y-4">
       <div>
@@ -347,6 +382,82 @@ function EquipmentDetails({ item }) {
       <div>
         <p className="text-xs font-medium text-[var(--color-ink-600)] uppercase tracking-wide mb-1">Status</p>
         <StatusDial status={item.status} size="sm" />
+        {item.status === "Pending Calibration" && (
+          <p className="text-xs text-[var(--color-ink-600)] mt-1.5">
+            This equipment can't be booked until a technician logs its initial calibration below.
+          </p>
+        )}
+      </div>
+      {/* Milestone 3, task 2: calibration tracking & renewal reminders. Full
+          history (not just a "next due date") so past certifications stay on
+          record for audits, same reasoning as Maintenance being a history
+          table rather than a single status field on Equipment. */}
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-xs font-medium text-[var(--color-ink-600)] uppercase tracking-wide">
+            Calibration history{calibrations.length > 0 ? ` (${calibrations.length})` : ""}
+          </p>
+          {canLogCalibration && (
+            <button
+              onClick={() => setLogFormOpen((v) => !v)}
+              className="text-xs font-medium text-[var(--color-brass-600)] hover:underline"
+            >
+              {logFormOpen ? "Cancel" : "+ Log calibration"}
+            </button>
+          )}
+        </div>
+        {logFormOpen && (
+          <LogCalibrationForm
+            equipmentId={item.equipmentId}
+            onLogged={(record) => {
+              setCalibrations((prev) => [record, ...prev]);
+              setLogFormOpen(false);
+            }}
+          />
+        )}
+        {calibrationsLoading ? (
+          <p className="text-sm text-[var(--color-ink-600)]">Loading…</p>
+        ) : calibrationsError ? (
+          <p className="text-sm text-[var(--color-status-maintenance)]">{calibrationsError}</p>
+        ) : calibrations.length === 0 ? (
+          <p className="text-sm text-[var(--color-ink-600)]">No calibration records on file.</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {calibrations.map((c) => {
+              const overdue = new Date(c.expiryDate) < new Date();
+              return (
+                <li
+                  key={c.calibrationRecordId}
+                  className="text-sm bg-[var(--color-paper-100)] rounded-md px-3 py-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[var(--color-ink-900)]">
+                      {c.calibratedDate}
+                      {c.certificationStandard ? ` — ${c.certificationStandard}` : ""}
+                    </span>
+                    <span
+                      className={`text-xs font-[var(--font-mono)] ${
+                        overdue ? "text-[var(--color-status-maintenance)]" : "text-[var(--color-ink-600)]"
+                      }`}
+                    >
+                      {overdue ? "expired" : "expires"} {c.expiryDate}
+                    </span>
+                  </div>
+                  {c.certificateUrl && (
+                    <a
+                      href={c.certificateUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-[var(--color-brass-600)] hover:underline"
+                    >
+                      View certificate
+                    </a>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
       {/* Uses the per-equipment waitlist endpoint that previously existed in
           the API client but was never called from anywhere - the Bookings
@@ -388,6 +499,12 @@ function EquipmentDetails({ item }) {
         </p>
       </div>
       <div>
+        <p className="text-xs font-medium text-[var(--color-ink-600)] uppercase tracking-wide mb-1">Hourly rate</p>
+        <p className="text-sm text-[var(--color-ink-900)]">
+          {item.hourlyRate != null ? `$${Number(item.hourlyRate).toFixed(2)}/hr` : "Not billed"}
+        </p>
+      </div>
+      <div>
         <p className="text-xs font-medium text-[var(--color-ink-600)] uppercase tracking-wide mb-1">Documentation</p>
         {item.documentationUrl ? (
           <a
@@ -421,6 +538,7 @@ function EquipmentForm({ initial, labs, onSaved }) {
   const [labId, setLabId] = useState(initial?.lab?.labId || "");
   const [specification, setSpecification] = useState(initial?.specification || "");
   const [documentationUrl, setDocumentationUrl] = useState(initial?.documentationUrl || "");
+  const [hourlyRate, setHourlyRate] = useState(initial?.hourlyRate ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -434,7 +552,11 @@ function EquipmentForm({ initial, labs, onSaved }) {
       lab: { labId: Number(labId) },
       specification: specification || undefined,
       documentationUrl: documentationUrl || undefined,
-      ...(initial ? {} : { status: "Available" }),
+      hourlyRate: hourlyRate !== "" ? Number(hourlyRate) : undefined,
+      // No status sent on create - the backend always starts new equipment as
+      // "Pending Calibration" (see EquipmentService.createEquipment), so a
+      // technician has to verify it before it can be booked. Sending
+      // "Available" here would let the client bypass that gate.
     };
     try {
       const saved = initial
@@ -510,6 +632,24 @@ function EquipmentForm({ initial, labs, onSaved }) {
         </p>
       </Field>
 
+      <Field label="Hourly rate" htmlFor="e-rate">
+        <input
+          id="e-rate"
+          type="number"
+          min="0"
+          step="0.01"
+          value={hourlyRate}
+          onChange={(e) => setHourlyRate(e.target.value)}
+          placeholder="Leave blank if this equipment isn't billed"
+          className={inputClass}
+        />
+        <p className="text-xs text-[var(--color-ink-600)] mt-1">
+          Only used for inter-institution billing — if another institution's researcher books this
+          equipment and completes it, this rate determines what their institution is charged. Leave
+          blank if you don't charge for this equipment.
+        </p>
+      </Field>
+
       {error && <ErrorState message={error} />}
 
       <button
@@ -525,6 +665,97 @@ function EquipmentForm({ initial, labs, onSaved }) {
 
 const inputClass =
   "w-full rounded-md border border-[var(--color-paper-200)] bg-white px-3.5 py-2.5 text-sm text-[var(--color-ink-900)] focus:border-[var(--color-brass-500)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brass-500)]/20 transition-colors";
+
+function LogCalibrationForm({ equipmentId, onLogged }) {
+  const [calibratedDate, setCalibratedDate] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [certificationStandard, setCertificationStandard] = useState("");
+  const [certificateUrl, setCertificateUrl] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      const record = await calibrationRecordsApi.create({
+        equipment: { equipmentId },
+        calibratedDate,
+        // Sent as undefined (not "") when left blank, so the backend applies
+        // its default 6-month validity cycle instead of receiving an
+        // unparseable empty string - see CalibrationRecordService.create's
+        // DEFAULT_VALIDITY_MONTHS, from the meeting note "for every six
+        // months the validation should be conducted."
+        expiryDate: expiryDate || undefined,
+        certificationStandard: certificationStandard || undefined,
+        certificateUrl: certificateUrl || undefined,
+      });
+      onLogged(record);
+    } catch (err) {
+      setError(err.response?.data?.message || "Couldn't log this calibration — check the dates and try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3 bg-[var(--color-paper-100)] rounded-md p-3 mb-2" noValidate>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Calibrated on" htmlFor="cal-date">
+          <input
+            id="cal-date"
+            type="date"
+            required
+            value={calibratedDate}
+            onChange={(e) => setCalibratedDate(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Expires on" htmlFor="cal-expiry">
+          <input
+            id="cal-expiry"
+            type="date"
+            value={expiryDate}
+            onChange={(e) => setExpiryDate(e.target.value)}
+            placeholder="Defaults to 6 months from calibration date"
+            className={inputClass}
+          />
+        </Field>
+      </div>
+      <p className="text-xs text-[var(--color-ink-600)] -mt-1.5">
+        Leave blank to use the standard 6-month validation cycle.
+      </p>
+      <Field label="Certification standard (optional)" htmlFor="cal-standard">
+        <input
+          id="cal-standard"
+          value={certificationStandard}
+          onChange={(e) => setCertificationStandard(e.target.value)}
+          placeholder="e.g. ISO 17025"
+          className={inputClass}
+        />
+      </Field>
+      <Field label="Certificate URL (optional)" htmlFor="cal-cert">
+        <input
+          id="cal-cert"
+          type="url"
+          value={certificateUrl}
+          onChange={(e) => setCertificateUrl(e.target.value)}
+          placeholder="Link to the certificate document"
+          className={inputClass}
+        />
+      </Field>
+      {error && <ErrorState message={error} />}
+      <button
+        type="submit"
+        disabled={submitting}
+        className="w-full rounded-md bg-[var(--color-ink-900)] px-3 py-2 text-xs font-medium text-white hover:bg-[var(--color-ink-800)] disabled:opacity-60 transition-colors"
+      >
+        {submitting ? "Saving…" : "Log calibration"}
+      </button>
+    </form>
+  );
+}
 
 function Field({ label, htmlFor, children }) {
   return (

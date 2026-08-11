@@ -5,6 +5,7 @@ import com.labplatform.labresourceplatform.entity.User;
 import com.labplatform.labresourceplatform.enums.Role;
 import com.labplatform.labresourceplatform.repository.InstitutionRepository;
 import com.labplatform.labresourceplatform.repository.UserRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -45,7 +46,29 @@ public class  UserService {
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
 
-    public User createUser(User user){
+    // Security fix: an INSTITUTION_ADMINISTRATOR could previously set (or
+    // create a user with) ANY role, including SYSTEM_ADMINISTRATOR - the
+    // controller only checked institution boundaries, never the role ceiling.
+    // Only SYSTEM_ADMINISTRATOR may assign SYSTEM_ADMINISTRATOR; an
+    // INSTITUTION_ADMINISTRATOR may assign anything up to and including
+    // INSTITUTION_ADMINISTRATOR itself (their own tier and below), matching
+    // "you can't grant a privilege you don't have or higher than your own."
+    private void assertCanAssignRole(Role actingRole, Role targetRole){
+        if (targetRole == null) {
+            return;
+        }
+        if (actingRole == Role.SYSTEM_ADMINISTRATOR) {
+            return;
+        }
+        if (actingRole == Role.INSTITUTION_ADMINISTRATOR && targetRole != Role.SYSTEM_ADMINISTRATOR) {
+            return;
+        }
+        throw new AccessDeniedException("You are not permitted to assign the " + targetRole + " role.");
+    }
+
+    public User createUser(User user, Role actingRole){
+        assertCanAssignRole(actingRole, user.getRole());
+
         // The client only sends { institution: { institutionId: N } }. Re-fetch
         // the real, fully-loaded Institution so the response (and the row shown
         // until a full reload) has the actual institution name, not a bare id.
@@ -61,9 +84,19 @@ public class  UserService {
                 .orElseThrow(() -> new RuntimeException("Institution not found with id: " + institutionId));
     }
 
-    public User updateUser(Long id, User updatedUser){
+    public User updateUser(Long id, User updatedUser, Role actingRole){
 
         User existing = getUserById(id);
+
+        // Checked against both the role being assigned AND the target's
+        // current role - this blocks an INSTITUTION_ADMINISTRATOR from
+        // demoting/reassigning an existing SYSTEM_ADMINISTRATOR too (not just
+        // from promoting someone up to it), since editing any other field on a
+        // SYSTEM_ADMINISTRATOR's account is itself a tier they don't outrank.
+        if (updatedUser.getRole() != null) {
+            assertCanAssignRole(actingRole, updatedUser.getRole());
+        }
+        assertCanAssignRole(actingRole, existing.getRole());
 
         if(updatedUser.getName() != null)
             existing.setName(updatedUser.getName());

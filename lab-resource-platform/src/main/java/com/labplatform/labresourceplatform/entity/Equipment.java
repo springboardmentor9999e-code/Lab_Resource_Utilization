@@ -3,6 +3,8 @@ package com.labplatform.labresourceplatform.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,6 +34,13 @@ public class Equipment {
 
     @Column(name = "documentation_url")
     private String documentationUrl;
+
+    // Milestone 3, task 3 (cost tracking & inter-institution billing): what it
+    // costs, per hour of use, to book this equipment. Nullable - equipment
+    // added before this field existed, or equipment an institution doesn't
+    // charge for, simply has no rate and generates no billing records.
+    @Column(name = "hourly_rate")
+    private BigDecimal hourlyRate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lab_id", nullable = false)

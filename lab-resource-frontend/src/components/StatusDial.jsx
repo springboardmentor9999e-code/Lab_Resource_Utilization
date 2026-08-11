@@ -12,6 +12,9 @@ const STATUS_STYLES = {
   "Pending Approval": { dot: "bg-[var(--color-status-booked)]", bg: "bg-[var(--color-status-booked-bg)]", text: "text-[var(--color-ink-900)]" },
   Waitlisted: { dot: "bg-[var(--color-status-booked)]", bg: "bg-[var(--color-status-booked-bg)]", text: "text-[var(--color-ink-900)]" },
   "Under Maintenance": { dot: "bg-[var(--color-status-maintenance)]", bg: "bg-[var(--color-status-maintenance-bg)]", text: "text-[var(--color-ink-900)]" },
+  // New equipment awaiting a technician's initial calibration check before it
+  // can be booked - see EquipmentService.PENDING_CALIBRATION.
+  "Pending Calibration": { dot: "bg-[var(--color-status-maintenance)]", bg: "bg-[var(--color-status-maintenance-bg)]", text: "text-[var(--color-ink-900)]" },
   Cancelled: { dot: "bg-[var(--color-status-maintenance)]", bg: "bg-[var(--color-status-maintenance-bg)]", text: "text-[var(--color-ink-900)]" },
   "No Show": { dot: "bg-[var(--color-status-maintenance)]", bg: "bg-[var(--color-status-maintenance-bg)]", text: "text-[var(--color-ink-900)]" },
   "Out of Service": { dot: "bg-[var(--color-status-maintenance)]", bg: "bg-[var(--color-status-maintenance-bg)]", text: "text-[var(--color-ink-900)]" },
@@ -28,6 +31,11 @@ const STATUS_STYLES = {
   // Maintenance status is free-text on the backend (no enum/CHECK constraint)
   Scheduled: { dot: "bg-[var(--color-status-booked)]", bg: "bg-[var(--color-status-booked-bg)]", text: "text-[var(--color-ink-900)]" },
   "In Progress": { dot: "bg-[var(--color-status-maintenance)]", bg: "bg-[var(--color-status-maintenance-bg)]", text: "text-[var(--color-ink-900)]" },
+  // BillingRecord status - also free-text, capitalized-first like Maintenance,
+  // distinct from Booking's "Pending Approval" and SharingRequest's uppercase PENDING.
+  Pending: { dot: "bg-[var(--color-status-booked)]", bg: "bg-[var(--color-status-booked-bg)]", text: "text-[var(--color-ink-900)]" },
+  Invoiced: { dot: "bg-[var(--color-status-booked)]", bg: "bg-[var(--color-status-booked-bg)]", text: "text-[var(--color-ink-900)]" },
+  Paid: { dot: "bg-[var(--color-status-available)]", bg: "bg-[var(--color-status-available-bg)]", text: "text-[var(--color-ink-900)]" },
 };
 
 const DEFAULT_STYLE = { dot: "bg-[var(--color-ink-600)]", bg: "bg-[var(--color-paper-200)]", text: "text-[var(--color-ink-700)]" };

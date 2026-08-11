@@ -12,6 +12,13 @@ public interface UtilizationLogRepository extends JpaRepository<UtilizationLog, 
 
     List<UtilizationLog> findByEquipment_EquipmentId(Long equipmentId);
 
+    // Used for platform-wide usage-pattern analysis (which day of the week is
+    // used most, across all equipment) - unlike the windowed queries below,
+    // this deliberately has no date filter since patterns are more meaningful
+    // over the full history than an arbitrary recent window.
+    @Query("SELECT u FROM UtilizationLog u")
+    List<UtilizationLog> findAllForPatternAnalysis();
+
     // Windowed queries filter on recordedAt (when the log was actually created)
     // rather than usageStart/usageEnd (the booking's *scheduled* slot) - see the
     // note on UtilizationLog.recordedAt and item #4 of the fixes spec. This is

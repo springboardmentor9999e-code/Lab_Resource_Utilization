@@ -23,17 +23,20 @@ public class BookingService {
     private final EquipmentService equipmentService;
     private final UserService userService;
     private final SharingRequestRepository sharingRequestRepository;
+    private final BillingRecordService billingRecordService;
 
     public BookingService(BookingRepository bookingRepository,
                            UtilizationService utilizationService,
                            EquipmentService equipmentService,
                            UserService userService,
-                           SharingRequestRepository sharingRequestRepository){
+                           SharingRequestRepository sharingRequestRepository,
+                           BillingRecordService billingRecordService){
         this.bookingRepository = bookingRepository;
         this.utilizationService = utilizationService;
         this.equipmentService = equipmentService;
         this.userService = userService;
         this.sharingRequestRepository = sharingRequestRepository;
+        this.billingRecordService = billingRecordService;
     }
 
     public List<Booking> getAllBookings(){
@@ -76,6 +79,19 @@ public class BookingService {
         // page load re-fetches bookings with the real, DB-loaded equipment.
         Long equipmentId = booking.getEquipment().getEquipmentId();
         booking.setEquipment(equipmentService.getEquipmentById(equipmentId));
+
+        // "The technician will receive message for calibration test... then he
+        // can approve the registered equipment" - equipment sitting in Pending
+        // Calibration hasn't been verified as accurate yet, so it can't be
+        // booked at all until a technician logs its first calibration record
+        // (see CalibrationRecordService.create -> approveInitialCalibration).
+        // Without this check, the status existed but nothing actually
+        // enforced it - equipment could still be booked while awaiting
+        // verification, which defeats the entire point of the gate.
+        if (EquipmentService.PENDING_CALIBRATION.equals(booking.getEquipment().getStatus())) {
+            throw new RuntimeException(
+                    "This equipment is awaiting its initial calibration check and can't be booked yet.");
+        }
 
         // Same re-fetch for the user - for self-service roles the controller
         // already attaches the real, DB-loaded current user, but a staff member
@@ -176,11 +192,62 @@ public class BookingService {
                 candidate.setStatus("Pending Approval");
                 Booking saved = bookingRepository.save(candidate);
                 syncEquipmentStatus(saved);
+                syncLinkedSharingRequestStatus(saved);
                 return saved;
             }
             // Still conflicts - leave this one waitlisted and check the next.
         }
         return null;
+    }
+
+    // Bug fix: a SharingRequest linked to a Waitlisted booking (see
+    // approveSharingRequest and logSharingRequestIfCrossInstitution) was never
+    // updated when that booking later got promoted off the waitlist - the
+    // request stayed showing WAITLISTED permanently, even once the requester's
+    // slot actually opened up and the booking moved to Pending Approval. This
+    // brings the request's status back in line with its booking's real state
+    // whenever the booking's status changes here.
+    private void syncLinkedSharingRequestStatus(Booking booking){
+        sharingRequestRepository.findByBooking_BookingId(booking.getBookingId()).ifPresent(request -> {
+            if (request.getStatus() == SharingRequestStatus.WAITLISTED
+                    && ACTIVE_STATUSES.contains(booking.getStatus())) {
+                request.setStatus(SharingRequestStatus.APPROVED);
+                sharingRequestRepository.save(request);
+            }
+        });
+    }
+
+    // Startup self-heal for requests that got stuck at WAITLISTED before two
+    // related bugs were fixed: (1) promoteNextInLine never told the linked
+    // SharingRequest about a promotion, and (2) a booking being marked
+    // Completed (as opposed to Cancelled/No Show) never triggered promotion
+    // at all. Rather than requiring a manual SQL fix every time logic like
+    // this changes, this re-checks every currently-WAITLISTED request's
+    // linked booking on every startup and corrects any that are already out
+    // of sync - safe to run repeatedly, it only writes when there's an actual
+    // mismatch to fix.
+    public void reconcileStuckWaitlistedSharingRequests(){
+        for (Object[] row : sharingRequestRepository.findIdAndBookingIdByStatus(SharingRequestStatus.WAITLISTED)) {
+            Long requestId = (Long) row[0];
+            Long bookingId = (Long) row[1];
+
+            Booking booking = bookingRepository.findById(bookingId).orElse(null);
+            if (booking == null) {
+                continue;
+            }
+
+            // Completed also counts as "the requester got real access" here,
+            // same reasoning as justFreed treating Completed as freeing the
+            // slot below - by the time a booking is Completed, the requester
+            // clearly did get to use the equipment, so the request should
+            // read APPROVED, not still WAITLISTED.
+            if (ACTIVE_STATUSES.contains(booking.getStatus()) || "Completed".equals(booking.getStatus())) {
+                sharingRequestRepository.findById(requestId).ifPresent(request -> {
+                    request.setStatus(SharingRequestStatus.APPROVED);
+                    sharingRequestRepository.save(request);
+                });
+            }
+        }
     }
 
     public Booking updateBooking(Long id, Booking updatedBooking){
@@ -247,8 +314,16 @@ public class BookingService {
                 && "Completed".equals(updatedBooking.getStatus())
                 && !"Completed".equals(existing.getStatus());
 
+        // Bug fix: this previously only covered "Cancelled"/"No Show" - a
+        // booking that finished normally (Completed) also frees its slot for
+        // the next waitlisted request, but nothing was triggering promotion
+        // for that case. A waitlisted request whose conflict was a booking
+        // that later completed (rather than being explicitly cancelled) could
+        // sit WAITLISTED forever even after that time slot had genuinely passed.
         boolean justFreed = updatedBooking.getStatus() != null
-                && ("Cancelled".equals(updatedBooking.getStatus()) || "No Show".equals(updatedBooking.getStatus()))
+                && ("Cancelled".equals(updatedBooking.getStatus())
+                    || "No Show".equals(updatedBooking.getStatus())
+                    || "Completed".equals(updatedBooking.getStatus()))
                 && !updatedBooking.getStatus().equals(existing.getStatus());
 
         if(updatedBooking.getStatus() != null)
@@ -260,6 +335,12 @@ public class BookingService {
         // actual usage session for utilization-rate calculations (Milestone 2).
         if (justCompleted) {
             utilizationService.logUsageFromBooking(saved);
+            // Milestone 3, task 3: if this was a cross-institution booking with
+            // a priced equipment rate, generate the corresponding bill. No-ops
+            // silently if the booking was within one institution or the
+            // equipment has no hourly rate set - see
+            // BillingRecordService.createBillingRecordIfApplicable for the exact conditions.
+            billingRecordService.createBillingRecordIfApplicable(saved);
         }
 
         // Waitlist management: offer the freed slot to the next waitlisted request.
@@ -272,6 +353,16 @@ public class BookingService {
         // was set to at creation. Runs after the completed/freed handling above so
         // it sees the final, saved booking status.
         syncEquipmentStatus(saved);
+
+        // Same fix as promoteNextInLine(): if this booking is linked to a
+        // WAITLISTED sharing request and just moved into an active status
+        // (whether via promotion above, or - as here - a staff member
+        // manually approving a Waitlisted booking straight through the
+        // Bookings page), bring the request's status back in line rather than
+        // leaving it stuck showing WAITLISTED after the slot actually opened up.
+        if (enteringActiveStatus) {
+            syncLinkedSharingRequestStatus(saved);
+        }
 
         return saved;
     }

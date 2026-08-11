@@ -82,6 +82,15 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Report generation (Milestone 3, task v: utilization/cost analysis
+             reports, downloadable as PDF). OpenPDF is an actively-maintained,
+             permissively-licensed (LGPL/MPL) fork of the old iText 4 - no
+             external native binaries needed, pure Java. -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>1.3.42</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa-test</artifactId>

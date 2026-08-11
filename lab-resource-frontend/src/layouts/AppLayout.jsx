@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { can, roleLabel } from "../auth/permissions";
+import { useNotifications } from "../notifications/NotificationsContext";
 
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Dashboard", icon: DialIcon },
@@ -14,10 +15,13 @@ const NAV_ITEMS = [
   { to: "/labs", label: "Labs", icon: LabIcon },
   { to: "/institutions", label: "Institutions", icon: BuildingIcon },
   { to: "/role-requests", label: "Role Requests", icon: BadgeIcon, requires: "roleRequests:review" },
+  { to: "/billing", label: "Billing", icon: BillingIcon, requires: "billing:view" },
+  { to: "/notifications", label: "Notifications", icon: BellIcon },
 ];
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
 
   return (
     <div className="min-h-screen flex bg-[var(--color-paper-50)]">
@@ -51,6 +55,11 @@ export default function AppLayout() {
               >
                 <item.icon className="h-4 w-4 shrink-0" />
                 {item.label}
+                {item.to === "/notifications" && unreadCount > 0 && (
+                  <span className="ml-auto rounded-full bg-[var(--color-brass-500)] text-[var(--color-ink-900)] text-[11px] font-semibold px-1.5 py-0.5 min-w-[1.25rem] text-center">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
               </NavLink>
             )
           )}
@@ -168,6 +177,22 @@ function BadgeIcon(props) {
     <svg viewBox="0 0 20 20" fill="none" {...props}>
       <circle cx="10" cy="8" r="4.5" stroke="currentColor" strokeWidth="1.5" />
       <path d="M7.5 11.5L6.5 17l3.5-2 3.5 2-1-5.5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function BillingIcon(props) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" {...props}>
+      <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 6v8M12.5 8.2c0-.9-1.1-1.7-2.5-1.7s-2.5.6-2.5 1.5.9 1.3 2.5 1.5c1.6.2 2.5.6 2.5 1.5s-1.1 1.5-2.5 1.5-2.5-.8-2.5-1.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+function BellIcon(props) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" {...props}>
+      <path d="M10 3.5c-2.2 0-4 1.8-4 4v2.3c0 .5-.2 1-.5 1.4l-.9 1.1c-.4.5 0 1.2.6 1.2h9.6c.6 0 1-.7.6-1.2l-.9-1.1c-.3-.4-.5-.9-.5-1.4V7.5c0-2.2-1.8-4-4-4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M8.3 15.5a1.8 1.8 0 003.4 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }

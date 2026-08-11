@@ -62,7 +62,16 @@ public class AuthService {
         // it's already a self-service-tier role with no elevated privileges; any
         // other selection (LAB_TECHNICIAN, LAB_MANAGER, DEPARTMENT_HEAD, admin
         // roles, etc.) is only recorded as a pending request below.
-        Role requestedRole = request.getRole();
+        //
+        // SYSTEM_ADMINISTRATOR is excluded from becoming a pending request at
+        // all - not just from direct assignment - since that role isn't meant
+        // to be requestable through self-registration under any circumstance,
+        // regardless of what the frontend's dropdown normally offers (it never
+        // lists SYSTEM_ADMINISTRATOR, but the API itself doesn't validate
+        // against that, and RoleChangeRequestService.approve() has its own
+        // defense-in-depth check for this too - this closes it at the source
+        // instead of relying on that alone).
+        Role requestedRole = request.getRole() == Role.SYSTEM_ADMINISTRATOR ? null : request.getRole();
         Role actualRole = requestedRole == Role.RESEARCHER ? Role.RESEARCHER : DEFAULT_SELF_REGISTER_ROLE;
 
         User user = new User();

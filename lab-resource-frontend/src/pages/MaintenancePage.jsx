@@ -202,6 +202,8 @@ function CreateMaintenanceForm({ equipment, onCreated }) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
+  const [workOrderType, setWorkOrderType] = useState("Preventive");
+  const [recurrenceIntervalDays, setRecurrenceIntervalDays] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -216,6 +218,8 @@ function CreateMaintenanceForm({ equipment, onCreated }) {
         endDate: endDate || undefined,
         description: description || undefined,
         status: "Scheduled",
+        workOrderType,
+        recurrenceIntervalDays: recurrenceIntervalDays ? Number(recurrenceIntervalDays) : undefined,
       });
       onCreated(record);
     } catch (err) {
@@ -276,6 +280,41 @@ function CreateMaintenanceForm({ equipment, onCreated }) {
           />
         </div>
       </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="m-type" className="block text-sm font-medium text-[var(--color-ink-800)] mb-1.5">
+            Type
+          </label>
+          <select
+            id="m-type"
+            value={workOrderType}
+            onChange={(e) => setWorkOrderType(e.target.value)}
+            className={inputClass}
+          >
+            <option value="Preventive">Preventive (routine)</option>
+            <option value="Corrective">Corrective (reactive repair)</option>
+          </select>
+        </div>
+        <div>
+          <label htmlFor="m-recur" className="block text-sm font-medium text-[var(--color-ink-800)] mb-1.5">
+            Repeats every <span className="text-[var(--color-ink-600)] font-normal">(days, optional)</span>
+          </label>
+          <input
+            id="m-recur"
+            type="number"
+            min="1"
+            value={recurrenceIntervalDays}
+            onChange={(e) => setRecurrenceIntervalDays(e.target.value)}
+            placeholder="e.g. 90"
+            className={inputClass}
+          />
+        </div>
+      </div>
+      <p className="text-xs text-[var(--color-ink-600)] -mt-2">
+        For "continuous" maintenance - if set, completing this work order automatically schedules the next
+        occurrence that many days later.
+      </p>
 
       <div>
         <label htmlFor="m-desc" className="block text-sm font-medium text-[var(--color-ink-800)] mb-1.5">

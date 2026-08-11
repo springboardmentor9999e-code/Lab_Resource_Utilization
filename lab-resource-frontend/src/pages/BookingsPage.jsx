@@ -300,11 +300,14 @@ function CreateBookingForm({ equipment, onCreated }) {
           <option value="" disabled>
             Select equipment
           </option>
-          {equipment.map((eq) => (
-            <option key={eq.equipmentId} value={eq.equipmentId}>
-              {eq.equipmentName} {eq.status !== "Available" ? `(${eq.status})` : ""}
-            </option>
-          ))}
+          {equipment.map((eq) => {
+            const unbookable = ["Pending Calibration", "Out of Service", "Retired"].includes(eq.status);
+            return (
+              <option key={eq.equipmentId} value={eq.equipmentId} disabled={unbookable}>
+                {eq.equipmentName} {eq.status !== "Available" ? `(${eq.status})` : ""}
+              </option>
+            );
+          })}
         </select>
       </div>
 

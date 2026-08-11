@@ -3,7 +3,6 @@ import { useAuth } from "../auth/AuthContext";
 import { can } from "../auth/permissions";
 import { sharingRequestsApi } from "../api/sharingRequests";
 import { equipmentApi } from "../api/equipment";
-import { institutionsApi } from "../api/institutions";
 import { Card, LoadingState, ErrorState, PageHeader, EmptyState } from "../components/ui";
 import { StatusDial } from "../components/StatusDial";
 import { Modal } from "../components/Modal";
@@ -12,7 +11,6 @@ export default function SharingRequestsPage() {
   const { user } = useAuth();
   const [requests, setRequests] = useState([]);
   const [equipment, setEquipment] = useState([]);
-  const [institutions, setInstitutions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -24,11 +22,10 @@ export default function SharingRequestsPage() {
   function loadData() {
     setLoading(true);
     setError(null);
-    return Promise.all([sharingRequestsApi.list(), equipmentApi.list(), institutionsApi.list()])
-      .then(([r, e, i]) => {
+    return Promise.all([sharingRequestsApi.list(), equipmentApi.list()])
+      .then(([r, e]) => {
         setRequests(r);
         setEquipment(e);
-        setInstitutions(i);
       })
       .catch((err) => setError(err.response?.data?.message || "Couldn't load sharing requests."))
       .finally(() => setLoading(false));
@@ -125,7 +122,6 @@ export default function SharingRequestsPage() {
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Request equipment sharing">
         <CreateRequestForm
           equipment={equipment}
-          institutions={institutions}
           currentInstitutionId={user?.institutionId}
           onCreated={(request) => {
             setRequests((prev) => [request, ...prev]);
@@ -155,9 +151,11 @@ function FilterPill({ label, active, onClick, count }) {
 function RequestRow({ request, canApprove, onUpdated }) {
   const [saving, setSaving] = useState(false);
   const [approvalNote, setApprovalNote] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   async function handle(action) {
     setSaving(true);
+    setActionError(null);
     try {
       const updated =
         action === "approve"
@@ -171,6 +169,12 @@ function RequestRow({ request, canApprove, onUpdated }) {
             : "Approved — a booking was created for the requester."
         );
       }
+    } catch (err) {
+      // Previously missing entirely - a failed approve/reject (e.g. the
+      // backend's guard against approving an already auto-logged request, or
+      // any other error) threw silently: the button just stopped spinning
+      // with no explanation at all.
+      setActionError(err.response?.data?.message || "Couldn't update this request.");
     } finally {
       setSaving(false);
     }
@@ -231,11 +235,17 @@ function RequestRow({ request, canApprove, onUpdated }) {
           </td>
         )}
       </tr>
-      {approvalNote && (
+      {(approvalNote || actionError) && (
         <tr>
           <td colSpan={canApprove ? 6 : 5} className="px-5 pb-3 -mt-1">
-            <div className="text-xs text-[var(--color-brass-600)] bg-[var(--color-status-booked-bg)]/40 rounded-md px-3 py-1.5 inline-block">
-              {approvalNote}
+            <div
+              className={`text-xs rounded-md px-3 py-1.5 inline-block ${
+                actionError
+                  ? "text-[var(--color-status-maintenance)] bg-[var(--color-status-maintenance-bg)]/50"
+                  : "text-[var(--color-brass-600)] bg-[var(--color-status-booked-bg)]/40"
+              }`}
+            >
+              {actionError || approvalNote}
             </div>
           </td>
         </tr>
@@ -244,25 +254,47 @@ function RequestRow({ request, canApprove, onUpdated }) {
   );
 }
 
-function CreateRequestForm({ equipment, institutions, currentInstitutionId, onCreated }) {
+function CreateRequestForm({ equipment, currentInstitutionId, onCreated }) {
   const [equipmentId, setEquipmentId] = useState("");
-  const [ownerInstitutionId, setOwnerInstitutionId] = useState("");
   const [purpose, setPurpose] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const otherInstitutions = institutions.filter((i) => i.institutionId !== currentInstitutionId);
+  // The owning institution is NOT a free choice - it's whichever institution
+  // actually owns the selected equipment (via equipment.lab.institution).
+  // Previously this was a separate, disconnected dropdown that let someone
+  // pick ANY institution regardless of what equipment they'd selected, and
+  // its default option ("same as equipment's home institution") didn't
+  // actually implement that - it just left ownerInstitution unset entirely,
+  // producing a sharing request with no owner institution at all. That broke
+  // the owning institution's Lab Manager/Department Head ever seeing the
+  // request to approve it, since visibility scoping is keyed on
+  // ownerInstitution - and would have silently prevented billing later too.
+  const selectedEquipment = equipment.find((eq) => String(eq.equipmentId) === equipmentId);
+  const ownerInstitution = selectedEquipment?.lab?.institution;
+  const sameInstitution = ownerInstitution && ownerInstitution.institutionId === currentInstitutionId;
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    if (!ownerInstitution) {
+      setError("Select a piece of equipment first.");
+      return;
+    }
+    // Matches the backend's validation (SharingRequestService.assertValidDateRange) -
+    // checked here too so the mistake is caught immediately rather than round-tripping
+    // to the server first. Previously neither side checked this at all.
+    if (startDate && endDate && new Date(endDate) <= new Date(startDate)) {
+      setError("The end date must be after the start date.");
+      return;
+    }
     setSubmitting(true);
     try {
       const request = await sharingRequestsApi.create({
         equipment: { equipmentId: Number(equipmentId) },
-        ownerInstitution: ownerInstitutionId ? { institutionId: Number(ownerInstitutionId) } : undefined,
+        ownerInstitution: { institutionId: ownerInstitution.institutionId },
         requesterInstitution: currentInstitutionId ? { institutionId: currentInstitutionId } : undefined,
         purpose,
         startDate,
@@ -294,30 +326,19 @@ function CreateRequestForm({ equipment, institutions, currentInstitutionId, onCr
           </option>
           {equipment.map((eq) => (
             <option key={eq.equipmentId} value={eq.equipmentId}>
-              {eq.equipmentName}
+              {eq.equipmentName} {eq.lab?.institution?.institutionName ? `— ${eq.lab.institution.institutionName}` : ""}
             </option>
           ))}
         </select>
       </div>
 
-      <div>
-        <label htmlFor="sr-owner" className="block text-sm font-medium text-[var(--color-ink-800)] mb-1.5">
-          Owning institution
-        </label>
-        <select
-          id="sr-owner"
-          value={ownerInstitutionId}
-          onChange={(e) => setOwnerInstitutionId(e.target.value)}
-          className={inputClass}
-        >
-          <option value="">Same as equipment's home institution</option>
-          {otherInstitutions.map((inst) => (
-            <option key={inst.institutionId} value={inst.institutionId}>
-              {inst.institutionName}
-            </option>
-          ))}
-        </select>
-      </div>
+      {selectedEquipment && (
+        <p className="text-xs text-[var(--color-ink-600)] -mt-2">
+          {sameInstitution
+            ? "This equipment belongs to your own institution — no cross-institution approval needed."
+            : `Owned by ${ownerInstitution?.institutionName || "another institution"}. Their Lab Manager or Department Head will need to approve this request.`}
+        </p>
+      )}
 
       <div>
         <label htmlFor="sr-purpose" className="block text-sm font-medium text-[var(--color-ink-800)] mb-1.5">

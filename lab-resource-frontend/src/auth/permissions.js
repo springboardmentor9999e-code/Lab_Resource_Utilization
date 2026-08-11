@@ -104,6 +104,36 @@ export function can(role, action) {
         ROLES.INSTITUTION_ADMINISTRATOR,
         ROLES.SYSTEM_ADMINISTRATOR,
       ].includes(role);
+    // Matches CalibrationRecordController's @PreAuthorize on POST.
+    case "calibration:log":
+      return [
+        ROLES.LAB_TECHNICIAN,
+        ROLES.LAB_MANAGER,
+        ROLES.INSTITUTION_ADMINISTRATOR,
+        ROLES.SYSTEM_ADMINISTRATOR,
+      ].includes(role);
+    // Matches BillingRecordController's @PreAuthorize - billing is
+    // institution-level financial data, not shown to STUDENT/RESEARCHER/LAB_TECHNICIAN.
+    case "billing:view":
+      return [
+        ROLES.LAB_MANAGER,
+        ROLES.DEPARTMENT_HEAD,
+        ROLES.INSTITUTION_ADMINISTRATOR,
+        ROLES.SYSTEM_ADMINISTRATOR,
+      ].includes(role);
+    // Matches ReportController's @PreAuthorize - same tier as billing, since a
+    // report combines cost data with operational data.
+    case "reports:view":
+      return [
+        ROLES.LAB_MANAGER,
+        ROLES.DEPARTMENT_HEAD,
+        ROLES.INSTITUTION_ADMINISTRATOR,
+        ROLES.SYSTEM_ADMINISTRATOR,
+      ].includes(role);
+    // Institution-wide view (cross-lab, cross-department) rather than the
+    // narrower Lab Manager/Department Head operational view.
+    case "dashboard:institutionView":
+      return [ROLES.INSTITUTION_ADMINISTRATOR, ROLES.SYSTEM_ADMINISTRATOR].includes(role);
     default:
       return false;
   }

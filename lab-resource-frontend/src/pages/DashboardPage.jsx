@@ -6,6 +6,8 @@ import { bookingsApi } from "../api/bookings";
 import { equipmentApi } from "../api/equipment";
 import { utilizationApi } from "../api/utilization";
 import { sharingRequestsApi } from "../api/sharingRequests";
+import { billingRecordsApi } from "../api/billingRecords";
+import { calibrationRecordsApi } from "../api/calibrationRecords";
 import { Card, StatCard, LoadingState, ErrorState, PageHeader, EmptyState } from "../components/ui";
 import { StatusDial } from "../components/StatusDial";
 
@@ -17,8 +19,15 @@ export default function DashboardPage() {
   const [equipment, setEquipment] = useState([]);
   const [sharingRequests, setSharingRequests] = useState([]);
   const [idleEquipment, setIdleEquipment] = useState([]);
+  const [billingRecords, setBillingRecords] = useState([]);
+  const [calibrationReminders, setCalibrationReminders] = useState([]);
 
   const showIdle = can(user?.role, "utilization:idle");
+  // Only fetched for the Institution Admin tier - billing is institution-level
+  // financial data (see BillingRecordController's @PreAuthorize), and pulling
+  // it for every role would either 403 pointlessly or show numbers a Lab
+  // Manager/Department Head shouldn't necessarily see by default.
+  const showInstitutionView = can(user?.role, "dashboard:institutionView");
 
   useEffect(() => {
     let cancelled = false;
@@ -30,15 +39,19 @@ export default function DashboardPage() {
       equipmentApi.list(),
       sharingRequestsApi.list().catch(() => []),
       showIdle ? utilizationApi.idle().catch(() => []) : Promise.resolve([]),
+      showInstitutionView ? billingRecordsApi.list().catch(() => []) : Promise.resolve([]),
+      showInstitutionView ? calibrationRecordsApi.reminders().catch(() => []) : Promise.resolve([]),
     ];
 
     Promise.all(calls)
-      .then(([b, e, sr, idle]) => {
+      .then(([b, e, sr, idle, billing, calibration]) => {
         if (cancelled) return;
         setBookings(b);
         setEquipment(e);
         setSharingRequests(sr);
         setIdleEquipment(idle);
+        setBillingRecords(billing);
+        setCalibrationReminders(calibration);
       })
       .catch((err) => {
         if (!cancelled) setError(err.response?.data?.message || "Couldn't load dashboard data.");
@@ -48,16 +61,34 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [showIdle]);
+  }, [showIdle, showInstitutionView]);
 
   if (loading) return <LoadingState label="Loading dashboard…" />;
   if (error) return <ErrorState message={error} />;
 
   const selfService = isSelfServiceRole(user?.role);
 
-  return selfService ? (
-    <StudentDashboard user={user} bookings={bookings} equipment={equipment} sharingRequests={sharingRequests} />
-  ) : (
+  if (selfService) {
+    return (
+      <StudentDashboard user={user} bookings={bookings} equipment={equipment} sharingRequests={sharingRequests} />
+    );
+  }
+
+  if (showInstitutionView) {
+    return (
+      <InstitutionAdminDashboard
+        user={user}
+        bookings={bookings}
+        equipment={equipment}
+        sharingRequests={sharingRequests}
+        idleEquipment={idleEquipment}
+        billingRecords={billingRecords}
+        calibrationReminders={calibrationReminders}
+      />
+    );
+  }
+
+  return (
     <StaffDashboard
       user={user}
       bookings={bookings}
@@ -195,6 +226,157 @@ function StaffDashboard({ user, bookings, equipment, sharingRequests, idleEquipm
           </p>
         </Card>
       )}
+    </>
+  );
+}
+
+function InstitutionAdminDashboard({
+  user,
+  bookings,
+  equipment,
+  sharingRequests,
+  idleEquipment,
+  billingRecords,
+  calibrationReminders,
+}) {
+  const pendingApprovals = bookings.filter((b) => b.status === "Pending Approval");
+  const inMaintenance = equipment.filter((e) => e.status === "Under Maintenance");
+  const pendingSharing = sharingRequests.filter((s) => s.status === "PENDING");
+
+  // "What we owe others" vs "what others owe us" - the two sides of
+  // inter-institution billing (Milestone 3, task 3). ownInstitutionId is
+  // needed to tell which side of each record this institution is on, since
+  // the API already scopes the list to records touching this institution
+  // either way.
+  const ownInstitutionId = user?.institutionId;
+  const pendingOwed = billingRecords.filter(
+    (r) => r.status === "Pending" && r.ownerInstitution?.institutionId === ownInstitutionId
+  );
+  const pendingOwing = billingRecords.filter(
+    (r) => r.status === "Pending" && r.billedInstitution?.institutionId === ownInstitutionId
+  );
+  const totalOwed = pendingOwed.reduce((sum, r) => sum + Number(r.totalCost || 0), 0);
+  const totalOwing = pendingOwing.reduce((sum, r) => sum + Number(r.totalCost || 0), 0);
+
+  return (
+    <>
+      <PageHeader
+        eyebrow={roleLabel(user?.role)}
+        title="Institution overview"
+        description="Organization-wide equipment utilization, cross-department sharing, and cost intelligence."
+      />
+
+      <div className="grid grid-cols-4 gap-4 mb-8">
+        <StatCard label="Pending approvals" value={pendingApprovals.length} accent />
+        <StatCard label="Total equipment" value={equipment.length} />
+        <StatCard label="Under maintenance" value={inMaintenance.length} />
+        <StatCard label="Idle equipment" value={idleEquipment.length} sublabel="72h+ unused" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-[var(--font-display)] text-lg text-[var(--color-ink-900)]">
+              Inter-institution billing
+            </h2>
+            <Link to="/billing" className="text-sm font-medium text-[var(--color-brass-600)] hover:underline">
+              View all →
+            </Link>
+          </div>
+          {billingRecords.length === 0 ? (
+            <EmptyState
+              title="No billing activity"
+              description="Charges appear here once cross-institution bookings on priced equipment are completed."
+            />
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-ink-600)] mb-1">
+                  Owed to you ({pendingOwed.length} pending)
+                </p>
+                <p className="text-2xl font-[var(--font-display)] text-[var(--color-ink-900)]">
+                  ${totalOwed.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-ink-600)] mb-1">
+                  You owe ({pendingOwing.length} pending)
+                </p>
+                <p className="text-2xl font-[var(--font-display)] text-[var(--color-ink-900)]">
+                  ${totalOwing.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-[var(--font-display)] text-lg text-[var(--color-ink-900)]">
+              Calibration renewals due
+            </h2>
+            <Link to="/equipment" className="text-sm font-medium text-[var(--color-brass-600)] hover:underline">
+              View equipment →
+            </Link>
+          </div>
+          {calibrationReminders.length === 0 ? (
+            <EmptyState title="Nothing due" description="No calibrations expiring in the next 30 days." />
+          ) : (
+            <ul className="divide-y divide-[var(--color-paper-200)]">
+              {calibrationReminders.slice(0, 5).map((r) => {
+                const overdue = new Date(r.expiryDate) < new Date();
+                return (
+                  <li key={r.calibrationRecordId} className="py-2.5 flex items-center justify-between text-sm">
+                    <span className="text-[var(--color-ink-900)]">{r.equipment?.equipmentName || "—"}</span>
+                    <span
+                      className={`font-[var(--font-mono)] text-xs ${
+                        overdue ? "text-[var(--color-status-maintenance)]" : "text-[var(--color-ink-600)]"
+                      }`}
+                    >
+                      {overdue ? "overdue" : "due"} {r.expiryDate}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6">
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-[var(--font-display)] text-lg text-[var(--color-ink-900)]">
+              Pending booking approvals
+            </h2>
+            <Link to="/bookings" className="text-sm font-medium text-[var(--color-brass-600)] hover:underline">
+              View all →
+            </Link>
+          </div>
+          {pendingApprovals.length === 0 ? (
+            <EmptyState title="All caught up" description="No bookings waiting on approval right now." />
+          ) : (
+            <BookingRows rows={pendingApprovals.slice(0, 5)} />
+          )}
+        </Card>
+
+        {pendingSharing.length > 0 && (
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-[var(--font-display)] text-lg text-[var(--color-ink-900)]">
+                Sharing requests awaiting review
+              </h2>
+              <Link to="/sharing-requests" className="text-sm font-medium text-[var(--color-brass-600)] hover:underline">
+                Review →
+              </Link>
+            </div>
+            <p className="text-sm text-[var(--color-ink-600)]">
+              {pendingSharing.length} request{pendingSharing.length === 1 ? "" : "s"} across departments
+              waiting on review.
+            </p>
+          </Card>
+        )}
+      </div>
     </>
   );
 }

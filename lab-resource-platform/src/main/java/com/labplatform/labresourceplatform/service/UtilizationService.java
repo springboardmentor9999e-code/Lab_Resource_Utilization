@@ -7,10 +7,13 @@ import com.labplatform.labresourceplatform.repository.EquipmentRepository;
 import com.labplatform.labresourceplatform.repository.UtilizationLogRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +24,11 @@ public class UtilizationService {
     private final UtilizationLogRepository utilizationLogRepository;
     private final EquipmentRepository equipmentRepository;
 
-    // Equipment idle beyond this many hours (with no logged usage) is flagged in the idle report.
-    private static final long IDLE_THRESHOLD_HOURS = 72;
+    // Equipment idle beyond this many hours (with no logged usage) is flagged
+    // in the idle report. Set to 1 week (168h) per the "if not used for a week,
+    // send an alert" requirement - was previously 72h (3 days), which didn't
+    // match that.
+    private static final long IDLE_THRESHOLD_HOURS = 24 * 7;
 
     public UtilizationService(UtilizationLogRepository utilizationLogRepository,
                                EquipmentRepository equipmentRepository) {
@@ -93,6 +99,73 @@ public class UtilizationService {
             heatmap.add(entry);
         }
         return heatmap;
+    }
+
+    // "Which day is used most" (platform-wide): total minutes used, summed
+    // across ALL equipment, grouped by day of week. Based on usageStart (the
+    // actual scheduled usage time), not recordedAt (just administrative
+    // bookkeeping of when the log was created) - the question is about when
+    // equipment gets used, not when someone happened to click "Completed".
+    public Map<DayOfWeek, Long> getUsageByDayOfWeek() {
+        Map<DayOfWeek, Long> byDay = new EnumMap<>(DayOfWeek.class);
+        for (DayOfWeek day : DayOfWeek.values()) {
+            byDay.put(day, 0L);
+        }
+        for (UtilizationLog log : utilizationLogRepository.findAllForPatternAnalysis()) {
+            DayOfWeek day = log.getUsageStart().getDayOfWeek();
+            byDay.merge(day, log.getDurationMinutes(), Long::sum);
+        }
+        return byDay;
+    }
+
+    // Per-equipment usage pattern: day-of-week breakdown, average session
+    // length, and most common start hour - the closest a booking-log-derived
+    // dataset can get to "pattern of particular equipment usage" without
+    // needing a dedicated ML/statistics layer. Useful for spotting things like
+    // "this microscope is booked almost exclusively on Monday mornings."
+    public Map<String, Object> getUsagePatternForEquipment(Long equipmentId) {
+        Equipment equipment = equipmentRepository.findById(equipmentId)
+                .orElseThrow(() -> new RuntimeException("Equipment not found with id: " + equipmentId));
+
+        List<UtilizationLog> logs = utilizationLogRepository.findByEquipment_EquipmentId(equipmentId);
+
+        Map<DayOfWeek, Long> minutesByDay = new EnumMap<>(DayOfWeek.class);
+        for (DayOfWeek day : DayOfWeek.values()) {
+            minutesByDay.put(day, 0L);
+        }
+        Map<Integer, Long> sessionsByStartHour = new HashMap<>();
+        long totalMinutes = 0;
+
+        for (UtilizationLog log : logs) {
+            DayOfWeek day = log.getUsageStart().getDayOfWeek();
+            minutesByDay.merge(day, log.getDurationMinutes(), Long::sum);
+            totalMinutes += log.getDurationMinutes();
+
+            int hour = log.getUsageStart().toLocalTime().getHour();
+            sessionsByStartHour.merge(hour, 1L, Long::sum);
+        }
+
+        DayOfWeek busiestDay = minutesByDay.entrySet().stream()
+                .max(Comparator.comparingLong(Map.Entry::getValue))
+                .filter(e -> e.getValue() > 0)
+                .map(Map.Entry::getKey)
+                .orElse(null);
+
+        Integer mostCommonStartHour = sessionsByStartHour.entrySet().stream()
+                .max(Comparator.comparingLong(Map.Entry::getValue))
+                .map(Map.Entry::getKey)
+                .orElse(null);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("equipmentId", equipmentId);
+        result.put("equipmentName", equipment.getEquipmentName());
+        result.put("totalSessions", logs.size());
+        result.put("totalMinutesUsed", totalMinutes);
+        result.put("averageSessionMinutes", logs.isEmpty() ? 0 : Math.round((double) totalMinutes / logs.size()));
+        result.put("minutesByDayOfWeek", minutesByDay);
+        result.put("busiestDayOfWeek", busiestDay);
+        result.put("mostCommonStartHour", mostCommonStartHour);
+        return result;
     }
 
     // Flags equipment with no usage logged in the idle threshold window - candidates for

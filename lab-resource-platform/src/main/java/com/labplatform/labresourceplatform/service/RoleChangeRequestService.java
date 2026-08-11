@@ -6,6 +6,7 @@ import com.labplatform.labresourceplatform.enums.Role;
 import com.labplatform.labresourceplatform.enums.RoleChangeStatus;
 import com.labplatform.labresourceplatform.repository.RoleChangeRequestRepository;
 import com.labplatform.labresourceplatform.repository.UserRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -70,14 +71,32 @@ public class RoleChangeRequestService {
                 ? request.getUser().getInstitution().getInstitutionId()
                 : null;
         if (reviewerInstitutionId == null || !reviewerInstitutionId.equals(requesterInstitutionId)) {
-            throw new org.springframework.security.access.AccessDeniedException(
+            throw new AccessDeniedException(
                     "You may only review role change requests within your own institution");
+        }
+    }
+
+    // Security fix: closes the same privilege-escalation gap as
+    // UserService.assertCanAssignRole, reached via a different path - a user
+    // could submit { role: "SYSTEM_ADMINISTRATOR" } directly to the register
+    // API (bypassing the frontend's dropdown, which never offers that option),
+    // creating a pending request for it. Without this check, an
+    // INSTITUTION_ADMINISTRATOR could then approve that request and grant
+    // SYSTEM_ADMINISTRATOR - only SYSTEM_ADMINISTRATOR may approve a request
+    // for the SYSTEM_ADMINISTRATOR role.
+    private void assertCanGrantRole(User reviewer, Role requestedRole) {
+        if (reviewer.getRole() == Role.SYSTEM_ADMINISTRATOR) {
+            return;
+        }
+        if (requestedRole == Role.SYSTEM_ADMINISTRATOR) {
+            throw new AccessDeniedException("Only a System Administrator may approve a request for that role.");
         }
     }
 
     public RoleChangeRequest approve(Long id, User reviewer) {
         RoleChangeRequest request = getById(id);
         assertCanReview(reviewer, request);
+        assertCanGrantRole(reviewer, request.getRequestedRole());
 
         request.setStatus(RoleChangeStatus.APPROVED);
         request.setReviewedBy(reviewer);

@@ -1,6 +1,8 @@
 package com.labplatform.labresourceplatform.service;
 
+import com.labplatform.labresourceplatform.entity.Equipment;
 import com.labplatform.labresourceplatform.entity.Maintenance;
+import com.labplatform.labresourceplatform.enums.Role;
 import com.labplatform.labresourceplatform.repository.MaintenanceRepository;
 import org.springframework.stereotype.Service;
 
@@ -13,10 +15,12 @@ public class MaintenanceService {
 
     private final MaintenanceRepository maintenanceRepository;
     private final EquipmentService equipmentService;
+    private final UserService userService;
 
-    public MaintenanceService(MaintenanceRepository maintenanceRepository, EquipmentService equipmentService){
+    public MaintenanceService(MaintenanceRepository maintenanceRepository, EquipmentService equipmentService, UserService userService){
         this.maintenanceRepository = maintenanceRepository;
         this.equipmentService = equipmentService;
+        this.userService = userService;
     }
 
     public List<Maintenance> getAllMaintenance(){
@@ -41,6 +45,13 @@ public class MaintenanceService {
         if (maintenance.getEquipment() != null) {
             maintenance.setEquipment(equipmentService.getEquipmentById(maintenance.getEquipment().getEquipmentId()));
         }
+        if (maintenance.getAssignedTechnician() != null) {
+            assertIsTechnician(maintenance.getAssignedTechnician().getUserId());
+            maintenance.setAssignedTechnician(userService.getUserById(maintenance.getAssignedTechnician().getUserId()));
+        }
+        if (maintenance.getRecurrenceIntervalDays() != null && maintenance.getRecurrenceIntervalDays() <= 0) {
+            throw new RuntimeException("Recurrence interval must be a positive number of days.");
+        }
 
         Maintenance saved = maintenanceRepository.save(maintenance);
         if (saved.getEquipment() != null) {
@@ -53,6 +64,7 @@ public class MaintenanceService {
 
         Maintenance existing = getMaintenanceById(id);
         Long previousEquipmentId = existing.getEquipment() != null ? existing.getEquipment().getEquipmentId() : null;
+        String previousStatus = existing.getStatus();
 
         if(updatedMaintenance.getEquipment() != null)
             // Same re-fetch as createMaintenance() above.
@@ -70,7 +82,36 @@ public class MaintenanceService {
         if(updatedMaintenance.getStatus() != null)
             existing.setStatus(updatedMaintenance.getStatus());
 
+        if(updatedMaintenance.getWorkOrderType() != null)
+            existing.setWorkOrderType(updatedMaintenance.getWorkOrderType());
+
+        if(updatedMaintenance.getAssignedTechnician() != null) {
+            assertIsTechnician(updatedMaintenance.getAssignedTechnician().getUserId());
+            existing.setAssignedTechnician(userService.getUserById(updatedMaintenance.getAssignedTechnician().getUserId()));
+        }
+
+        if(updatedMaintenance.getRecurrenceIntervalDays() != null) {
+            if (updatedMaintenance.getRecurrenceIntervalDays() <= 0) {
+                throw new RuntimeException("Recurrence interval must be a positive number of days.");
+            }
+            existing.setRecurrenceIntervalDays(updatedMaintenance.getRecurrenceIntervalDays());
+        }
+
+        boolean justCompleted = "Completed".equals(existing.getStatus()) && !"Completed".equals(previousStatus);
+
         Maintenance saved = maintenanceRepository.save(existing);
+
+        // "Continuous"/recurring maintenance: completing a recurring work order
+        // automatically schedules its next occurrence, rather than relying on
+        // someone remembering to create a follow-up record manually. Guarded by
+        // nextOccurrenceGenerated so re-saving an already-completed record
+        // (e.g. editing its description afterward) never spawns a duplicate.
+        if (justCompleted && saved.getRecurrenceIntervalDays() != null
+                && !Boolean.TRUE.equals(saved.getNextOccurrenceGenerated())) {
+            scheduleNextOccurrence(saved);
+            saved.setNextOccurrenceGenerated(true);
+            saved = maintenanceRepository.save(saved);
+        }
 
         Long newEquipmentId = saved.getEquipment() != null ? saved.getEquipment().getEquipmentId() : null;
         if (newEquipmentId != null) {
@@ -85,6 +126,33 @@ public class MaintenanceService {
         }
 
         return saved;
+    }
+
+    // Creates the follow-up Scheduled record, recurrenceIntervalDays after the
+    // completed one's start date - carries forward the same equipment,
+    // recurrence interval, and work order type, but NOT the assigned
+    // technician (a future occurrence shouldn't presume the same person is
+    // still available/assigned) or description (the completed record's notes
+    // about what was actually done don't apply to a not-yet-done occurrence).
+    private void scheduleNextOccurrence(Maintenance completed){
+        Maintenance next = new Maintenance();
+        next.setEquipment(completed.getEquipment());
+        next.setStartDate(completed.getStartDate().plusDays(completed.getRecurrenceIntervalDays()));
+        next.setStatus("Scheduled");
+        next.setWorkOrderType(completed.getWorkOrderType());
+        next.setRecurrenceIntervalDays(completed.getRecurrenceIntervalDays());
+        maintenanceRepository.save(next);
+    }
+
+    // Work orders can only be assigned to an actual LAB_TECHNICIAN - assigning
+    // one to, say, a STUDENT or an INSTITUTION_ADMINISTRATOR account wouldn't
+    // make sense as "who's doing this repair", so this is validated the same
+    // way role-appropriateness is checked elsewhere in the app.
+    private void assertIsTechnician(Long userId){
+        var user = userService.getUserById(userId);
+        if (user.getRole() != Role.LAB_TECHNICIAN) {
+            throw new RuntimeException("A work order can only be assigned to a Lab Technician.");
+        }
     }
 
     public void deleteMaintenance(Long id){
@@ -122,5 +190,17 @@ public class MaintenanceService {
     public void reconcileAllEquipmentWithMaintenanceHistory(){
         maintenanceRepository.findDistinctEquipmentIdsWithMaintenanceHistory()
                 .forEach(this::reconcileEquipmentStatus);
+    }
+
+    // Equipment that has NO maintenance record at all, ever - the literal
+    // reading of "every equipment needs continuous maintenance": these pieces
+    // of equipment have no maintenance history/schedule of any kind, past or
+    // future, which is itself worth surfacing as a gap.
+    public List<Long> getEquipmentIdsWithNoMaintenanceHistory(){
+        List<Long> withHistory = maintenanceRepository.findDistinctEquipmentIdsWithMaintenanceHistory();
+        return equipmentService.getAllEquipment().stream()
+                .map(Equipment::getEquipmentId)
+                .filter(equipmentId -> !withHistory.contains(equipmentId))
+                .toList();
     }
 }

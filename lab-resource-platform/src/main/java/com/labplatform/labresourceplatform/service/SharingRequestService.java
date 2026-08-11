@@ -14,6 +14,7 @@ import com.labplatform.labresourceplatform.repository.UserRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -136,8 +137,23 @@ public class SharingRequestService {
 
     public SharingRequest createSharingRequest(SharingRequest request) {
         resolveReferences(request);
+        assertValidDateRange(request.getStartDate(), request.getEndDate());
         request.setStatus(SharingRequestStatus.PENDING);
         return sharingRequestRepository.save(request);
+    }
+
+    // Real bug fix: nothing anywhere (frontend or backend) checked that a
+    // sharing request's end date was actually after its start date. A
+    // reversed range would sail through creation, sit fine as PENDING, and
+    // only surface as a problem once approved - createBookingForApprovedRequest
+    // would create a Booking with the same reversed times, and
+    // BillingRecordService would silently skip billing for it (it already
+    // guards against non-positive duration) rather than erroring loudly where
+    // the actual mistake was made.
+    private void assertValidDateRange(LocalDateTime start, LocalDateTime end) {
+        if (start != null && end != null && !end.isAfter(start)) {
+            throw new RuntimeException("The end date must be after the start date.");
+        }
     }
 
     public SharingRequest updateSharingRequest(Long id, SharingRequest updatedRequest) {
@@ -164,6 +180,8 @@ public class SharingRequestService {
 
         if (updatedRequest.getEndDate() != null)
             existing.setEndDate(updatedRequest.getEndDate());
+
+        assertValidDateRange(existing.getStartDate(), existing.getEndDate());
 
         return sharingRequestRepository.save(existing);
     }

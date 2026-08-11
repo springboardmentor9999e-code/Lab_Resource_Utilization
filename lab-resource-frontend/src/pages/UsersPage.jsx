@@ -133,6 +133,7 @@ export default function UsersPage() {
             <UserForm
               initial={modalState.mode === "edit" ? modalState.user : null}
               institutions={institutions}
+              isSystemAdmin={isSystemAdmin}
               onSaved={(saved) => {
                 setUsers((prev) =>
                   modalState.mode === "edit" ? prev.map((u) => (u.userId === saved.userId ? saved : u)) : [...prev, saved]
@@ -147,7 +148,7 @@ export default function UsersPage() {
   );
 }
 
-function UserForm({ initial, institutions, onSaved }) {
+function UserForm({ initial, institutions, isSystemAdmin, onSaved }) {
   const [name, setName] = useState(initial?.name || "");
   const [email, setEmail] = useState(initial?.email || "");
   const [password, setPassword] = useState("");
@@ -155,6 +156,19 @@ function UserForm({ initial, institutions, onSaved }) {
   const [institutionId, setInstitutionId] = useState(initial?.institution?.institutionId || "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  // Mirrors the backend's role ceiling (UserService.assertCanAssignRole): an
+  // INSTITUTION_ADMINISTRATOR may assign any role up to and including their
+  // own tier, but never SYSTEM_ADMINISTRATOR - offering it here would just
+  // show an option the backend rejects. Purely a UX improvement; the real
+  // enforcement lives server-side regardless of what this dropdown offers.
+  // The user's CURRENT role is always included even if it's above the
+  // ceiling (e.g. viewing an existing SYSTEM_ADMINISTRATOR's profile) so the
+  // dropdown never shows a value that isn't one of its own options - actually
+  // submitting a change would still be rejected server-side either way.
+  const assignableRoles = isSystemAdmin
+    ? ALL_ROLES
+    : Array.from(new Set([...ALL_ROLES.filter((r) => r !== ROLES.SYSTEM_ADMINISTRATOR), initial?.role].filter(Boolean)));
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -227,7 +241,7 @@ function UserForm({ initial, institutions, onSaved }) {
           Role
         </label>
         <select id="u-role" value={role} onChange={(e) => setRole(e.target.value)} className={inputClass}>
-          {ALL_ROLES.map((r) => (
+          {assignableRoles.map((r) => (
             <option key={r} value={r}>
               {roleLabel(r)}
             </option>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { can } from "../auth/permissions";
 import { utilizationApi } from "../api/utilization";
+import { reportsApi } from "../api/reports";
 import { Card, LoadingState, ErrorState, PageHeader, EmptyState, StatCard } from "../components/ui";
 
 function defaultRange() {
@@ -27,6 +28,28 @@ export default function UtilizationPage() {
   const [error, setError] = useState(null);
 
   const showIdle = can(user?.role, "utilization:idle");
+  const canDownloadReport = can(user?.role, "reports:view");
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState(null);
+
+  async function handleDownloadReport() {
+    if (!range.from || !range.to) {
+      setDownloadError("Set a From and To date first.");
+      return;
+    }
+    setDownloading(true);
+    setDownloadError(null);
+    try {
+      // range.from/range.to are already in the exact format the report
+      // endpoint expects (same datetime-local strings the heatmap query uses),
+      // so the downloaded PDF matches whatever window is currently selected.
+      await reportsApi.downloadUtilizationCostReport({ from: range.from, to: range.to });
+    } catch (err) {
+      setDownloadError(err.response?.data?.message || "Couldn't generate the report.");
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   function load() {
     setLoading(true);
@@ -68,7 +91,19 @@ export default function UtilizationPage() {
         eyebrow="Analytics"
         title="Utilization"
         description="How intensively equipment is actually used, over the selected window."
+        action={
+          canDownloadReport && (
+            <button
+              onClick={handleDownloadReport}
+              disabled={downloading}
+              className="rounded-md bg-[var(--color-ink-900)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-ink-800)] disabled:opacity-60 transition-colors"
+            >
+              {downloading ? "Generating…" : "Download report (PDF)"}
+            </button>
+          )
+        }
       />
+      {downloadError && <ErrorState message={downloadError} />}
 
       <form
         onSubmit={(e) => {
