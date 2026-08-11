@@ -33,7 +33,7 @@ export default function OAuth2CallbackPage() {
         if (accessToken && refreshToken) {
           try {
             await authApi.oauth2Success({ accessToken, refreshToken });
-            let currentUser = user;
+            let currentUser = null;
             if (checkAuth) {
               await checkAuth();
               // After checkAuth, the user state will be updated in the context,
@@ -43,10 +43,13 @@ export default function OAuth2CallbackPage() {
             }
             
             if (mounted) {
-              if (!currentUser.institutionId) {
+              if (currentUser && !currentUser.institutionId) {
                 navigate('/oauth2/complete-profile', { replace: true });
-              } else {
+              } else if (currentUser) {
                 window.location.href = '/dashboard';
+              } else {
+                toast.error('Failed to load user profile.');
+                navigate('/login', { replace: true });
               }
             }
           } catch (err) {
