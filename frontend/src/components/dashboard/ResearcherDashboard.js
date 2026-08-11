@@ -60,7 +60,7 @@ function ResearcherDashboard() {
 
     useEffect(() => {
         loadDashboardData();
-        const intervalId = setInterval(loadDashboardData, 5000);
+        const intervalId = setInterval(loadDashboardData, 60000);
         return () => clearInterval(intervalId);
     }, []);
 

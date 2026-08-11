@@ -276,7 +276,7 @@ function SystemAdminDashboard() {
 
     useEffect(() => {
         loadData();
-        const intervalId = setInterval(loadData, 5000);
+        const intervalId = setInterval(loadData, 60000);
         return () => clearInterval(intervalId);
     }, []);
 
@@ -882,34 +882,59 @@ function SystemAdminDashboard() {
                                 </Col>
                             </Row>
 
-                            {/* Inter-Institute Resource Sharing Summary */}
+                            {/* Global Inter-Institute Resource Sharing Metrics */}
                             <Card className="shadow border-0 mb-4 bg-white">
-                                <Card.Header className="bg-dark text-white border-0 py-3">
-                                    <h5 className="mb-0 fw-bold">Inter-Institute Resource Sharing Workspace</h5>
+                                <Card.Header className="bg-dark text-white border-0 py-3 d-flex justify-content-between align-items-center">
+                                    <h5 className="mb-0 fw-bold">Global Inter-Institute Resource Sharing Overview</h5>
+                                    <Badge bg="primary">Cross-Institute Ecosystem</Badge>
                                 </Card.Header>
                                 <Card.Body>
-                                    <Row className="g-4">
-                                        <Col md={4}>
+                                    <Row className="g-3">
+                                        <Col md={4} sm={6}>
                                             <Card className="text-center h-100 bg-light border-0 shadow-sm">
-                                                <Card.Body>
-                                                    <h4 className="fw-bold text-primary">{stats.totalSharedEquipment || 0}</h4>
-                                                    <p className="mb-0 text-muted small fw-bold">Total Shared Equipment</p>
+                                                <Card.Body className="py-3">
+                                                    <h3 className="fw-bold text-primary mb-1">{stats.totalOwnedEquipment || stats.totalEquipment || 0}</h3>
+                                                    <p className="mb-0 text-muted small fw-bold">Total Owned Equipment (Global)</p>
                                                 </Card.Body>
                                             </Card>
                                         </Col>
-                                        <Col md={4}>
+                                        <Col md={4} sm={6}>
                                             <Card className="text-center h-100 bg-light border-0 shadow-sm">
-                                                <Card.Body>
-                                                    <h4 className="fw-bold text-success">{stats.totalInterInstituteRequests || 0}</h4>
-                                                    <p className="mb-0 text-muted small fw-bold">Cross-Institute Requests</p>
+                                                <Card.Body className="py-3">
+                                                    <h3 className="fw-bold text-success mb-1">{stats.totalSharedEquipment || 0}</h3>
+                                                    <p className="mb-0 text-muted small fw-bold">Equipment Shared Across Institutes</p>
                                                 </Card.Body>
                                             </Card>
                                         </Col>
-                                        <Col md={4}>
+                                        <Col md={4} sm={6}>
                                             <Card className="text-center h-100 bg-light border-0 shadow-sm">
-                                                <Card.Body>
-                                                    <h4 className="fw-bold text-info">{stats.crossInstituteUtilization || 0}</h4>
-                                                    <p className="mb-0 text-muted small fw-bold">Cross-Institute Utilization</p>
+                                                <Card.Body className="py-3">
+                                                    <h3 className="fw-bold text-info mb-1">{stats.totalActiveSharingRequests || 0}</h3>
+                                                    <p className="mb-0 text-muted small fw-bold">Total Active Sharing Requests</p>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                        <Col md={4} sm={6}>
+                                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                                <Card.Body className="py-3">
+                                                    <h3 className="fw-bold text-warning mb-1">{stats.pendingRequests || 0}</h3>
+                                                    <p className="mb-0 text-muted small fw-bold">Pending Sharing Requests</p>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                        <Col md={4} sm={6}>
+                                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                                <Card.Body className="py-3">
+                                                    <h3 className="fw-bold text-success mb-1">{stats.approvedRequests || 0}</h3>
+                                                    <p className="mb-0 text-muted small fw-bold">Approved Sharing Requests</p>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                        <Col md={4} sm={6}>
+                                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                                <Card.Body className="py-3">
+                                                    <h3 className="fw-bold text-primary mb-1">₹{((stats.overallUtilizationCost || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h3>
+                                                    <p className="mb-0 text-muted small fw-bold">Total Inter-Institute Revenue</p>
                                                 </Card.Body>
                                             </Card>
                                         </Col>
@@ -1380,7 +1405,7 @@ function SystemAdminDashboard() {
                                                             <br />
                                                             <small className="text-muted">{item.laboratory?.department?.departmentName}</small>
                                                         </td>
-                                                        <td>${item.costPerHour?.toFixed(2)}</td>
+                                                        <td>₹{Number(item.costPerHour || 0).toFixed(2)}</td>
                                                         <td>{item.availableQuantity} / {item.totalQuantity}</td>
                                                         <td>
                                                             <Badge bg={item.status === "AVAILABLE" ? "success" : item.status === "BOOKED" ? "primary" : "warning"}>

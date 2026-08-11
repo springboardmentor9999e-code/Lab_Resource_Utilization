@@ -258,7 +258,7 @@ public class Equipment {
     }
 
     public Double getCostPerHour() {
-        return costPerHour;
+        return (costPerHour != null && costPerHour > 0) ? costPerHour : 5.0;
     }
 
     public void setCostPerHour(Double costPerHour) {

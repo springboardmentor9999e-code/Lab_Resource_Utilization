@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/preventive/**").hasAuthority("LAB_TECHNICIAN")
                         .requestMatchers("/api/utilization/**").authenticated()
                         .requestMatchers("/api/dashboard/**").authenticated()
+                        .requestMatchers("/api/resource-sharing/**").authenticated()
 
                         // =========================
                         // =========================
@@ -156,7 +157,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/bookings", "/api/bookings/**")
                         .hasAnyAuthority(
                                 "STUDENT",
-                                "RESEARCHER"
+                                "RESEARCHER",
+                                "INSTITUTION_ADMIN",
+                                "SYSTEM_ADMIN",
+                                "LAB_MANAGER"
                         )
 
                         .requestMatchers(HttpMethod.PUT, "/api/bookings/*/cancel").authenticated()

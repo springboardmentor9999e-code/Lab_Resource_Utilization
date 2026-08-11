@@ -70,7 +70,7 @@ function LabManagerDashboard() {
 
     useEffect(() => {
         fetchData();
-        const intervalId = setInterval(fetchData, 5000);
+        const intervalId = setInterval(fetchData, 60000);
         return () => clearInterval(intervalId);
     }, []);
 

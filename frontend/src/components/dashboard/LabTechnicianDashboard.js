@@ -78,8 +78,7 @@ function LabTechnicianDashboard() {
 
     useEffect(() => {
         fetchData();
-        // Dynamic auto refresh: poll data every 5 seconds
-        const intervalId = setInterval(fetchData, 5000);
+        const intervalId = setInterval(fetchData, 60000);
         return () => clearInterval(intervalId);
     }, []);
 

@@ -47,7 +47,7 @@ function MyBookings() {
 
     useEffect(() => {
         loadData();
-        const intervalId = setInterval(loadData, 5000);
+        const intervalId = setInterval(loadData, 60000);
         return () => clearInterval(intervalId);
     }, []);
 

@@ -108,17 +108,23 @@ public class BookingServiceImpl implements BookingService {
             }
         }
 
-        if (isInterInstitute) {
-            double costPerHour = equipment.getCostPerHour() != null ? equipment.getCostPerHour() : 0.0;
+        String userRole = user.getRole() != null ? user.getRole().getRoleName() : "";
+        boolean isStudentOrResearcher = "STUDENT".equalsIgnoreCase(userRole) || "RESEARCHER".equalsIgnoreCase(userRole);
+
+        if (isStudentOrResearcher) {
+            // Students and Researchers never pay external utilization fees (Institutional Covered)
+            booking.setUtilizationCost(0.0);
+        } else if (isInterInstitute) {
+            double costPerHour = (equipment.getCostPerHour() != null && equipment.getCostPerHour() > 0) ? equipment.getCostPerHour() : 5.0;
             booking.setUtilizationCost(booking.getDuration() * costPerHour);
-            booking.setStatus("Pending");
         } else {
             booking.setUtilizationCost(0.0);
-            if (hasOverlap) {
-                booking.setStatus("Waitlisted");
-            } else {
-                booking.setStatus("Pending Approval");
-            }
+        }
+
+        if (hasOverlap) {
+            booking.setStatus("Waitlisted");
+        } else {
+            booking.setStatus("Pending Approval");
         }
 
         Booking saved = bookingRepository.save(booking);
@@ -199,7 +205,7 @@ public class BookingServiceImpl implements BookingService {
             Long eqInstId = equipment.getLaboratory().getDepartment().getInstitution().getInstitutionId();
             Integer userInstId = user.getInstitutionId();
             if (userInstId == null || !eqInstId.equals(Long.valueOf(userInstId))) {
-                double costPerHour = equipment.getCostPerHour() != null ? equipment.getCostPerHour() : 0.0;
+                double costPerHour = (equipment.getCostPerHour() != null && equipment.getCostPerHour() > 0) ? equipment.getCostPerHour() : 5.0;
                 existingBooking.setUtilizationCost(durationHrs * costPerHour);
             } else {
                 existingBooking.setUtilizationCost(0.0);

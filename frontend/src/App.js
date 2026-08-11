@@ -19,6 +19,7 @@ import Users from "./components/users/Users";
 import LabManagerDashboard from "./components/dashboard/LabManagerDashboard";
 import LabTechnicianDashboard from "./components/dashboard/LabTechnicianDashboard";
 import Institutions from "./components/institution/Institutions";
+import ResourceSharing from "./components/sharing/ResourceSharing";
 
 function App() {
   return (
@@ -28,7 +29,7 @@ function App() {
         {/* Authentication */}
         <Route path="/" element={<AuthPage />} />
 
-        {/* Institution Admin Dashboard */}
+        {/* Dashboards */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/student-dashboard" element={<StudentDashboard />} />
         <Route path="/researcher-dashboard" element={<ResearcherDashboard />} />
@@ -37,6 +38,8 @@ function App() {
         <Route path="/department-dashboard" element={<InstitutionAdminDashboard />} />
         <Route path="/institution-dashboard" element={<InstitutionAdminDashboard />} />
         <Route path="/system-dashboard" element={<SystemAdminDashboard />} />
+
+        {/* Core Modules */}
         <Route path="/laboratories" element={<Laboratories />} />
         <Route path="/equipment" element={<Equipment />} />
         <Route path="/my-bookings" element={<MyBookings />} />
@@ -47,6 +50,7 @@ function App() {
         <Route path="/utilization-cost" element={<UtilizationCost />} />
         <Route path="/users" element={<Users />} />
         <Route path="/institutions" element={<Institutions />} />
+        <Route path="/resource-sharing" element={<ResourceSharing />} />
 
       </Routes>
     </BrowserRouter>

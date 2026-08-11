@@ -41,6 +41,9 @@ public class DashboardController {
     @Autowired
     private PreventiveMaintenanceRepository preventiveMaintenanceRepository;
 
+    @Autowired
+    private ResourceSharingRepository resourceSharingRepository;
+
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getStats(
             @RequestParam(required = false) Integer userId,
@@ -241,7 +244,22 @@ public class DashboardController {
                     .distinct()
                     .count();
 
+            List<ResourceSharing> globalSharings = resourceSharingRepository.findAll();
+            long totalActiveSharing = globalSharings.stream()
+                    .filter(s -> "Approved".equalsIgnoreCase(s.getStatus()) || "Active".equalsIgnoreCase(s.getStatus()))
+                    .count();
+            long pendingSharingGlobal = globalSharings.stream()
+                    .filter(s -> "Pending".equalsIgnoreCase(s.getStatus()))
+                    .count();
+            long approvedSharingGlobal = globalSharings.stream()
+                    .filter(s -> "Approved".equalsIgnoreCase(s.getStatus()) || "Active".equalsIgnoreCase(s.getStatus()) || "Completed".equalsIgnoreCase(s.getStatus()))
+                    .count();
+
+            data.put("totalOwnedEquipment", allEquipment.size());
             data.put("totalSharedEquipment", totalSharedEquipment);
+            data.put("totalActiveSharingRequests", totalActiveSharing);
+            data.put("pendingRequests", pendingSharingGlobal);
+            data.put("approvedRequests", approvedSharingGlobal);
             data.put("totalInterInstituteRequests", interInstituteCount);
             data.put("crossInstituteUtilization", crossInstUtilization);
 
@@ -468,6 +486,45 @@ public class DashboardController {
                         m.put("value", Math.round(e.getValue() * 100.0) / 100.0);
                         return m;
                     }).collect(Collectors.toList());
+
+            List<ResourceSharing> instSharings = resourceSharingRepository.findAll();
+            long totalSharedWithOthers = instSharings.stream()
+                    .filter(s -> s.getOwnerInstitution() != null && s.getOwnerInstitution().getInstitutionId().equals(instId))
+                    .filter(s -> "Approved".equalsIgnoreCase(s.getStatus()) || "Active".equalsIgnoreCase(s.getStatus()) || "Completed".equalsIgnoreCase(s.getStatus()))
+                    .map(s -> s.getEquipment().getId())
+                    .distinct()
+                    .count();
+
+            long totalSharedFromOthers = instSharings.stream()
+                    .filter(s -> s.getSharedWithInstitution() != null && s.getSharedWithInstitution().getInstitutionId().equals(instId))
+                    .filter(s -> "Approved".equalsIgnoreCase(s.getStatus()) || "Active".equalsIgnoreCase(s.getStatus()) || "Completed".equalsIgnoreCase(s.getStatus()))
+                    .map(s -> s.getEquipment().getId())
+                    .distinct()
+                    .count();
+
+            long totalActiveSharing = instSharings.stream()
+                    .filter(s -> (s.getOwnerInstitution() != null && s.getOwnerInstitution().getInstitutionId().equals(instId)) 
+                            || (s.getSharedWithInstitution() != null && s.getSharedWithInstitution().getInstitutionId().equals(instId)))
+                    .filter(s -> "Approved".equalsIgnoreCase(s.getStatus()) || "Active".equalsIgnoreCase(s.getStatus()))
+                    .count();
+
+            long pendingRequestsInst = instSharings.stream()
+                    .filter(s -> s.getOwnerInstitution() != null && s.getOwnerInstitution().getInstitutionId().equals(instId))
+                    .filter(s -> "Pending".equalsIgnoreCase(s.getStatus()))
+                    .count();
+
+            long approvedRequestsInst = instSharings.stream()
+                    .filter(s -> (s.getOwnerInstitution() != null && s.getOwnerInstitution().getInstitutionId().equals(instId)) 
+                            || (s.getSharedWithInstitution() != null && s.getSharedWithInstitution().getInstitutionId().equals(instId)))
+                    .filter(s -> "Approved".equalsIgnoreCase(s.getStatus()) || "Active".equalsIgnoreCase(s.getStatus()) || "Completed".equalsIgnoreCase(s.getStatus()))
+                    .count();
+
+            data.put("totalOwnedEquipment", instEquip.size());
+            data.put("totalEquipmentSharedWithOthers", totalSharedWithOthers);
+            data.put("totalEquipmentSharedFromOthers", totalSharedFromOthers);
+            data.put("totalActiveSharingRequests", totalActiveSharing);
+            data.put("pendingRequests", pendingRequestsInst);
+            data.put("approvedRequests", approvedRequestsInst);
 
             data.put("incomingRequestsCount", incomingRequestsCount);
             data.put("outgoingRequestsCount", outgoingRequestsCount);

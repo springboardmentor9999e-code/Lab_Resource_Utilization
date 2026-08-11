@@ -9,7 +9,8 @@ import {
     FaChartBar,
     FaSignOutAlt,
     FaTools,
-    FaDollarSign
+    FaDollarSign,
+    FaShareAlt
 } from "react-icons/fa";
 
 import "../App.css";
@@ -81,6 +82,7 @@ function Sidebar() {
             { name: "Laboratories", path: "/laboratories", icon: <FaUniversity /> },
             { name: "Equipment", path: "/equipment", icon: <FaLaptop /> },
             { name: "Bookings", path: "/bookings", icon: <FaClipboardList /> },
+            { name: "Resource Sharing", path: "/resource-sharing", icon: <FaShareAlt /> },
             { name: "Reports", path: "/reports", icon: <FaChartBar /> },
             { name: "Maintenance", path: "/maintenance", icon: <FaTools /> },
             { name: "Utilization Cost", path: "/utilization-cost", icon: <FaDollarSign /> },
@@ -92,6 +94,7 @@ function Sidebar() {
             { name: "Institutions", path: "/institutions", icon: <FaUniversity /> },
             { name: "Users", path: "/users", icon: <FaUsers /> },
             { name: "Bookings", path: "/bookings", icon: <FaClipboardList /> },
+            { name: "Resource Sharing", path: "/resource-sharing", icon: <FaShareAlt /> },
             { name: "Reports", path: "/reports", icon: <FaChartBar /> },
             { name: "Maintenance", path: "/maintenance", icon: <FaTools /> },
             { name: "Utilization Cost", path: "/utilization-cost", icon: <FaDollarSign /> },

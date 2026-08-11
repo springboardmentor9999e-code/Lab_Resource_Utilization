@@ -243,7 +243,7 @@ function UtilizationCost() {
                                             </td>
                                             <td>
                                                 <div className="d-flex align-items-center gap-2">
-                                                    <strong>${item.costPerHour.toFixed(2)}/hr</strong>
+                                                    <strong>₹{Number(item.costPerHour || 0).toFixed(2)}/hr</strong>
                                                     {isPrivileged && (
                                                         <Button
                                                             variant="link"
@@ -256,7 +256,7 @@ function UtilizationCost() {
                                                 </div>
                                             </td>
                                             <td className="text-center">{item.usageCount}</td>
-                                            <td className="text-center">{item.totalHoursUsed.toFixed(1)} hrs</td>
+                                            <td className="text-center">{Number(item.totalHoursUsed || 0).toFixed(1)} hrs</td>
                                             <td>
                                                 <div className="d-flex align-items-center gap-2">
                                                     <ProgressBar 

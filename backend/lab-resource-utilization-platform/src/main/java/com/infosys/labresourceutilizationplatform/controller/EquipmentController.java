@@ -60,6 +60,41 @@ public class EquipmentController {
                 equipmentService.getAllEquipment());
     }
 
+    // Get User Discoverable Inventory (Own + Approved Shared Equipment)
+    @GetMapping("/user-inventory")
+    public ResponseEntity<List<Equipment>> getUserInventory(
+            @RequestParam(required = false) Long laboratoryId,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "ALL") String ownership,
+            Principal principal) {
+        String email = principal != null ? principal.getName() : null;
+        return ResponseEntity.ok(equipmentService.getEquipmentForUser(email, laboratoryId, category, status, search, ownership));
+    }
+
+    // Global Equipment Matrix for System Admin / Institution Admin
+    @GetMapping("/global-view")
+    public ResponseEntity<List<Equipment>> getGlobalView(
+            @RequestParam(required = false) Long institutionId,
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) Long laboratoryId,
+            @RequestParam(required = false) String ownership,
+            @RequestParam(required = false) String sharedStatus,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search) {
+        return ResponseEntity.ok(equipmentService.getGlobalEquipmentView(institutionId, departmentId, laboratoryId, ownership, sharedStatus, status, search));
+    }
+
+    // Update External Equipment Hourly Cost
+    @PutMapping("/{id}/cost")
+    public ResponseEntity<Equipment> updateEquipmentCost(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, Double> payload) {
+        Double cost = payload.getOrDefault("costPerHour", 5.0);
+        return ResponseEntity.ok(equipmentService.updateEquipmentCost(id, cost));
+    }
+
     // Get Equipment By ID
     @GetMapping("/{id}")
     public ResponseEntity<Equipment> getEquipmentById(@PathVariable Long id) {

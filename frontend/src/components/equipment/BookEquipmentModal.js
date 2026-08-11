@@ -3,6 +3,8 @@ import { Modal, Button, Form } from "react-bootstrap";
 import { addBooking } from "../../services/bookingService";
 
 const BookEquipmentModal = ({ show, handleClose, equipment }) => {
+    const role = localStorage.getItem("role");
+    const isAdmin = ["SYSTEM_ADMIN", "INSTITUTION_ADMIN"].includes(role);
 
     const [bookingDate, setBookingDate] = useState("");
     const [startTime, setStartTime] = useState("");
@@ -18,13 +20,19 @@ const BookEquipmentModal = ({ show, handleClose, equipment }) => {
         const durationHrs = (endH * 60 + endM - (startH * 60 + startM)) / 60;
         if (durationHrs <= 0) return 0;
         
+        // Students and Researchers never pay external utilization fees (Institutional Covered)
+        if (role === "STUDENT" || role === "RESEARCHER") {
+            return 0;
+        }
+
         const userInstId = localStorage.getItem("institutionId");
         const eqInstId = equipment.laboratory?.department?.institution?.institutionId;
         
         if (userInstId && eqInstId && userInstId.toString() === eqInstId.toString()) {
             return 0;
         } else {
-            return durationHrs * (equipment.costPerHour || 0);
+            const rate = (equipment.costPerHour && equipment.costPerHour > 0) ? equipment.costPerHour : 5.0;
+            return durationHrs * rate;
         }
     };
 
@@ -134,27 +142,27 @@ const BookEquipmentModal = ({ show, handleClose, equipment }) => {
                     </Form.Group>
 
                     <div className="p-3 bg-light rounded border">
-                        <div className="d-flex justify-content-between align-items-center">
-                            <span className="fw-bold text-muted small">Owning Institute:</span>
-                            <span className="small fw-semibold text-end">{equipment?.laboratory?.department?.institution?.institutionName || "N/A"}</span>
-                        </div>
-                        <div className="d-flex justify-content-between align-items-center mt-1">
-                            <span className="fw-bold text-muted small">Billing Rate:</span>
-                            <span className="small fw-semibold">₹{equipment?.costPerHour || 0}/hr</span>
-                        </div>
-                        <hr className="my-2" />
+                        {isAdmin && (
+                            <>
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <span className="fw-bold text-muted small">Owning Institute:</span>
+                                    <span className="small fw-semibold text-end">{equipment?.laboratory?.department?.institution?.institutionName || "N/A"}</span>
+                                </div>
+                                <div className="d-flex justify-content-between align-items-center mt-1">
+                                    <span className="fw-bold text-muted small">Billing Rate:</span>
+                                    <span className="small fw-semibold">
+                                        {isOwnInstitute ? "₹0.00/hr (Internal)" : `₹${(equipment?.costPerHour && equipment?.costPerHour > 0 ? equipment.costPerHour : 5.0).toFixed(2)}/hr (External)`}
+                                    </span>
+                                </div>
+                                <hr className="my-2" />
+                            </>
+                        )}
                         <div className="d-flex justify-content-between align-items-center">
                             <span className="fw-bold">Estimated Cost:</span>
                             <span className="fw-bold text-success" style={{ fontSize: "1.2rem" }}>
                                 ₹{calculateCost().toFixed(2)}
                             </span>
                         </div>
-                        <small className="text-muted d-block mt-1 small">
-                            {isOwnInstitute
-                                ? "Internal equipment reservation (₹0 internal charge)"
-                                : "Inter-institute resource sharing (Usage duration charge applies)"
-                            }
-                        </small>
                     </div>
                 </Form>
             </Modal.Body>

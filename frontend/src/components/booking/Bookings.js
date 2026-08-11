@@ -77,7 +77,7 @@ function Bookings() {
 
     useEffect(() => {
         loadBookings();
-        const intervalId = setInterval(loadBookings, 5000);
+        const intervalId = setInterval(loadBookings, 60000);
         return () => clearInterval(intervalId);
     }, []);
 

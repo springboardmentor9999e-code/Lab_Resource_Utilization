@@ -85,7 +85,7 @@ function InstitutionAdminDashboard() {
 
     useEffect(() => {
         fetchData();
-        const intervalId = setInterval(fetchData, 5000);
+        const intervalId = setInterval(fetchData, 60000);
         return () => clearInterval(intervalId);
     }, []);
 
@@ -352,68 +352,85 @@ function InstitutionAdminDashboard() {
                 </Col>
             </Row>
 
-            {/* Inter-Institute Resource Sharing Card Row */}
+            {/* Inter-Institute Resource Sharing KPI Metric Grid */}
             <Card className="shadow border-0 mb-4 bg-white">
-                <Card.Header className="bg-primary text-white border-0 py-3">
-                    <h5 className="mb-0 fw-bold">Inter-Institute Resource Sharing Intelligence</h5>
+                <Card.Header className="bg-primary text-white border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0 fw-bold">Inter-Institute Resource Sharing Metrics</h5>
+                    <Badge bg="light" text="dark">Live Institute Metrics</Badge>
                 </Card.Header>
                 <Card.Body>
-                    <Row className="g-4">
-                        <Col md={3}>
+                    <Row className="g-3">
+                        <Col md={4} sm={6}>
                             <Card className="text-center h-100 bg-light border-0 shadow-sm">
-                                <Card.Body>
-                                    <h4 className="fw-bold text-primary">{realtimeData.incomingRequestsCount || 0}</h4>
-                                    <p className="mb-0 text-muted small fw-bold">Incoming Requests</p>
+                                <Card.Body className="py-3">
+                                    <h3 className="fw-bold text-primary mb-1">{realtimeData.totalOwnedEquipment || realtimeData.totalEquipment || 0}</h3>
+                                    <p className="mb-0 text-muted small fw-bold">Total Owned Equipment</p>
                                 </Card.Body>
                             </Card>
                         </Col>
-                        <Col md={3}>
+                        <Col md={4} sm={6}>
                             <Card className="text-center h-100 bg-light border-0 shadow-sm">
-                                <Card.Body>
-                                    <h4 className="fw-bold text-success">{realtimeData.outgoingRequestsCount || 0}</h4>
-                                    <p className="mb-0 text-muted small fw-bold">Outgoing Requests</p>
+                                <Card.Body className="py-3">
+                                    <h3 className="fw-bold text-success mb-1">{realtimeData.totalEquipmentSharedWithOthers || 0}</h3>
+                                    <p className="mb-0 text-muted small fw-bold">Shared With Other Institutes</p>
                                 </Card.Body>
                             </Card>
                         </Col>
-                        <Col md={3}>
+                        <Col md={4} sm={6}>
                             <Card className="text-center h-100 bg-light border-0 shadow-sm">
-                                <Card.Body>
-                                    <h4 className="fw-bold text-warning">{realtimeData.pendingSharingApprovals || 0}</h4>
-                                    <p className="mb-0 text-muted small fw-bold">Pending Incoming Approvals</p>
+                                <Card.Body className="py-3">
+                                    <h3 className="fw-bold text-info mb-1">{realtimeData.totalEquipmentSharedFromOthers || 0}</h3>
+                                    <p className="mb-0 text-muted small fw-bold">Shared From Other Institutes</p>
                                 </Card.Body>
                             </Card>
                         </Col>
-                        <Col md={3}>
+                        <Col md={4} sm={6}>
                             <Card className="text-center h-100 bg-light border-0 shadow-sm">
-                                <Card.Body>
-                                    <h4 className="fw-bold text-info">{realtimeData.crossInstituteUtilizationCount || 0}</h4>
-                                    <p className="mb-0 text-muted small fw-bold">Sharing Utilization Count</p>
+                                <Card.Body className="py-3">
+                                    <h3 className="fw-bold text-secondary mb-1">{realtimeData.totalActiveSharingRequests || 0}</h3>
+                                    <p className="mb-0 text-muted small fw-bold">Total Active Sharing Requests</p>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col md={4} sm={6}>
+                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                <Card.Body className="py-3">
+                                    <h3 className="fw-bold text-warning mb-1">{realtimeData.pendingRequests || realtimeData.pendingSharingApprovals || 0}</h3>
+                                    <p className="mb-0 text-muted small fw-bold">Pending Requests</p>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col md={4} sm={6}>
+                            <Card className="text-center h-100 bg-light border-0 shadow-sm">
+                                <Card.Body className="py-3">
+                                    <h3 className="fw-bold text-success mb-1">{realtimeData.approvedRequests || realtimeData.approvedSharingRequests || 0}</h3>
+                                    <p className="mb-0 text-muted small fw-bold">Approved Requests</p>
                                 </Card.Body>
                             </Card>
                         </Col>
                     </Row>
-                    <Row className="g-4 mt-2">
+                    <Row className="g-3 mt-1">
                         <Col md={4}>
                             <Card className="text-center h-100 bg-light border-0 shadow-sm">
-                                <Card.Body>
-                                    <h4 className="fw-bold text-success">₹{(realtimeData.externalRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h4>
-                                    <p className="mb-0 text-muted small fw-bold">Shared Revenue Generated</p>
+                                <Card.Body className="py-2">
+                                    <h5 className="fw-bold text-success mb-0">₹{(realtimeData.externalRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h5>
+                                    <small className="text-muted">Shared Revenue Generated</small>
                                 </Card.Body>
                             </Card>
                         </Col>
                         <Col md={4}>
                             <Card className="text-center h-100 bg-light border-0 shadow-sm">
-                                <Card.Body>
-                                    <h4 className="fw-bold text-secondary">{(realtimeData.internalEquipmentUsage || 0).toFixed(1)} hrs</h4>
-                                    <p className="mb-0 text-muted small fw-bold">Internal Usage Hours</p>
+                                <Card.Body className="py-2">
+                                    <h5 className="fw-bold text-secondary mb-0">{(realtimeData.internalEquipmentUsage || 0).toFixed(1)} hrs</h5>
+                                    <small className="text-muted">Internal Usage Hours</small>
                                 </Card.Body>
                             </Card>
                         </Col>
                         <Col md={4}>
                             <Card className="text-center h-100 bg-light border-0 shadow-sm">
-                                <Card.Body>
-                                    <h4 className="fw-bold text-primary">{(realtimeData.externalEquipmentUsage || 0).toFixed(1)} hrs</h4>
-                                    <p className="mb-0 text-muted small fw-bold">External Usage Hours</p>
+                                <Card.Body className="py-2">
+                                    <h5 className="fw-bold text-primary mb-0">{(realtimeData.externalEquipmentUsage || 0).toFixed(1)} hrs</h5>
+                                    <small className="text-muted">External Usage Hours</small>
                                 </Card.Body>
                             </Card>
                         </Col>

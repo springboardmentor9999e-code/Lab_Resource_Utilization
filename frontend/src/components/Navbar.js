@@ -43,7 +43,7 @@ function Navbar() {
 
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 5000);
+    const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -81,7 +81,12 @@ function Navbar() {
 
     const isStudentOrResearcher = ["STUDENT", "RESEARCHER"].includes(role);
     const cat = n.category ? n.category.toUpperCase() : "";
-    if (cat === "BOOKING") {
+    const titleText = (n.title || "").toUpperCase();
+    const msgText = (n.message || "").toUpperCase();
+
+    if (titleText.includes("SHARING") || msgText.includes("SHARING") || msgText.includes("INTER-INSTITUTE")) {
+      navigate("/resource-sharing");
+    } else if (cat === "BOOKING") {
       if (isStudentOrResearcher) {
         navigate("/my-bookings");
       } else {
@@ -92,7 +97,7 @@ function Navbar() {
                cat === "LICENSE_RENEWAL" || 
                cat === "CERTIFICATE_RENEWAL") {
       navigate("/maintenance");
-    } else if (cat === "SYSTEM" && n.title && n.title.toUpperCase().includes("USER")) {
+    } else if (cat === "SYSTEM" && (titleText.includes("USER") || msgText.includes("USER"))) {
       navigate("/users");
     }
   };

@@ -21,6 +21,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final NotificationRepository notificationRepository;
+    private final ResourceSharingRepository resourceSharingRepository;
 
     public DatabaseSeeder(RoleRepository roleRepository,
                           InstitutionRepository institutionRepository,
@@ -29,7 +30,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                           EquipmentRepository equipmentRepository,
                           UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
-                          NotificationRepository notificationRepository) {
+                          NotificationRepository notificationRepository,
+                          ResourceSharingRepository resourceSharingRepository) {
         this.roleRepository = roleRepository;
         this.institutionRepository = institutionRepository;
         this.departmentRepository = departmentRepository;
@@ -38,6 +40,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.notificationRepository = notificationRepository;
+        this.resourceSharingRepository = resourceSharingRepository;
     }
 
     @Override
@@ -390,106 +393,182 @@ public class DatabaseSeeder implements CommandLineRunner {
             createEquipment("GPS Survey Receiver", "Surveying", "Multi-frequency GNSS receiver for high accuracy surveying and geodetic measurements.", "Trimble", "R12i", "TB-GPS-671380", 4, "/images/equipment/gps-survey-receiver.jpg", "https://geospatial.trimble.com/products-and-solutions/gnss-systems", geoLab);
         }
 
-        // Setup custom dates for specific demo equipment
-        List<Equipment> allEquip = equipmentRepository.findAll();
-        for (Equipment e : allEquip) {
-            if ("Total Station".equalsIgnoreCase(e.getEquipmentName())) {
-                e.setNextCalibrationDate(LocalDate.now().plusDays(1));
-                e.setCalibrationStatus("Due Soon");
-                equipmentRepository.save(e);
-            } else if ("Universal Testing Machine".equalsIgnoreCase(e.getEquipmentName())) {
-                e.setNextCalibrationDate(LocalDate.now().minusDays(5));
-                e.setCalibrationStatus("Overdue");
-                equipmentRepository.save(e);
-            } else if ("Auto Level".equalsIgnoreCase(e.getEquipmentName())) {
-                e.setLicenseExpiryDate(LocalDate.now().plusDays(2));
-                e.setLicenseRenewalDate(LocalDate.now().plusDays(2));
-                equipmentRepository.save(e);
-            } else if ("Compression Testing Machine".equalsIgnoreCase(e.getEquipmentName())) {
-                e.setCertificateExpiryDate(LocalDate.now().plusDays(1));
-                e.setCertificateRenewalDate(LocalDate.now().plusDays(1));
-                equipmentRepository.save(e);
+        // Setup custom dates for specific demo equipment once if needed
+        if (roleRepository.count() <= 7 && resourceSharingRepository.count() <= 3) {
+            List<Equipment> allEquip = equipmentRepository.findAll();
+            for (Equipment e : allEquip) {
+                if ("Total Station".equalsIgnoreCase(e.getEquipmentName()) && e.getNextCalibrationDate() == null) {
+                    e.setNextCalibrationDate(LocalDate.now().plusDays(1));
+                    e.setCalibrationStatus("Due Soon");
+                    equipmentRepository.save(e);
+                } else if ("Universal Testing Machine".equalsIgnoreCase(e.getEquipmentName()) && e.getNextCalibrationDate() == null) {
+                    e.setNextCalibrationDate(LocalDate.now().minusDays(5));
+                    e.setCalibrationStatus("Overdue");
+                    equipmentRepository.save(e);
+                } else if ("Auto Level".equalsIgnoreCase(e.getEquipmentName()) && e.getLicenseExpiryDate() == null) {
+                    e.setLicenseExpiryDate(LocalDate.now().plusDays(2));
+                    e.setLicenseRenewalDate(LocalDate.now().plusDays(2));
+                    equipmentRepository.save(e);
+                } else if ("Compression Testing Machine".equalsIgnoreCase(e.getEquipmentName()) && e.getCertificateExpiryDate() == null) {
+                    e.setCertificateExpiryDate(LocalDate.now().plusDays(1));
+                    e.setCertificateRenewalDate(LocalDate.now().plusDays(1));
+                    equipmentRepository.save(e);
+                }
             }
         }
 
-        // Seed realistic notifications for demo
-        System.out.println("Seeding Demo Notifications...");
-        notificationRepository.deleteAll();
+        // Seed Demo Resource Sharing
+        if (resourceSharingRepository.count() == 0) {
+            System.out.println("Seeding Demo Resource Sharing Requests...");
+            
+            Institution infosysInst = institutionRepository.findByInstitutionCode("INFOSYS_IT").orElse(null);
+            if (infosysInst == null) {
+                infosysInst = institutionRepository.findByInstitutionCode("INFOSYS_UNIV").orElse(null);
+            }
+            Institution mitInst = institutionRepository.findByInstitutionCode("MIT_EC").orElse(null);
+            Institution stanfordInst = institutionRepository.findByInstitutionCode("STANFORD_TECH").orElse(null);
+            
+            User stdUser = userRepository.findByEmail("student@infosys.com").orElse(null);
+            User resUser = userRepository.findByEmail("researcher@infosys.com").orElse(null);
+            User adminUser = userRepository.findByEmail("admin@infosys.com").orElse(null);
 
-        User student = userRepository.findByEmail("student@infosys.com").orElse(null);
-        Long studentId = (student != null && student.getUserId() != null) ? Long.valueOf(student.getUserId()) : null;
-        Long instId = (student != null && student.getInstitutionId() != null) ? Long.valueOf(student.getInstitutionId()) : null;
+            // 1. Approved sharing from MIT to Infosys
+            Equipment totalStation = equipmentRepository.findByEquipmentNameContainingIgnoreCase("Total Station").stream().findFirst().orElse(null);
+            if (totalStation != null && mitInst != null && infosysInst != null && stdUser != null) {
+                ResourceSharing rs1 = new ResourceSharing();
+                rs1.setEquipment(totalStation);
+                rs1.setOwnerInstitution(mitInst);
+                rs1.setSharedWithInstitution(infosysInst);
+                rs1.setStatus("Approved");
+                rs1.setRequestDate(LocalDate.now().minusDays(2));
+                rs1.setApprovalDate(LocalDate.now().minusDays(1));
+                rs1.setBookingDate(LocalDate.now().plusDays(1));
+                rs1.setStartTime(java.time.LocalTime.of(10, 0));
+                rs1.setEndTime(java.time.LocalTime.of(12, 0));
+                rs1.setDuration(2.0);
+                rs1.setHourlyRate(totalStation.getCostPerHour() != null ? totalStation.getCostPerHour() : 5.0);
+                rs1.setEstimatedCost(2.0 * rs1.getHourlyRate());
+                rs1.setRequestedBy(stdUser);
+                rs1.setApprovedBy(adminUser);
+                rs1.setPurpose("Geotechnical Survey and Civil Site Mapping Workshop");
+                resourceSharingRepository.save(rs1);
+            }
 
-        User researcher = userRepository.findByEmail("researcher@infosys.com").orElse(null);
-        Long researcherId = (researcher != null && researcher.getUserId() != null) ? Long.valueOf(researcher.getUserId()) : null;
+            // 2. Pending sharing from Stanford to Infosys
+            Equipment stanfordServer = equipmentRepository.findByEquipmentNameContainingIgnoreCase("Stanford").stream().findFirst().orElse(null);
+            if (stanfordServer != null && stanfordInst != null && infosysInst != null && resUser != null) {
+                ResourceSharing rs2 = new ResourceSharing();
+                rs2.setEquipment(stanfordServer);
+                rs2.setOwnerInstitution(stanfordInst);
+                rs2.setSharedWithInstitution(infosysInst);
+                rs2.setStatus("Pending");
+                rs2.setRequestDate(LocalDate.now());
+                rs2.setBookingDate(LocalDate.now().plusDays(2));
+                rs2.setStartTime(java.time.LocalTime.of(14, 0));
+                rs2.setEndTime(java.time.LocalTime.of(18, 0));
+                rs2.setDuration(4.0);
+                rs2.setHourlyRate(stanfordServer.getCostPerHour() != null ? stanfordServer.getCostPerHour() : 15.0);
+                rs2.setEstimatedCost(4.0 * rs2.getHourlyRate());
+                rs2.setRequestedBy(resUser);
+                rs2.setPurpose("Distributed Deep Learning Neural Network Training");
+                resourceSharingRepository.save(rs2);
+            }
 
-        User manager = userRepository.findByEmail("manager@infosys.com").orElse(null);
-        Long managerId = (manager != null && manager.getUserId() != null) ? Long.valueOf(manager.getUserId()) : null;
+            // 3. Incoming Pending sharing from MIT requesting Infosys Jetson
+            Equipment jetson = equipmentRepository.findByEquipmentNameContainingIgnoreCase("Jetson").stream().findFirst().orElse(null);
+            if (jetson != null && mitInst != null && infosysInst != null && stdUser != null) {
+                ResourceSharing rs3 = new ResourceSharing();
+                rs3.setEquipment(jetson);
+                rs3.setOwnerInstitution(infosysInst);
+                rs3.setSharedWithInstitution(mitInst);
+                rs3.setStatus("Pending");
+                rs3.setRequestDate(LocalDate.now().minusDays(1));
+                rs3.setBookingDate(LocalDate.now().plusDays(3));
+                rs3.setStartTime(java.time.LocalTime.of(9, 0));
+                rs3.setEndTime(java.time.LocalTime.of(12, 0));
+                rs3.setDuration(3.0);
+                rs3.setHourlyRate(jetson.getCostPerHour() != null ? jetson.getCostPerHour() : 10.0);
+                rs3.setEstimatedCost(3.0 * rs3.getHourlyRate());
+                rs3.setRequestedBy(stdUser);
+                rs3.setPurpose("Edge Computing and Autonomous Robotics Simulation");
+                resourceSharingRepository.save(rs3);
+            }
+        }
 
-        User tech = userRepository.findByEmail("tech@infosys.com").orElse(null);
-        Long techId = (tech != null && tech.getUserId() != null) ? Long.valueOf(tech.getUserId()) : null;
+        // Seed realistic notifications for demo only if empty
+        if (notificationRepository.count() == 0) {
+            System.out.println("Seeding Demo Notifications...");
 
-        User hod = userRepository.findByEmail("hod@infosys.com").orElse(null);
-        Long hodId = (hod != null && hod.getUserId() != null) ? Long.valueOf(hod.getUserId()) : null;
+            User student = userRepository.findByEmail("student@infosys.com").orElse(null);
+            Long studentId = (student != null && student.getUserId() != null) ? Long.valueOf(student.getUserId()) : null;
+            Long instId = (student != null && student.getInstitutionId() != null) ? Long.valueOf(student.getInstitutionId()) : null;
 
-        User admin = userRepository.findByEmail("admin@infosys.com").orElse(null);
-        Long adminId = (admin != null && admin.getUserId() != null) ? Long.valueOf(admin.getUserId()) : null;
+            User researcher = userRepository.findByEmail("researcher@infosys.com").orElse(null);
+            Long researcherId = (researcher != null && researcher.getUserId() != null) ? Long.valueOf(researcher.getUserId()) : null;
 
-        User sys = userRepository.findByEmail("admin@system.com").orElse(null);
-        Long sysId = (sys != null && sys.getUserId() != null) ? Long.valueOf(sys.getUserId()) : null;
+            User manager = userRepository.findByEmail("manager@infosys.com").orElse(null);
+            Long managerId = (manager != null && manager.getUserId() != null) ? Long.valueOf(manager.getUserId()) : null;
 
-        // 1. STUDENT / RESEARCHER
-        createNotification(studentId, "STUDENT", instId, "[DEMO] Booking Approved", "Your booking request for NVIDIA Jetson AGX Xavier has been approved.", "BOOKING", "High");
-        createNotification(studentId, "STUDENT", instId, "[DEMO] Booking Rejected", "Your booking request for GPU Server RTX 4090 was rejected due to high utilization demand.", "BOOKING", "Medium");
-        createNotification(studentId, "STUDENT", instId, "[DEMO] Booking Completed", "Your booking for Stanford High-Performance Server has been completed.", "BOOKING", "Low");
-        createNotification(studentId, "STUDENT", instId, "[DEMO] Equipment Returned", "Equipment returned successfully: NVIDIA Jetson AGX Xavier.", "BOOKING", "Low");
+            User tech = userRepository.findByEmail("tech@infosys.com").orElse(null);
+            Long techId = (tech != null && tech.getUserId() != null) ? Long.valueOf(tech.getUserId()) : null;
 
-        createNotification(researcherId, "RESEARCHER", instId, "[DEMO] Booking Approved", "Your booking request for NVIDIA Jetson AGX Xavier has been approved.", "BOOKING", "High");
-        createNotification(researcherId, "RESEARCHER", instId, "[DEMO] Booking Completed", "Your booking for GPU Server RTX 4090 has been completed.", "BOOKING", "Low");
+            User hod = userRepository.findByEmail("hod@infosys.com").orElse(null);
+            Long hodId = (hod != null && hod.getUserId() != null) ? Long.valueOf(hod.getUserId()) : null;
 
-        // 2. LAB TECHNICIAN
-        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] New Issue Reported", "New issue reported: Lens alignment error on Auto Level.", "MAINTENANCE", "Medium");
-        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Maintenance Assigned", "Preventive maintenance assigned: Inspect Dobot Magician Robotic Arm.", "MAINTENANCE", "High");
-        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Maintenance Completed", "Recalibration task on Universal Testing Machine completed successfully.", "MAINTENANCE", "Low");
-        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Calibration Due", "Total Station calibration is due tomorrow.", "CALIBRATION", "High");
-        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Calibration Overdue", "Universal Testing Machine calibration is overdue!", "CALIBRATION", "High");
-        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
-        createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Certificate Renewal Due", "Compression Testing Machine certificate renewal due tomorrow.", "CERTIFICATE_RENEWAL", "High");
+            User admin = userRepository.findByEmail("admin@infosys.com").orElse(null);
+            Long adminId = (admin != null && admin.getUserId() != null) ? Long.valueOf(admin.getUserId()) : null;
 
-        // 3. LAB MANAGER
-        createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Maintenance Requests", "New preventive maintenance request submitted for Rigol Function Generator.", "MAINTENANCE", "Medium");
-        createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Maintenance Status", "Dobot Magician Robotic Arm maintenance status changed to In Progress.", "MAINTENANCE", "Low");
-        createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Calibration Due", "Total Station calibration is due tomorrow.", "CALIBRATION", "High");
-        createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
-        createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Equipment Under Maintenance", "Dobot Magician Robotic Arm status changed to Under Maintenance.", "MAINTENANCE", "Medium");
-        createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Laboratory Notification", "Lab-03 monthly checkup scheduled.", "SYSTEM", "Low");
+            User sys = userRepository.findByEmail("admin@system.com").orElse(null);
+            Long sysId = (sys != null && sys.getUserId() != null) ? Long.valueOf(sys.getUserId()) : null;
 
-        // 4. DEPARTMENT HEAD
-        createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] Department Maintenance", "Monthly preventive maintenance summary: 2 resolved, 1 pending.", "MAINTENANCE", "Low");
-        createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] Calibration Due", "Total Station calibration is due tomorrow.", "CALIBRATION", "Medium");
-        createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
-        createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] Equipment Health", "NVIDIA Jetson AGX Xavier reported under critical warning.", "EQUIPMENT", "High");
-        createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] Department Alert", "Department Lab access policy updated.", "SYSTEM", "Low");
+            // 1. STUDENT / RESEARCHER
+            createNotification(studentId, "STUDENT", instId, "[DEMO] Booking Approved", "Your booking request for NVIDIA Jetson AGX Xavier has been approved.", "BOOKING", "High");
+            createNotification(studentId, "STUDENT", instId, "[DEMO] Booking Reminder", "Reminder: Your session for 3D Printer begins in 30 minutes.", "BOOKING", "Medium");
+            createNotification(studentId, "STUDENT", instId, "[DEMO] Lab Access Notice", "Civil Surveying Lab will close early this Friday at 4:00 PM for maintenance.", "SYSTEM", "Low");
 
-        // 5. INSTITUTION ADMINISTRATOR
-        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Pending User Approvals", "There are pending user registration requests waiting for your approval.", "SYSTEM", "High");
-        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Booking Approval Request", "Inter-institute booking request pending approval for Stanford Tech.", "BOOKING", "Medium");
-        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Maintenance Summary", "Weekly overview: 15 active maintenance schedules across all colleges.", "MAINTENANCE", "Low");
-        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Calibration Due", "Total Station calibration is due tomorrow.", "CALIBRATION", "Medium");
-        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
-        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Certificate Renewal Due", "Compression Testing Machine certificate renewal due tomorrow.", "CERTIFICATE_RENEWAL", "High");
-        createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Institution Alert", "Boston Dynamics Spot Robot requires warranty inspection soon.", "SYSTEM", "Low");
+            createNotification(researcherId, "RESEARCHER", instId, "[DEMO] Resource Sharing Approved", "Your inter-institute sharing request for Stanford Server has been approved.", "BOOKING", "High");
+            createNotification(researcherId, "RESEARCHER", instId, "[DEMO] Allocation Confirmed", "High Performance Computing cluster allocated for project #409.", "BOOKING", "Medium");
 
-        // 6. SYSTEM ADMINISTRATOR
-        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Institution-wide Alerts", "Weekly overview: 15 active maintenance schedules across all colleges.", "SYSTEM", "Low");
-        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Pending User Approvals", "There are pending user registration requests waiting for your approval.", "SYSTEM", "High");
-        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Cross-Institute Resource Sharing", "Inter-institute booking request pending approval for Stanford Tech.", "BOOKING", "Medium");
-        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Booking Approval Request", "Inter-institute booking request pending approval for Stanford Tech.", "BOOKING", "Medium");
-        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Maintenance Summary", "Weekly overview: 15 active maintenance schedules across all colleges.", "MAINTENANCE", "Low");
-        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Calibration Due", "Total Station calibration is due tomorrow.", "CALIBRATION", "Medium");
-        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
-        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Certificate Renewal Due", "Compression Testing Machine certificate renewal due tomorrow.", "CERTIFICATE_RENEWAL", "High");
-        createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Overall System Alerts", "Overall System Database maintenance scheduled for Sunday at 02:00 AM.", "SYSTEM", "Low");
+            // 2. LAB TECHNICIAN
+            createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Calibration Due Soon", "Total Station calibration is due tomorrow.", "CALIBRATION", "Medium");
+            createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Calibration Overdue", "Universal Testing Machine calibration is 5 days overdue.", "CALIBRATION", "High");
+            createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Maintenance Ticket Assigned", "Issue reported on Hydraulic Bench: pressure valve leak.", "MAINTENANCE", "High");
+            createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
+            createNotification(techId, "LAB_TECHNICIAN", instId, "[DEMO] Certificate Renewal Due", "Compression Testing Machine certificate renewal due tomorrow.", "CERTIFICATE_RENEWAL", "High");
+
+            // 3. LAB MANAGER
+            createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Booking Approval Required", "New booking request pending for GPU Server RTX 4090.", "BOOKING", "High");
+            createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Calibration Due Soon", "Total Station calibration is due tomorrow.", "CALIBRATION", "Medium");
+            createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
+            createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Certificate Renewal Due", "Compression Testing Machine certificate renewal due tomorrow.", "CERTIFICATE_RENEWAL", "High");
+            createNotification(managerId, "LAB_MANAGER", instId, "[DEMO] Maintenance Alert", "Universal Testing Machine is marked Out of Service for calibration.", "MAINTENANCE", "High");
+
+            // 4. DEPARTMENT HEAD
+            createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] Monthly Utilization Summary", "Department lab utilization reached 78.4% this month.", "SYSTEM", "Low");
+            createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] Critical Equipment Alert", "Universal Testing Machine calibration is overdue.", "CALIBRATION", "High");
+            createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] Certificate Renewal Due", "Compression Testing Machine certificate renewal due tomorrow.", "CERTIFICATE_RENEWAL", "High");
+            createNotification(hodId, "DEPARTMENT_HEAD", instId, "[DEMO] Department Alert", "Department Lab access policy updated.", "SYSTEM", "Low");
+
+            // 5. INSTITUTION ADMINISTRATOR
+            createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Pending User Approvals", "There are pending user registration requests waiting for your approval.", "SYSTEM", "High");
+            createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Booking Approval Request", "Inter-institute booking request pending approval for Stanford Tech.", "BOOKING", "Medium");
+            createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Maintenance Summary", "Weekly overview: 15 active maintenance schedules across all colleges.", "MAINTENANCE", "Low");
+            createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Calibration Due", "Total Station calibration is due tomorrow.", "CALIBRATION", "Medium");
+            createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
+            createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Certificate Renewal Due", "Compression Testing Machine certificate renewal due tomorrow.", "CERTIFICATE_RENEWAL", "High");
+            createNotification(adminId, "INSTITUTION_ADMIN", instId, "[DEMO] Institution Alert", "Boston Dynamics Spot Robot requires warranty inspection soon.", "SYSTEM", "Low");
+
+            // 6. SYSTEM ADMINISTRATOR
+            createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Institution-wide Alerts", "Weekly overview: 15 active maintenance schedules across all colleges.", "SYSTEM", "Low");
+            createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Pending User Approvals", "There are pending user registration requests waiting for your approval.", "SYSTEM", "High");
+            createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Cross-Institute Resource Sharing", "Inter-institute booking request pending approval for Stanford Tech.", "BOOKING", "Medium");
+            createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Booking Approval Request", "Inter-institute booking request pending approval for Stanford Tech.", "BOOKING", "Medium");
+            createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Maintenance Summary", "Weekly overview: 15 active maintenance schedules across all colleges.", "MAINTENANCE", "Low");
+            createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Calibration Due", "Total Station calibration is due tomorrow.", "CALIBRATION", "Medium");
+            createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] License Renewal Due", "Auto Level license renewal due in 2 days.", "LICENSE_RENEWAL", "Medium");
+            createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Certificate Renewal Due", "Compression Testing Machine certificate renewal due tomorrow.", "CERTIFICATE_RENEWAL", "High");
+            createNotification(sysId, "SYSTEM_ADMIN", null, "[DEMO] Overall System Alerts", "Overall System Database maintenance scheduled for Sunday at 02:00 AM.", "SYSTEM", "Low");
+        }
     }
 
     private void createNotification(Long userId, String roleName, Long institutionId, String title, String message, String category, String priority) {
@@ -561,15 +640,21 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private void updateExistingEquipmentUrls() {
-        System.out.println("Updating existing equipment image URLs to reliable sources...");
         List<Equipment> list = equipmentRepository.findAll();
+        boolean modified = false;
         for (Equipment eq : list) {
-            String name = eq.getEquipmentName();
-            String newUrl = getReliableImageUrl(name);
-            if (newUrl != null) {
-                eq.setImageUrl(newUrl);
-                equipmentRepository.save(eq);
+            if (eq.getImageUrl() == null || eq.getImageUrl().startsWith("http") || eq.getImageUrl().isEmpty()) {
+                String name = eq.getEquipmentName();
+                String newUrl = getReliableImageUrl(name);
+                if (newUrl != null && !newUrl.equals(eq.getImageUrl())) {
+                    eq.setImageUrl(newUrl);
+                    equipmentRepository.save(eq);
+                    modified = true;
+                }
             }
+        }
+        if (modified) {
+            System.out.println("Equipment image URLs updated.");
         }
     }
 
