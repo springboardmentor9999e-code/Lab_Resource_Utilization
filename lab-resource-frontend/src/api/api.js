@@ -51,9 +51,7 @@ export const equipmentApi = {
   update: (id, data) => api.put(`/equipment/${id}`, data),
   delete: (id) => api.delete(`/equipment/${id}`),
   getQrCode: (id) => api.get(`/equipment/${id}/qr-code`, { responseType: 'blob' }),
-  uploadImage: (id, formData) => api.post(`/equipment/${id}/image`, formData, {
-    headers: { 'Content-Type': undefined },
-  }),
+  uploadImage: (id, formData) => api.post(`/equipment/${id}/image`, formData),
   getUtilization: (id, params) => api.get(`/equipment/${id}/utilization`, { params }),
   searchTags: (query) => api.get('/equipment/tags/search', { params: { query } }),
   getRecommendations: () => api.get('/equipment/recommendations'),

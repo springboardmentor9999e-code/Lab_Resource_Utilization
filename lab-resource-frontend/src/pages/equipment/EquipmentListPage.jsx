@@ -59,7 +59,7 @@ export default function EquipmentListPage() {
           <h1 className="text-2xl font-bold text-gray-800">Equipment Inventory</h1>
           <p className="text-gray-600 mt-1">Manage and browse laboratory equipment</p>
         </div>
-        {isManager && !isSystemAdmin && (
+        {isManager && (
           <Link to="/equipment/new" className="btn-primary flex items-center gap-2">
             <Plus size={18} />
             Add Equipment
@@ -119,7 +119,7 @@ export default function EquipmentListPage() {
         <div className="card text-center py-12">
           <Cpu size={48} className="mx-auto text-gray-300 mb-4" />
           <p className="text-gray-500">No equipment found</p>
-          {isManager && !isSystemAdmin && (
+          {isManager && (
             <Link to="/equipment/new" className="btn-primary inline-flex items-center gap-2 mt-4">
               <Plus size={16} /> Add Equipment
             </Link>

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { Wrench, Clock, CheckCircle, Plus, Trash2, CalendarClock, AlertTriangle, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { maintenanceApi } from '../../api/api';
+import { maintenanceApi, equipmentApi } from '../../api/api';
 import { useAuth } from '../../context/AuthContext';
 
 const statusConfig = {
@@ -67,6 +67,14 @@ export default function MaintenanceDashboard() {
     queryFn: async () => {
       const res = await maintenanceApi.getServiceSchedule();
       return res.data;
+    },
+  });
+
+  const { data: equipmentList = [] } = useQuery({
+    queryKey: ['equipment'],
+    queryFn: async () => {
+      const res = await equipmentApi.getAll();
+      return res.data.content || [];
     },
   });
 
@@ -308,11 +316,15 @@ export default function MaintenanceDashboard() {
             <h3 className="text-lg font-semibold mb-4">Create Work Order</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Equipment ID *</label>
-                <input type="number" className="input-field" value={createForm.equipmentId}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Equipment *</label>
+                <select className="input-field" value={createForm.equipmentId}
                   onChange={(e) => setCreateForm({ ...createForm, equipmentId: e.target.value })}
-                  placeholder="Enter equipment ID"
-                  disabled={!!equipmentIdFromUrl} />
+                  disabled={!!equipmentIdFromUrl}>
+                  <option value="">Select Equipment</option>
+                  {equipmentList.map(eq => (
+                    <option key={eq.id} value={eq.id}>{eq.equipmentName} ({eq.equipmentCode})</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>

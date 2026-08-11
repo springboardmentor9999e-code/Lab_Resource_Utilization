@@ -165,7 +165,7 @@ export default function EquipmentDetailPage() {
           <h1 className="text-2xl font-bold text-gray-800">{eq.equipmentName}</h1>
         </div>
         <div className="flex gap-2">
-          {isManager && !isSystemAdmin && (
+          {isManager && (
             <>
               <button onClick={() => navigate(`/equipment/${id}/edit`)} className="btn-secondary flex items-center gap-2">
                 <Edit size={16} /> Edit
@@ -242,7 +242,7 @@ export default function EquipmentDetailPage() {
                 {(tags.length > 0 ? tags : eq.tags || []).map((tag, i) => (
                   <span key={i} className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-100 text-primary-700 rounded-full text-sm font-medium">
                     <Tag size={12} /> {tag}
-                    {isManager && !isSystemAdmin && (
+                    {isManager && (
                       <button onClick={() => handleRemoveTag(tag)} className="ml-1 hover:text-red-600">
                         <X size={12} />
                       </button>
@@ -250,7 +250,7 @@ export default function EquipmentDetailPage() {
                   </span>
                 ))}
               </div>
-              {isManager && !isSystemAdmin && (
+              {isManager && (
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -266,7 +266,7 @@ export default function EquipmentDetailPage() {
                 </div>
               )}
             </div>
-          ) : isManager && !isSystemAdmin ? (
+          ) : isManager ? (
             <div className="card">
               <h3 className="text-lg font-semibold mb-3">Tags</h3>
               <p className="text-sm text-gray-400 mb-3">No tags yet</p>
@@ -296,7 +296,7 @@ export default function EquipmentDetailPage() {
                   <Calendar size={16} /> Book Equipment
                 </button>
               )}
-              {isManager && !isSystemAdmin && (
+              {isManager && (
                 <button onClick={() => navigate(`/maintenance?equipmentId=${id}`)} className="w-full btn-secondary flex items-center justify-center gap-2">
                   <Wrench size={16} /> Request Maintenance
                 </button>
@@ -326,7 +326,7 @@ export default function EquipmentDetailPage() {
                   alt={eq.equipmentName}
                   className="h-48 w-full object-cover rounded-lg"
                 />
-                {isManager && !isSystemAdmin && (
+                {isManager && (
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="absolute bottom-2 right-2 p-2 bg-white rounded-lg shadow-md hover:bg-gray-100"
@@ -339,10 +339,10 @@ export default function EquipmentDetailPage() {
             ) : (
               <div 
                 className="h-48 bg-gray-50 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
-                onClick={() => isManager && !isSystemAdmin && fileInputRef.current?.click()}
+                onClick={() => isManager && fileInputRef.current?.click()}
               >
                 <ImageIcon size={48} className="text-gray-300 mb-2" />
-                {isManager && !isSystemAdmin && (
+                {isManager && (
                   <p className="text-sm text-gray-500">Click to upload image</p>
                 )}
               </div>

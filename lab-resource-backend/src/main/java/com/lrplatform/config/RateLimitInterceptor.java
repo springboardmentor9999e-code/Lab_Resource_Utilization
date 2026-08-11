@@ -3,22 +3,22 @@ package com.lrplatform.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Arrays;
-import java.util.Deque;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 public class RateLimitInterceptor implements HandlerInterceptor {
 
     @Value("${rate-limit.enabled:true}")
@@ -33,8 +33,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     @Value("${rate-limit.trusted-proxies:}")
     private String trustedProxies;
 
-    private final Map<String, Deque<Long>> minuteWindow = new ConcurrentHashMap<>();
-    private final Map<String, Deque<Long>> hourWindow = new ConcurrentHashMap<>();
+    private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -47,8 +46,8 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
         String clientIp = getClientIp(request);
 
-        if (isRateLimited(clientIp, minuteWindow, requestsPerMinute, 60_000) ||
-            isRateLimited(clientIp, hourWindow, requestsPerHour, 3_600_000)) {
+        if (isRateLimited(clientIp, "minute", requestsPerMinute, 60_000) ||
+            isRateLimited(clientIp, "hour", requestsPerHour, 3_600_000)) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.getWriter().write(
@@ -63,22 +62,32 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    private boolean isRateLimited(String clientIp, Map<String, Deque<Long>> window,
+    private boolean isRateLimited(String clientIp, String windowName,
                                    int maxRequests, long windowMs) {
         long now = System.currentTimeMillis();
-        Deque<Long> timestamps = window.computeIfAbsent(clientIp, k -> new ConcurrentLinkedDeque<>());
-
-        // Remove expired entries
-        while (!timestamps.isEmpty() && timestamps.peekFirst() < now - windowMs) {
-            timestamps.pollFirst();
+        String key = "ratelimit:" + windowName + ":" + clientIp;
+        
+        try {
+            // Remove expired entries
+            redisTemplate.opsForZSet().removeRangeByScore(key, 0, now - windowMs);
+            
+            // Check current count
+            Long count = redisTemplate.opsForZSet().zCard(key);
+            
+            if (count != null && count >= maxRequests) {
+                return true;
+            }
+            
+            // Add current request
+            redisTemplate.opsForZSet().add(key, UUID.randomUUID().toString(), now);
+            // Set expiry on the whole key to automatically clean up
+            redisTemplate.expire(key, java.time.Duration.ofMillis(windowMs));
+            
+            return false;
+        } catch (Exception e) {
+            // If Redis fails, log it and allow the request (fail open)
+            return false;
         }
-
-        if (timestamps.size() >= maxRequests) {
-            return true;
-        }
-
-        timestamps.addLast(now);
-        return false;
     }
 
     private String getClientIp(HttpServletRequest request) {
@@ -99,28 +108,23 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     }
 
     public Map<String, Object> getMetrics() {
-        long now = System.currentTimeMillis();
         int activeMinuteClients = 0;
         int activeHourClients = 0;
-
-        for (Deque<Long> queue : minuteWindow.values()) {
-            while (!queue.isEmpty() && queue.peekFirst() < now - 60_000) {
-                queue.pollFirst();
-            }
-            if (!queue.isEmpty()) activeMinuteClients++;
-        }
-
-        for (Deque<Long> queue : hourWindow.values()) {
-            while (!queue.isEmpty() && queue.peekFirst() < now - 3_600_000) {
-                queue.pollFirst();
-            }
-            if (!queue.isEmpty()) activeHourClients++;
+        
+        try {
+            var minuteKeys = redisTemplate.keys("ratelimit:minute:*");
+            if (minuteKeys != null) activeMinuteClients = minuteKeys.size();
+            
+            var hourKeys = redisTemplate.keys("ratelimit:hour:*");
+            if (hourKeys != null) activeHourClients = hourKeys.size();
+        } catch (Exception e) {
+            // Ignore Redis errors for metrics
         }
 
         return Map.of(
             "enabled", enabled,
-            "requestsPerMinute", requestsPerMinute,
-            "requestsPerHour", requestsPerHour,
+            "requestsPerMinuteLimit", requestsPerMinute,
+            "requestsPerHourLimit", requestsPerHour,
             "activeMinuteClients", activeMinuteClients,
             "activeHourClients", activeHourClients
         );

@@ -32,12 +32,10 @@ public class JwtTokenProvider {
     @PostConstruct
     public void init() {
         if (jwtSecret == null || jwtSecret.isBlank()) {
-            byte[] keyBytes = new byte[64];
-            new SecureRandom().nextBytes(keyBytes);
-            jwtSecret = Base64.getEncoder().encodeToString(keyBytes);
-            log.warn("jwt.secret is not configured; generated a random signing key at startup. "
-                    + "All issued tokens will become invalid after a restart. "
-                    + "Set the JWT_SECRET environment variable in production.");
+            throw new IllegalStateException(
+                "CRITICAL: JWT_SECRET environment variable is missing. " +
+                "The server cannot start securely without a persistent signing key."
+            );
         }
     }
 
