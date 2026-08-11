@@ -122,8 +122,8 @@ function App() {
 
               <Route path="equipment" element={<EquipmentListPage />} />
               <Route path="equipment/:id" element={<EquipmentDetailPage />} />
-              <Route path="equipment/new" element={<ManagerRoute><NonSystemAdminRoute><EquipmentFormPage /></NonSystemAdminRoute></ManagerRoute>} />
-              <Route path="equipment/:id/edit" element={<MaintenanceRoute><NonSystemAdminRoute><EquipmentFormPage /></NonSystemAdminRoute></MaintenanceRoute>} />
+              <Route path="equipment/new" element={<ManagerRoute><EquipmentFormPage /></ManagerRoute>} />
+              <Route path="equipment/:id/edit" element={<MaintenanceRoute><EquipmentFormPage /></MaintenanceRoute>} />
 
               <Route path="bookings" element={<BookingCalendarPage />} />
               <Route path="bookings/my" element={<MyBookingsPage />} />
