@@ -591,10 +591,12 @@ public class DataSeeder implements CommandLineRunner {
                 .title("New Booking Request").message("Selvakumar K has requested to book Digital Oscilloscope on 2026-07-24")
                 .notificationType(NotificationType.BOOKING_CREATED).priority(NotificationPriority.MEDIUM)
                 .status("UNREAD").build());
-        notificationRepository.save(Notification.builder().user(selvakumar)
-                .title("Booking Approved").message("Your booking for Digital Oscilloscope on 2026-07-24 has been approved.")
-                .notificationType(NotificationType.BOOKING_APPROVED).priority(NotificationPriority.MEDIUM)
-                .status("UNREAD").build());
+        if (selvakumar != null) {
+            notificationRepository.save(Notification.builder().user(selvakumar)
+                    .title("Booking Approved").message("Your booking for Digital Oscilloscope on 2026-07-24 has been approved.")
+                    .notificationType(NotificationType.BOOKING_APPROVED).priority(NotificationPriority.MEDIUM)
+                    .status("UNREAD").build());
+        }
         notificationRepository.save(Notification.builder().user(priya)
                 .title("New Booking Request").message("Arun Kumar has requested to book Digital Oscilloscope on 2026-07-25")
                 .notificationType(NotificationType.BOOKING_CREATED).priority(NotificationPriority.MEDIUM)
