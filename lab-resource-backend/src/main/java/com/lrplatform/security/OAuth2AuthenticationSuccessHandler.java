@@ -50,6 +50,18 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         refreshTokenRepository.save(Objects.requireNonNull(refreshEntity));
 
         log.info("OAuth2 login successful for user: {}", email);
-        response.sendRedirect(frontendUrl + "/oauth2/callback?mode=login#access_token=" + accessToken + "&refresh_token=" + refreshToken);
+        
+        // Dynamically build the frontend URL based on the incoming request (e.g., https://trycloudflare.com)
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+        
+        StringBuilder frontendRedirect = new StringBuilder();
+        frontendRedirect.append(scheme).append("://").append(serverName);
+        if (serverPort != 80 && serverPort != 443 && serverPort != -1) {
+            frontendRedirect.append(":").append(serverPort);
+        }
+        
+        response.sendRedirect(frontendRedirect.toString() + "/oauth2/callback?mode=login#access_token=" + accessToken + "&refresh_token=" + refreshToken);
     }
 }
