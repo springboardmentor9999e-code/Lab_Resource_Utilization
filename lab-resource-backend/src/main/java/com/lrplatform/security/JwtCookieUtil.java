@@ -22,7 +22,7 @@ public final class JwtCookieUtil {
     public static final String ACCESS_COOKIE_PATH = "/";
     public static final String REFRESH_COOKIE_PATH = "/api/auth";
     public static final String SETUP_COOKIE_PATH = "/";
-    public static final String SAME_SITE = "Strict";
+    public static final String SAME_SITE = "Lax";
     public static final int SETUP_COOKIE_MAX_AGE = 600;
 
     private JwtCookieUtil() {
