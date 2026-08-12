@@ -38,6 +38,18 @@ public class Notification {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "channel")
+    private String channel = "IN_APP"; // IN_APP, EMAIL, SMS, ALL
+
+    @Column(name = "delivery_status")
+    private String deliveryStatus = "SENT"; // SENT, FAILED, PENDING
+
+    @Column(name = "sent_at")
+    private LocalDateTime sentAt = LocalDateTime.now();
+
+    @Column(name = "failure_reason", length = 500)
+    private String failureReason;
+
     public Notification() {
     }
 
@@ -119,5 +131,37 @@ public class Notification {
 
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    public String getChannel() {
+        return channel;
+    }
+
+    public void setChannel(String channel) {
+        this.channel = channel;
+    }
+
+    public String getDeliveryStatus() {
+        return deliveryStatus;
+    }
+
+    public void setDeliveryStatus(String deliveryStatus) {
+        this.deliveryStatus = deliveryStatus;
+    }
+
+    public LocalDateTime getSentAt() {
+        return sentAt;
+    }
+
+    public void setSentAt(LocalDateTime sentAt) {
+        this.sentAt = sentAt;
+    }
+
+    public String getFailureReason() {
+        return failureReason;
+    }
+
+    public void setFailureReason(String failureReason) {
+        this.failureReason = failureReason;
     }
 }

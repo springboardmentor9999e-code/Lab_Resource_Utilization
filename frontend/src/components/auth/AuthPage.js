@@ -104,6 +104,7 @@ function AuthPage({ onLogin }) {
                             <Login
                                 onLogin={onLogin}
                                 onForgotPassword={() => setPage("forgot")}
+                                onGoToRegister={() => setPage("register")}
                             />
                         )}
 

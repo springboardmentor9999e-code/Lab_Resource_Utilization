@@ -1,21 +1,46 @@
 package com.infosys.labresourceutilizationplatform.service;
 
 import com.infosys.labresourceutilizationplatform.entity.Notification;
+import com.infosys.labresourceutilizationplatform.entity.User;
 import com.infosys.labresourceutilizationplatform.repository.NotificationRepository;
+import com.infosys.labresourceutilizationplatform.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class NotificationService {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
+
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private EmailNotificationService emailNotificationService;
+
+    @Autowired
+    private SmsNotificationService smsNotificationService;
+
     public void sendNotification(Long userId, String roleName, Long institutionId, String title, String message, String category, String priority) {
+        sendNotification(userId, roleName, institutionId, title, message, category, priority, "ALL");
+    }
+
+    public void sendNotification(Long userId, String roleName, Long institutionId, String title, String message, String category) {
+        sendNotification(userId, roleName, institutionId, title, message, category, "Low", "ALL");
+    }
+
+    public void sendNotification(Long userId, String roleName, Long institutionId, String title, String message, String category, String priority, String channel) {
+        // 1. Create and save In-App notification record
         Notification n = new Notification();
         n.setUserId(userId);
         n.setRoleName(roleName);
@@ -24,13 +49,54 @@ public class NotificationService {
         n.setMessage(message);
         n.setCategory(category);
         n.setPriority(priority != null ? priority : "Low");
+        n.setChannel(channel != null ? channel : "ALL");
         n.setRead(false);
         n.setCreatedAt(LocalDateTime.now());
-        notificationRepository.save(n);
-    }
+        n.setSentAt(LocalDateTime.now());
+        n.setDeliveryStatus("SENT");
 
-    public void sendNotification(Long userId, String roleName, Long institutionId, String title, String message, String category) {
-        sendNotification(userId, roleName, institutionId, title, message, category, "Low");
+        try {
+            notificationRepository.save(n);
+        } catch (Exception ex) {
+            log.error("[NOTIFICATION REPO FAILURE] Could not persist in-app notification: {}", ex.getMessage());
+        }
+
+        // 2. Resolve target users for external channels (Email & SMS)
+        List<User> targetUsers = new ArrayList<>();
+        if (userId != null) {
+            userRepository.findById(userId.intValue()).ifPresent(targetUsers::add);
+        } else if (roleName != null) {
+            List<User> allUsers = userRepository.findAll();
+            for (User u : allUsers) {
+                if (u.getRole() != null && roleName.equalsIgnoreCase(u.getRole().getRoleName())) {
+                    if (institutionId == null || (u.getInstitutionId() != null && u.getInstitutionId().equals(institutionId.intValue()))) {
+                        targetUsers.add(u);
+                    }
+                }
+            }
+        }
+
+        // 3. Dispatch Email & SMS asynchronously to all target users
+        boolean shouldEmail = "ALL".equalsIgnoreCase(channel) || "EMAIL".equalsIgnoreCase(channel);
+        boolean shouldSms = "ALL".equalsIgnoreCase(channel) || "SMS".equalsIgnoreCase(channel);
+
+        for (User user : targetUsers) {
+            if (shouldEmail && user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
+                try {
+                    emailNotificationService.sendEmailAsync(user.getEmail(), title, message);
+                } catch (Exception ex) {
+                    log.warn("[EMAIL ASYNC TRIGGER ERROR] Error queuing email for {}: {}", user.getEmail(), ex.getMessage());
+                }
+            }
+
+            if (shouldSms && user.getPhone() != null && !user.getPhone().trim().isEmpty()) {
+                try {
+                    smsNotificationService.sendSmsAsync(user.getPhone(), title + ": " + message);
+                } catch (Exception ex) {
+                    log.warn("[SMS ASYNC TRIGGER ERROR] Error queuing SMS for {}: {}", user.getPhone(), ex.getMessage());
+                }
+            }
+        }
     }
 
     public List<Notification> getUserNotifications(Long userId, String roleName, Long institutionId) {
