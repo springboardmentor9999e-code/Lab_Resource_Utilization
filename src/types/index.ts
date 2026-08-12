@@ -13,6 +13,8 @@ export interface User {
   role: UserRole;
   departmentId: string;
   departmentName: string;
+  institutionId: string;
+  institutionName: string;
   avatarUrl?: string;
   phone?: string;
   title?: string;
@@ -38,6 +40,8 @@ export interface Lab {
   code: string;
   departmentId: string;
   departmentName: string;
+  institutionId: string;
+  institutionName: string;
   building: string;
   roomNumber: string;
   technicianId: string;
@@ -73,6 +77,8 @@ export interface Equipment {
   labName: string;
   departmentId: string;
   departmentName: string;
+  institutionId: string;
+  institutionName: string;
   status: EquipmentStatus;
   condition: EquipmentCondition;
   purchaseCost: number;
@@ -103,10 +109,14 @@ export interface Booking {
   labName: string;
   departmentId: string;
   departmentName: string;
+  institutionId: string;
+  institutionName: string;
   userId: string;
   userName: string;
   userRole: UserRole;
   userEmail: string;
+  userInstitutionId?: string;
+  userInstitutionName?: string;
   subjectCode?: string;
   subjectName?: string;
   purpose: string;
@@ -120,6 +130,7 @@ export interface Booking {
   allocatedByTechnicianId?: string;
   allocatedByTechnicianName?: string;
   createdAt: string;
+  grantReference?: string;
 }
 
 export type TicketIssueType = 
@@ -194,6 +205,8 @@ export interface ActivityLog {
   userRole: UserRole;
   departmentId: string;
   departmentName: string;
+  institutionId: string;
+  institutionName: string;
   action: string;
   category: 'Booking' | 'Equipment' | 'Maintenance' | 'Calibration' | 'User Management' | 'System';
   details: string;
@@ -209,3 +222,20 @@ export interface NotificationItem {
   type: 'booking' | 'maintenance' | 'calibration' | 'schedule' | 'info';
   read: boolean;
 }
+
+export interface MaintenanceSchedule {
+  id: string;
+  equipmentId: string;
+  equipmentName: string;
+  labId: string;
+  labName: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  technicianName: string;
+  description: string;
+  type: 'Preventive' | 'Calibration Check' | 'Routine Servicing';
+  status: 'Scheduled' | 'Completed' | 'Cancelled';
+  estimatedDurationHours: number;
+  estimatedCost: number;
+}
+

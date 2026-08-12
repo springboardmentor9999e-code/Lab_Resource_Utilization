@@ -11,6 +11,7 @@ interface RaiseTicketModalProps {
 export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({ initialEquipment, onClose }) => {
   const { equipment, currentUser, raiseMaintenanceTicket } = useApp();
 
+  const user = currentUser!;
   const [selectedEqId, setSelectedEqId] = useState<string>(
     initialEquipment ? initialEquipment.id : (equipment[0]?.id || '')
   );
@@ -32,9 +33,9 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({ initialEquip
       labName: selectedEq.labName,
       departmentId: selectedEq.departmentId,
       departmentName: selectedEq.departmentName,
-      raisedByUserId: currentUser.id,
-      raisedByUserName: currentUser.name,
-      raisedByUserRole: currentUser.role,
+      raisedByUserId: user.id,
+      raisedByUserName: user.name,
+      raisedByUserRole: user.role,
       issueType,
       priority,
       description,

@@ -16,12 +16,14 @@ interface TechnicianDashboardProps {
   onOpenCalibrationModal: () => void;
   onOpenSafetyCheckModal: () => void;
   onOpenTicketModal: () => void;
+  onOpenAddEquipmentModal: () => void;
 }
 
 export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
   onOpenCalibrationModal,
   onOpenSafetyCheckModal,
-  onOpenTicketModal
+  onOpenTicketModal,
+  onOpenAddEquipmentModal
 }) => {
   const { 
     currentUser, 
@@ -29,6 +31,7 @@ export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
     equipment, 
     calibrations, 
     safetyChecklists, 
+    labs,
     assignSlot, 
     rejectBooking, 
     updateEquipmentStatus 
@@ -40,13 +43,24 @@ export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
   const [customEnd, setCustomEnd] = useState<string>('11:00');
   const [rejectReason, setRejectReason] = useState<string>('');
 
+  const user = currentUser!;
   // Department / Lab filter
-  const myEquipment = equipment.filter(e => e.departmentId === currentUser.departmentId);
-  const pendingBookings = bookings.filter(b => b.status === 'Pending Approval');
-  const allocatedBookings = bookings.filter(b => b.status === 'Assigned Slot' || b.status === 'Confirmed');
+  const myEquipment = equipment.filter(e => e.institutionId === user.institutionId && e.departmentId === user.departmentId);
+  const pendingBookings = bookings.filter(b => b.institutionId === user.institutionId && b.departmentId === user.departmentId && b.status === 'Pending Approval');
+  const allocatedBookings = bookings.filter(b => b.institutionId === user.institutionId && b.departmentId === user.departmentId && (b.status === 'Assigned Slot' || b.status === 'Confirmed'));
+  
+  const myCalibrations = calibrations.filter(c => {
+    const eq = equipment.find(e => e.id === c.equipmentId);
+    return eq && eq.institutionId === user.institutionId && eq.departmentId === user.departmentId;
+  });
+  
+  const mySafetyChecklists = safetyChecklists.filter(s => {
+    const l = labs.find(lab => lab.id === s.labId);
+    return l && l.institutionId === user.institutionId && l.departmentId === user.departmentId;
+  });
 
   const handleAllocateSlot = (bookingId: string) => {
-    assignSlot(bookingId, customStart, customEnd, currentUser.name);
+    assignSlot(bookingId, customStart, customEnd, user.name);
     setSelectedBookingId(null);
   };
 
@@ -70,7 +84,7 @@ export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
             <h2 className="text-lg font-bold text-white">Lab Manager & Technician Console</h2>
           </div>
           <p className="text-xs text-slate-300 mt-1">
-            Welcome, {currentUser.name}. Allocate booking slots, manage equipment availability, track calibration dates, and enforce lab safety.
+            Welcome, {user.name}. Allocate booking slots, manage equipment availability, track calibration dates, and enforce lab safety.
           </p>
         </div>
 
@@ -94,6 +108,13 @@ export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
             className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium px-3.5 py-2 rounded-xl transition-all shadow-md flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" /> Raise Maintenance Ticket
+          </button>
+
+          <button
+            onClick={onOpenAddEquipmentModal}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium px-3.5 py-2 rounded-xl transition-all shadow-md flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" /> Add Lab Device
           </button>
         </div>
       </div>
@@ -128,7 +149,7 @@ export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          Calibration Records ({calibrations.length})
+          Calibration Records ({myCalibrations.length})
         </button>
         <button
           onClick={() => setActiveTab('safety')}
@@ -138,7 +159,7 @@ export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          Lab Safety & Audits ({safetyChecklists.length})
+          Lab Safety & Audits ({mySafetyChecklists.length})
         </button>
       </div>
 
@@ -368,7 +389,7 @@ export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
           </div>
 
           <div className="space-y-3">
-            {calibrations.map(c => (
+            {myCalibrations.map(c => (
               <div key={c.id} className="p-4 bg-slate-900/80 border border-slate-700 rounded-xl space-y-1 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-white text-sm">{c.equipmentName}</span>
@@ -409,7 +430,7 @@ export const TechnicianDashboard: React.FC<TechnicianDashboardProps> = ({
           </div>
 
           <div className="space-y-3">
-            {safetyChecklists.map(s => (
+            {mySafetyChecklists.map(s => (
               <div key={s.id} className="p-4 bg-slate-900/80 border border-slate-700 rounded-xl space-y-2 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-white text-sm">{s.labName}</span>

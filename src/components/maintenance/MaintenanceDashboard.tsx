@@ -17,6 +17,7 @@ interface MaintenanceDashboardProps {
 
 export const MaintenanceDashboard: React.FC<MaintenanceDashboardProps> = ({ onOpenTicketModal }) => {
   const { tickets, updateTicketStatus, currentUser } = useApp();
+  const user = currentUser!;
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [editingTicketId, setEditingTicketId] = useState<string | null>(null);
@@ -56,7 +57,7 @@ export const MaintenanceDashboard: React.FC<MaintenanceDashboardProps> = ({ onOp
             <h2 className="text-lg font-bold text-white">Central Maintenance & Repair Work Orders</h2>
           </div>
           <p className="text-xs text-slate-300 mt-1">
-            Welcome, {currentUser.name}. Track incoming maintenance tickets, assign engineering work orders, log repair costs, and clear downtime.
+            Welcome, {user.name}. Track incoming maintenance tickets, assign engineering work orders, log repair costs, and clear downtime.
           </p>
         </div>
 

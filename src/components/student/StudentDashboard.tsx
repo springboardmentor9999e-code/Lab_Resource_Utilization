@@ -18,11 +18,12 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onOpenBookin
   const { currentUser, equipment, bookings } = useApp();
   const [activeTab, setActiveTab] = useState<'assigned' | 'my_bookings'>('assigned');
 
+  const user = currentUser!;
   // Filter student's bookings
-  const myBookings = bookings.filter(b => b.userId === currentUser.id);
+  const myBookings = bookings.filter(b => b.userId === user.id);
 
   // Filter equipment available in student's department or mapped to courses
-  const deptEquipment = equipment.filter(e => e.departmentId === currentUser.departmentId);
+  const deptEquipment = equipment.filter(e => e.departmentId === user.departmentId);
 
   return (
     <div className="space-y-6">
@@ -37,7 +38,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onOpenBookin
             <h2 className="text-lg font-bold text-white">Student & Researcher Apparatus Portal</h2>
           </div>
           <p className="text-xs text-slate-300 mt-1">
-            Welcome, {currentUser.name}. See assigned equipment for your research & practical courses, request lab slots, and track booking status.
+            Welcome, {user.name}. See assigned equipment for your research & practical courses, request lab slots, and track booking status.
           </p>
         </div>
 
@@ -50,26 +51,26 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onOpenBookin
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-700 flex items-center gap-2">
+      <div className="bg-slate-900/60 border border-slate-800/80 backdrop-blur-md rounded-xl p-1 flex items-center gap-1 self-start inline-flex mb-2">
         <button
           onClick={() => setActiveTab('assigned')}
-          className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
+          className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
             activeTab === 'assigned'
-              ? 'border-indigo-500 text-indigo-400 bg-slate-800/50'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/10'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          Assigned Equipment & Apparatus ({deptEquipment.length})
+          Assigned Equipment ({deptEquipment.length})
         </button>
         <button
           onClick={() => setActiveTab('my_bookings')}
-          className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
+          className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
             activeTab === 'my_bookings'
-              ? 'border-indigo-500 text-indigo-400 bg-slate-800/50'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/10'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          My Slot Bookings & Status ({myBookings.length})
+          Slot Bookings & Status ({myBookings.length})
         </button>
       </div>
 
@@ -85,36 +86,45 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onOpenBookin
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {deptEquipment.map(eq => (
-              <div key={eq.id} className="bg-slate-800 border border-slate-700 rounded-2xl p-4 space-y-3 flex flex-col justify-between">
+              <div key={eq.id} className="group bg-slate-900/60 hover:bg-slate-900/90 border border-slate-800 hover:border-slate-700 rounded-2xl p-4.5 flex flex-col justify-between transition-all duration-300 shadow-md hover:shadow-xl hover:scale-[1.01]">
                 <div>
-                  <img src={eq.imageUrl} alt={eq.name} className="w-full h-32 rounded-xl object-cover mb-3 border border-slate-700" />
-                  
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="text-xs font-mono font-bold text-indigo-300 bg-indigo-500/20 px-2 py-0.5 rounded border border-indigo-500/30">
-                      {eq.category}
-                    </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                      eq.status === 'Available' ? 'bg-emerald-900/60 text-emerald-300' : 'bg-rose-900/60 text-rose-300'
+                  <div className="relative h-36 rounded-xl overflow-hidden mb-3 border border-slate-800 shrink-0">
+                    <img src={eq.imageUrl} alt={eq.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded shadow ${
+                      eq.status === 'Available' ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30' :
+                      'bg-rose-950/80 text-rose-300 border-rose-500/30'
                     }`}>
                       {eq.status}
                     </span>
                   </div>
+                  
+                  <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                    <span className="text-[10px] font-mono font-bold text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+                      {eq.category}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400 border border-slate-850 px-2 py-0.5 rounded">
+                      {eq.modelNumber}
+                    </span>
+                  </div>
 
-                  <h4 className="text-sm font-bold text-white leading-tight">{eq.name}</h4>
-                  <p className="text-xs text-slate-400 mt-1">Lab: {eq.labName}</p>
+                  <h4 className="text-sm font-bold text-white leading-tight tracking-tight">{eq.name}</h4>
+                  <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+                    <span>Lab: {eq.labName}</span>
+                  </p>
                   
                   {eq.assignedCourse && (
                     <p className="text-[11px] text-emerald-400 font-medium mt-2 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Mapped to: {eq.assignedCourse}
+                      <Sparkles className="w-3 h-3 text-emerald-400" /> Mapped to: {eq.assignedCourse}
                     </p>
                   )}
                 </div>
 
-                <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs">
-                  <span className="text-slate-400 text-[11px]">Condition: <strong className="text-white">{eq.condition}</strong></span>
+                <div className="pt-3 border-t border-slate-800/80 mt-3 flex items-center justify-between text-xs">
+                  <span className="text-slate-400 text-[11px]">Condition: <strong className="text-slate-200">{eq.condition}</strong></span>
                   <button
                     onClick={onOpenBookingModal}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1 rounded-lg text-xs"
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer"
                   >
                     Request Slot
                   </button>

@@ -22,10 +22,11 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
   const { currentUser, labs, equipment, bookings } = useApp();
   const [activeTab, setActiveTab] = useState<'subject_labs' | 'my_schedule' | 'equipment_condition'>('subject_labs');
 
+  const user = currentUser!;
   // Filter bookings for this professor
-  const myBookings = bookings.filter(b => b.userId === currentUser.id);
-  const myDeptLabs = labs.filter(l => l.departmentId === currentUser.departmentId);
-  const myDeptEquipment = equipment.filter(e => e.departmentId === currentUser.departmentId);
+  const myBookings = bookings.filter(b => b.userId === user.id);
+  const myDeptLabs = labs.filter(l => l.departmentId === user.departmentId);
+  const myDeptEquipment = equipment.filter(e => e.departmentId === user.departmentId);
 
   return (
     <div className="space-y-6">
@@ -40,7 +41,7 @@ export const StaffDashboard: React.FC<StaffDashboardProps> = ({
             <h2 className="text-lg font-bold text-white">Faculty & Course Lab Portal</h2>
           </div>
           <p className="text-xs text-slate-300 mt-1">
-            Welcome, {currentUser.name}. Manage subject practical lab sessions, check slot allocations, and inspect equipment readiness.
+            Welcome, {user.name}. Manage subject practical lab sessions, check slot allocations, and inspect equipment readiness.
           </p>
         </div>
 

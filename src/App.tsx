@@ -15,13 +15,20 @@ import { RaiseTicketModal } from './components/maintenance/RaiseTicketModal';
 import { CalibrationModal } from './components/technician/CalibrationModal';
 import { SafetyCheckModal } from './components/technician/SafetyCheckModal';
 import { AiLabAssistantModal } from './components/ai/AiLabAssistantModal';
+import { AuthScreen } from './components/auth/AuthScreen';
+import { ChatSpace } from './components/chat/ChatSpace';
+import { AddEquipmentModal } from './components/equipment/AddEquipmentModal';
 import { Equipment } from './types';
-import { Building2, Layers, Cpu, HeartHandshake } from 'lucide-react';
+import { Building2, Layers, Cpu, HeartHandshake, MessageSquare, Globe, Calendar, TrendingUp } from 'lucide-react';
+import { InterInstitutionHub } from './components/collaboration/InterInstitutionHub';
+import { MaintenancePlanner } from './components/maintenance/MaintenancePlanner';
+import { AnalyticsDashboard } from './components/admin/AnalyticsDashboard';
+import { AccessDenied } from './components/auth/AccessDenied';
 
 function DashboardContent() {
-  const { currentRole } = useApp();
+  const { currentRole, isAuthenticated, authLoading } = useApp();
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'role_console' | 'catalog'>('role_console');
+  const [activeTab, setActiveTab] = useState<'role_console' | 'catalog' | 'collaboration' | 'planner' | 'analytics' | 'chat'>('role_console');
 
   // Modals state
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
@@ -33,6 +40,20 @@ function DashboardContent() {
   const [showCalibrationModal, setShowCalibrationModal] = useState<boolean>(false);
   const [showSafetyCheckModal, setShowSafetyCheckModal] = useState<boolean>(false);
   const [showAiModal, setShowAiModal] = useState<boolean>(false);
+  const [showAddEquipmentModal, setShowAddEquipmentModal] = useState<boolean>(false);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100">
+        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-xs text-slate-400 font-medium">Restoring encrypted session...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !currentRole) {
+    return <AuthScreen />;
+  }
 
   const handleOpenDetail = (eq: Equipment) => {
     setSelectedEquipment(eq);
@@ -68,77 +89,167 @@ function DashboardContent() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         
-        {/* Role Explanation Banner */}
-        <RoleHeaderBanner />
-
-        {/* Console View Mode Switcher (Role Console vs Full Catalog) */}
-        <div className="mb-6 border-b border-slate-800 flex items-center gap-4">
+        {/* Console View Mode Switcher (Role Console vs Full Catalog vs Chat Room) */}
+        <div className="mb-8 bg-slate-900/60 border border-slate-800/80 backdrop-blur-md rounded-2xl p-1.5 flex flex-wrap items-center gap-1 shadow-lg shadow-slate-950/20">
           <button
             onClick={() => setActiveTab('role_console')}
-            className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 flex items-center gap-2 transition-all ${
+            className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer ${
               activeTab === 'role_console'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/20'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
             }`}
           >
-            <Layers className="w-4 h-4" />
+            <Layers className="w-4 h-4 shrink-0" />
             <span>Role Workspace ({currentRole.toUpperCase().replace('_', ' ')})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('catalog')}
-            className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 flex items-center gap-2 transition-all ${
+            className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer ${
               activeTab === 'catalog'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/20'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
             }`}
           >
-            <Cpu className="w-4 h-4" />
-            <span>Full University Equipment Catalog</span>
+            <Cpu className="w-4 h-4 shrink-0" />
+            <span>Full Catalog</span>
+          </button>
+
+          {['admin', 'hod', 'lab_technician', 'staff', 'student', 'maintenance'].includes(currentRole || '') && (
+            <button
+              onClick={() => setActiveTab('collaboration')}
+              className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer ${
+                activeTab === 'collaboration'
+                  ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/20'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+              }`}
+            >
+              <Globe className="w-4 h-4 shrink-0" />
+              <span>Inter-Institution Hub</span>
+            </button>
+          )}
+
+          {['admin', 'lab_technician', 'maintenance'].includes(currentRole || '') && (
+            <button
+              onClick={() => setActiveTab('planner')}
+              className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer ${
+                activeTab === 'planner'
+                  ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/20'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+              }`}
+            >
+              <Calendar className="w-4 h-4 shrink-0" />
+              <span>Maintenance Planner</span>
+            </button>
+          )}
+
+          {['admin', 'hod'].includes(currentRole || '') && (
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer ${
+                activeTab === 'analytics'
+                  ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/20'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+              }`}
+            >
+              <TrendingUp className="w-4 h-4 shrink-0" />
+              <span>Analytics Dashboard</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => setActiveTab('chat')}
+            className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 rounded-xl transition-all duration-200 cursor-pointer ${
+              activeTab === 'chat'
+                ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/20'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4 shrink-0" />
+            <span>Chat Space</span>
           </button>
         </div>
 
         {/* Active Workspace View */}
-        {activeTab === 'catalog' ? (
-          <EquipmentCatalog
-            searchQuery={searchQuery}
-            onSelectEquipment={handleOpenDetail}
-            onOpenBookingModal={handleOpenBooking}
-          />
-        ) : (
-          <div>
-            {currentRole === 'admin' && <AdminDashboard />}
+        {(() => {
+          // Tab authorization checker helper
+          const isTabAllowed = (tab: typeof activeTab, role: typeof currentRole): boolean => {
+            if (tab === 'collaboration') return ['admin', 'hod', 'lab_technician', 'staff', 'student', 'maintenance'].includes(role || '');
+            if (tab === 'planner') return ['admin', 'lab_technician', 'maintenance'].includes(role || '');
+            if (tab === 'analytics') return ['admin', 'hod'].includes(role || '');
+            return true;
+          };
 
-            {currentRole === 'hod' && <HodDashboard />}
+          if (!isTabAllowed(activeTab, currentRole)) {
+            return <AccessDenied onBackToConsole={() => setActiveTab('role_console')} />;
+          }
 
-            {currentRole === 'staff' && (
-              <StaffDashboard
-                onOpenBookingModal={() => handleOpenBooking()}
-                onOpenTicketModal={() => handleOpenTicket()}
+          if (activeTab === 'catalog') {
+            return (
+              <EquipmentCatalog
+                searchQuery={searchQuery}
+                onSelectEquipment={handleOpenDetail}
+                onOpenBookingModal={handleOpenBooking}
               />
-            )}
+            );
+          }
+          if (activeTab === 'collaboration') {
+            return <InterInstitutionHub />;
+          }
+          if (activeTab === 'planner') {
+            return <MaintenancePlanner onOpenCalibrationModal={() => setShowCalibrationModal(true)} />;
+          }
+          if (activeTab === 'analytics') {
+            return <AnalyticsDashboard />;
+          }
+          if (activeTab === 'chat') {
+            return <ChatSpace />;
+          }
 
-            {currentRole === 'lab_technician' && (
-              <TechnicianDashboard
-                onOpenCalibrationModal={() => setShowCalibrationModal(true)}
-                onOpenSafetyCheckModal={() => setShowSafetyCheckModal(true)}
-                onOpenTicketModal={() => handleOpenTicket()}
-              />
-            )}
+          return (
+            <div>
+              {currentRole === 'admin' && (
+                <AdminDashboard 
+                  onOpenAddEquipmentModal={() => setShowAddEquipmentModal(true)} 
+                />
+              )}
 
-            {currentRole === 'student' && (
-              <StudentDashboard
-                onOpenBookingModal={() => handleOpenBooking()}
-              />
-            )}
+              {currentRole === 'hod' && (
+                <HodDashboard 
+                  onOpenAddEquipmentModal={() => setShowAddEquipmentModal(true)} 
+                />
+              )}
 
-            {currentRole === 'maintenance' && (
-              <MaintenanceDashboard
-                onOpenTicketModal={() => handleOpenTicket()}
-              />
-            )}
-          </div>
-        )}
+              {currentRole === 'staff' && (
+                <StaffDashboard
+                  onOpenBookingModal={() => handleOpenBooking()}
+                  onOpenTicketModal={() => handleOpenTicket()}
+                />
+              )}
+
+              {currentRole === 'lab_technician' && (
+                <TechnicianDashboard
+                  onOpenCalibrationModal={() => setShowCalibrationModal(true)}
+                  onOpenSafetyCheckModal={() => setShowSafetyCheckModal(true)}
+                  onOpenTicketModal={() => handleOpenTicket()}
+                  onOpenAddEquipmentModal={() => setShowAddEquipmentModal(true)}
+                />
+              )}
+
+              {currentRole === 'student' && (
+                <StudentDashboard
+                  onOpenBookingModal={() => handleOpenBooking()}
+                />
+              )}
+
+              {currentRole === 'maintenance' && (
+                <MaintenanceDashboard
+                  onOpenTicketModal={() => handleOpenTicket()}
+                />
+              )}
+            </div>
+          );
+        })()}
 
       </main>
 
@@ -194,6 +305,12 @@ function DashboardContent() {
       {showAiModal && (
         <AiLabAssistantModal
           onClose={() => setShowAiModal(false)}
+        />
+      )}
+
+      {showAddEquipmentModal && (
+        <AddEquipmentModal
+          onClose={() => setShowAddEquipmentModal(false)}
         />
       )}
 

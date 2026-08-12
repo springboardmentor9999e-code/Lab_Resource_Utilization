@@ -12,20 +12,25 @@ import {
   Layers
 } from 'lucide-react';
 
-export const HodDashboard: React.FC = () => {
-  const { currentUser, labs, equipment, users, bookings, rejectBooking, assignSlot } = useApp();
-  const [activeTab, setActiveTab] = useState<'labs' | 'people' | 'equipment' | 'requests'>('labs');
+interface HodDashboardProps {
+  onOpenAddEquipmentModal: () => void;
+}
+
+export const HodDashboard: React.FC<HodDashboardProps> = ({ onOpenAddEquipmentModal }) => {
+  const { currentUser, labs, equipment, users, bookings, rejectBooking, assignSlot, addBooking } = useApp();
+  const [activeTab, setActiveTab] = useState<'labs' | 'people' | 'equipment' | 'requests' | 'sharing'>('labs');
   const [rejectReason, setRejectReason] = useState<string>('');
   const [rejectingBookingId, setRejectingBookingId] = useState<string | null>(null);
 
+  const user = currentUser!;
   // Filter department data
-  const deptId = currentUser.departmentId || 'dept-ece';
-  const deptName = currentUser.departmentName || 'Electronics & Communication Engineering';
+  const deptId = user.departmentId || 'dept-ece';
+  const deptName = user.departmentName || 'Electronics & Communication Engineering';
 
-  const myLabs = labs.filter(l => l.departmentId === deptId);
-  const myEquipment = equipment.filter(e => e.departmentId === deptId);
-  const myUsers = users.filter(u => u.departmentId === deptId);
-  const myBookings = bookings.filter(b => b.departmentId === deptId);
+  const myLabs = labs.filter(l => l.institutionId === user.institutionId && l.departmentId === deptId);
+  const myEquipment = equipment.filter(e => e.institutionId === user.institutionId && e.departmentId === deptId);
+  const myUsers = users.filter(u => u.institutionId === user.institutionId && u.departmentId === deptId);
+  const myBookings = bookings.filter(b => b.institutionId === user.institutionId && b.departmentId === deptId);
 
   const pendingRequests = myBookings.filter(b => b.status === 'Pending Approval');
 
@@ -34,14 +39,13 @@ export const HodDashboard: React.FC = () => {
   const studentList = myUsers.filter(u => u.role === 'student');
 
   const handleApprove = (bookingId: string) => {
-    // Default slot assignment confirmation
     const booking = myBookings.find(b => b.id === bookingId);
     if (booking) {
       assignSlot(
         bookingId, 
         booking.requestedStartTime, 
         booking.requestedEndTime, 
-        currentUser.name
+        user.name
       );
     }
   };
@@ -55,6 +59,28 @@ export const HodDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+
+      {/* HOD Title Header with Quick Action */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-800 border border-slate-700 rounded-2xl p-5">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold bg-blue-500/20 text-blue-300 px-2.5 py-0.5 rounded border border-blue-500/30">
+              @hod
+            </span>
+            <h2 className="text-lg font-bold text-white">Department HOD Control Panel ({deptName})</h2>
+          </div>
+          <p className="text-xs text-slate-300 mt-1">
+            Supervise department labs, staff workload allocations, equipment calibrations, and approve cross-departmental sharing requests.
+          </p>
+        </div>
+
+        <button
+          onClick={onOpenAddEquipmentModal}
+          className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-1.5 shrink-0"
+        >
+          <Cpu className="w-4 h-4" /> Register Department Asset
+        </button>
+      </div>
       
       {/* HOD Header Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -150,6 +176,16 @@ export const HodDashboard: React.FC = () => {
           }`}
         >
           Pending Approvals ({pendingRequests.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('sharing')}
+          className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
+            activeTab === 'sharing'
+              ? 'border-blue-500 text-blue-400 bg-slate-800/50'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          Cross-Dept Lab Borrowing
         </button>
       </div>
 
@@ -411,6 +447,86 @@ export const HodDashboard: React.FC = () => {
             </div>
           )}
 
+        </div>
+      )}
+
+      {/* Tab 5: Cross-Department Sharing */}
+      {activeTab === 'sharing' && (
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider">Cross-Department Lab Sharing & Borrowing</h2>
+            <p className="text-xs text-slate-400">View and reserve laboratories or high-value instruments from other academic departments</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {labs.filter(l => l.institutionId === user.institutionId && l.departmentId !== deptId).map(lab => {
+              const labEquipment = equipment.filter(e => e.labId === lab.id);
+              return (
+                <div key={lab.id} className="bg-slate-800 border border-slate-700 rounded-2xl p-5 space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-bold bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/30 uppercase">
+                        {lab.departmentName.split(' ')[0]} / {lab.code}
+                      </span>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                        lab.condition === 'Operational' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-800' : 'bg-rose-950/40 text-rose-300 border-rose-800'
+                      }`}>
+                        {lab.condition}
+                      </span>
+                    </div>
+                    <h3 className="text-base font-bold text-white mt-1.5">{lab.name}</h3>
+                    <p className="text-xs text-slate-400">{lab.building} · {lab.roomNumber}</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Available Equipment:</span>
+                    {labEquipment.length === 0 ? (
+                      <span className="text-xs text-slate-500 italic">No equipment listed.</span>
+                    ) : (
+                      <div className="divide-y divide-slate-700/50 bg-slate-900/40 border border-slate-700/50 rounded-xl overflow-hidden">
+                        {labEquipment.map(eq => (
+                          <div key={eq.id} className="p-2.5 flex items-center justify-between text-xs hover:bg-slate-800/40 transition-colors">
+                            <div>
+                              <span className="font-bold text-slate-200 block">{eq.name}</span>
+                              <span className="text-[10px] text-slate-400 font-mono">{eq.modelNumber}</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                addBooking({
+                                  equipmentId: eq.id,
+                                  equipmentName: eq.name,
+                                  labId: lab.id,
+                                  labName: lab.name,
+                                  departmentId: eq.departmentId,
+                                  departmentName: eq.departmentName,
+                                  institutionId: eq.institutionId,
+                                  institutionName: eq.institutionName,
+                                  userId: user.id,
+                                  userName: user.name,
+                                  userRole: 'hod',
+                                  userEmail: user.email,
+                                  userInstitutionId: user.institutionId,
+                                  userInstitutionName: user.institutionName,
+                                  purpose: `Cross-Department HOD request from ${deptName}`,
+                                  bookingDate: new Date().toISOString().split('T')[0],
+                                  requestedStartTime: '10:00',
+                                  requestedEndTime: '12:00'
+                                });
+                                alert(`Submitted sharing slot request for ${eq.name}!`);
+                              }}
+                              className="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded font-semibold transition-colors"
+                            >
+                              Request Access
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 

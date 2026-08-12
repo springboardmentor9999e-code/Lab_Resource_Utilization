@@ -14,7 +14,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Clock,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -36,9 +37,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     currentRole, 
     switchUserRole, 
     currentUser, 
+    realUser,
     notifications, 
     markNotificationRead, 
-    clearAllNotifications 
+    clearAllNotifications,
+    logout
   } = useApp();
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -229,50 +232,66 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* Current User Badge */}
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
-              <img
-                src={currentUser.avatarUrl}
-                alt={currentUser.name}
-                className="w-8 h-8 rounded-full object-cover border border-indigo-500/50"
-              />
-              <div className="hidden xl:block text-left">
-                <div className="text-xs font-semibold text-slate-200 truncate max-w-[120px]">
-                  {currentUser.name}
+            {currentUser && (
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
+                <img
+                  src={currentUser.avatarUrl}
+                  alt={currentUser.name}
+                  className="w-8 h-8 rounded-full object-cover border border-indigo-500/50"
+                />
+                <div className="hidden xl:block text-left">
+                  <div className="text-xs font-semibold text-slate-200 truncate max-w-[120px]">
+                    {currentUser.name}
+                  </div>
+                  <div className="text-[10px] text-indigo-400 truncate max-w-[120px]">
+                    {currentUser.departmentName}
+                  </div>
                 </div>
-                <div className="text-[10px] text-indigo-400 truncate max-w-[120px]">
-                  {currentUser.departmentName}
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Role Switcher Toolbar */}
-        <div className="py-2 border-t border-slate-800/80 flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
-              <span>Switch Role:</span>
-            </span>
-            {roleOptions.map(option => {
-              const isActive = currentRole === option.role;
-              return (
                 <button
-                  key={option.role}
-                  onClick={() => switchUserRole(option.role)}
-                  className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-medium transition-all ${
-                    isActive
-                      ? `${option.color} ring-2 ring-white/20 shadow-sm scale-105`
-                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/50'
-                  }`}
+                  onClick={logout}
+                  className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors ml-1"
+                  title="Sign Out"
                 >
-                  {option.icon}
-                  <span>{option.label}</span>
+                  <LogOut className="w-4 h-4" />
                 </button>
-              );
-            })}
+              </div>
+            )}
+
           </div>
         </div>
+
+        {/* Role Switcher Toolbar - Render only for admin users */}
+        {realUser?.role === 'admin' && (
+          <div className="py-2 border-t border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3 overflow-x-auto scrollbar-none">
+            <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 mr-1 flex items-center gap-1">
+                <span>Sandbox Role Switcher:</span>
+              </span>
+              {roleOptions.map(option => {
+                const isActive = currentRole === option.role;
+                return (
+                  <button
+                    key={option.role}
+                    onClick={() => switchUserRole(option.role)}
+                    className={`flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                      isActive
+                        ? `${option.color} ring-2 ring-white/20 shadow-sm scale-105`
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/50'
+                    }`}
+                  >
+                    {option.icon}
+                    <span>{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            
+            <div className="text-[10px] text-slate-400 leading-normal bg-indigo-950/40 border border-indigo-500/20 px-3 py-1.5 rounded-xl max-w-xl md:text-right shrink-0">
+              <span className="text-amber-400 font-bold uppercase mr-1">ℹ️ Sandbox Mode:</span>
+              To evaluate all dashboards, switch roles above. In production, access is strictly governed by JWT role claims.
+            </div>
+          </div>
+        )}
 
       </div>
     </header>

@@ -14,9 +14,13 @@ import {
   Sparkles
 } from 'lucide-react';
 
-export const AdminDashboard: React.FC = () => {
+interface AdminDashboardProps {
+  onOpenAddEquipmentModal: () => void;
+}
+
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenAddEquipmentModal }) => {
   const { departments, equipment, labs, users, activityLogs, bookings, tickets } = useApp();
-  const [activeTab, setActiveTab] = useState<'overview' | 'departments' | 'users' | 'activity' | 'procurement'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'departments' | 'users' | 'activity' | 'procurement' | 'bookings_tickets'>('overview');
   const [logFilter, setLogFilter] = useState<string>('all');
   const [userSearch, setUserSearch] = useState<string>('');
 
@@ -44,6 +48,28 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+
+      {/* Admin Title Header with Quick Action */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-800 border border-slate-700 rounded-2xl p-5">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded border border-indigo-500/30">
+              @admin
+            </span>
+            <h2 className="text-lg font-bold text-white">Central Dean & University Resource Console</h2>
+          </div>
+          <p className="text-xs text-slate-300 mt-1">
+            Global oversight of department spaces, inventory compliance audit logs, and inter-departmental equipment sharing.
+          </p>
+        </div>
+
+        <button
+          onClick={onOpenAddEquipmentModal}
+          className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-1.5 shrink-0"
+        >
+          <Cpu className="w-4 h-4" /> Register New Equipment
+        </button>
+      </div>
       
       {/* Admin KPI Header Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -162,6 +188,16 @@ export const AdminDashboard: React.FC = () => {
           }`}
         >
           Procurement & Sharing Insights
+        </button>
+        <button
+          onClick={() => setActiveTab('bookings_tickets')}
+          className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
+            activeTab === 'bookings_tickets'
+              ? 'border-indigo-500 text-indigo-400 bg-slate-800/50'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          All Requests & Tickets ({bookings.length + tickets.length})
         </button>
       </div>
 
@@ -476,6 +512,119 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Tab 6: Bookings & Tickets */}
+      {activeTab === 'bookings_tickets' && (
+        <div className="space-y-6">
+          {/* Bookings Section */}
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 space-y-4">
+            <div>
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider">All Equipment Bookings & Requests</h2>
+              <p className="text-xs text-slate-400">Manage, inspect, and trace all slot request submissions and technician allocations</p>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-900/80 text-slate-400 uppercase font-mono text-[10px] border-b border-slate-700">
+                  <tr>
+                    <th className="p-3">Equipment</th>
+                    <th className="p-3">Requester</th>
+                    <th className="p-3">Lab / Dept</th>
+                    <th className="p-3">Scheduled Date/Time</th>
+                    <th className="p-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700/60">
+                  {bookings.map(b => (
+                    <tr key={b.id} className="hover:bg-slate-700/30">
+                      <td className="p-3 font-bold text-white">{b.equipmentName}</td>
+                      <td className="p-3">
+                        <span className="block">{b.userName}</span>
+                        <span className="text-[10px] text-slate-400 uppercase">{b.userRole.replace('_', ' ')}</span>
+                      </td>
+                      <td className="p-3">
+                        <span className="block">{b.labName}</span>
+                        <span className="text-[10px] text-slate-400">{b.departmentName}</span>
+                      </td>
+                      <td className="p-3">
+                        <span className="block">{b.bookingDate}</span>
+                        <span className="text-[10px] text-slate-400">
+                          {b.allocatedStartTime ? `${b.allocatedStartTime} - ${b.allocatedEndTime}` : `${b.requestedStartTime} - ${b.requestedEndTime} (Requested)`}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${
+                          b.status === 'Confirmed' || b.status === 'Assigned Slot' ? 'bg-emerald-950/50 text-emerald-300 border-emerald-800' :
+                          b.status === 'Pending Approval' ? 'bg-amber-950/50 text-amber-300 border-amber-800' :
+                          b.status === 'In Use' ? 'bg-indigo-950/50 text-indigo-300 border-indigo-800' :
+                          'bg-slate-900 text-slate-400 border-slate-800'
+                        }`}>
+                          {b.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Maintenance Tickets Section */}
+          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 space-y-4">
+            <div>
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider">All Active & Resolved Maintenance Tickets</h2>
+              <p className="text-xs text-slate-400">Audit trail of equipment malfunctions, repair statuses, and service costs</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-900/80 text-slate-400 uppercase font-mono text-[10px] border-b border-slate-700">
+                  <tr>
+                    <th className="p-3">Ticket Number</th>
+                    <th className="p-3">Equipment / Lab</th>
+                    <th className="p-3">Issue Type & Priority</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3">Cost</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700/60">
+                  {tickets.map(t => (
+                    <tr key={t.id} className="hover:bg-slate-700/30">
+                      <td className="p-3 font-mono font-bold text-indigo-300">{t.ticketNumber}</td>
+                      <td className="p-3">
+                        <span className="block text-white font-bold">{t.equipmentName}</span>
+                        <span className="text-[10px] text-slate-400">{t.labName}</span>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-200">{t.issueType}</span>
+                          <span className={`text-[9px] font-mono uppercase px-1.5 py-0.5 rounded border ${
+                            t.priority === 'Critical' ? 'bg-rose-950/50 text-rose-300 border-rose-800' :
+                            t.priority === 'High' ? 'bg-amber-950/50 text-amber-300 border-amber-800' :
+                            'bg-slate-800 text-slate-400 border-slate-700'
+                          }`}>
+                            {t.priority}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${
+                          t.status === 'Resolved' || t.status === 'Closed' ? 'bg-emerald-950/50 text-emerald-300 border-emerald-800' :
+                          t.status === 'Open' ? 'bg-rose-950/50 text-rose-300 border-rose-800' :
+                          'bg-amber-950/50 text-amber-300 border-amber-800'
+                        }`}>
+                          {t.status}
+                        </span>
+                      </td>
+                      <td className="p-3 font-mono text-slate-200">${t.repairCost || 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
