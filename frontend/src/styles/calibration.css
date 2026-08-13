@@ -1,287 +1,338 @@
-/* Calibration Page */
+/* =========================================================
+   CALIBRATION PAGE
+   ========================================================= */
 
-.main-content {
-
-    margin-left: 320px;
-    padding: 30px;
-    background: #f5f7fb;
-    min-height: 100vh;
-
-}
-
-
-/* Card */
-
-.card {
-
-    background: white;
-    padding: 25px;
-    margin-bottom: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-
-}
-
-
-
-.card h2 {
-
-    margin-bottom: 20px;
-    color: #1f2937;
-    font-size: 24px;
-
-}
-
-
-
-/* Form */
-
-form {
-
-    display: grid;
-    gap: 12px;
-
-}
-
-
-
-label {
-
-    font-weight: 600;
-    color: #374151;
-    margin-top: 8px;
-
-}
-
-
-
-input,
-select,
-textarea {
-
-
+.calibration-page {
     width: 100%;
-    padding: 12px;
-
-    border: 1px solid #d1d5db;
-
-    border-radius: 8px;
-
-    font-size: 15px;
-
-    outline: none;
-
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 
+/* =========================================================
+   CALIBRATION FORM
+   ========================================================= */
 
-input:focus,
-select:focus,
-textarea:focus {
-
-    border-color: #2563eb;
-
+.calibration-form-card {
+    width: 100%;
+    box-sizing: border-box;
 }
 
-
-
-textarea {
-
-    height: 90px;
-    resize: none;
-
+.calibration-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
+.calibration-form-group {
+    width: 100%;
+    box-sizing: border-box;
+}
 
+.calibration-form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
 
-/* File Upload */
-
-input[type="file"] {
-
-    background: #f9fafb;
+.calibration-form-group input,
+.calibration-form-group select,
+.calibration-form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
     padding: 10px;
-
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-family: inherit;
+    font-size: 14px;
 }
 
-
-
-/* Button */
-
-button {
-
-
-    margin-top: 15px;
-
-    background: #2563eb;
-
-    color: white;
-
-    border: none;
-
-    padding: 13px;
-
-    border-radius: 8px;
-
-    font-size: 16px;
-
-    cursor: pointer;
-
-    transition: 0.3s;
-
+.calibration-form-group input:focus,
+.calibration-form-group select:focus,
+.calibration-form-group textarea:focus {
+    outline: none;
+    border-color: #2563eb;
 }
 
-
-
-button:hover {
-
-    background: #1d4ed8;
-
+.calibration-form-group textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
-
-
-/* Calibration table container */
-.table-container {
-    width: 100%;
-    overflow-x: auto;
+.calibration-form-group input[type="file"] {
+    padding: 8px;
+    background: #ffffff;
 }
 
-
-/* Table */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    min-width: 900px;
-}
-
-
-/* Header */
-thead th {
-
-    background: #2563eb;
-    color: white;
-
-    padding: 15px;
-
-    text-align: center;
-
-    font-size: 16px;
-
-    white-space: nowrap;
-}
-
-
-
-/* Rows */
-tbody td {
-
-    padding: 14px;
-
-    text-align: center;
-
-    border-bottom: 1px solid #ddd;
-
-    font-size: 15px;
-
-    white-space: nowrap;
-
-}
-
-
-/* Alternate row */
-tbody tr:nth-child(even){
-
-    background:#f8fafc;
-
-}
-
-
-/* Hover */
-tbody tr:hover{
-
-    background:#e8f0ff;
-
-}
-
-
-
-
-/* Certificate column */
-td:nth-child(5){
-
-    max-width:250px;
-
-    overflow:hidden;
-
-    text-overflow:ellipsis;
-
-}
-
-
-
-
-/* Status badge */
-.status {
-
-    padding:6px 15px;
-
-    border-radius:20px;
-
-    background:#22c55e;
-
-    color:white;
-
-    font-weight:600;
-
-    font-size:14px;
-
-}
-
-
-/* Status Badge */
-
-
-.status {
-
-
-    background: #dcfce7;
-
-    color: #166534;
-
-    padding: 6px 12px;
-
-    border-radius: 20px;
-
+.selected-file-name {
+    display: block;
+    margin-top: 6px;
+    color: #475569;
     font-size: 13px;
-
-    font-weight: 600;
-
-
 }
 
 
+/* =========================================================
+   DATE GRID
+   ========================================================= */
 
-/* Responsive */
+.calibration-date-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    width: 100%;
+}
 
-@media(max-width:900px){
+
+/* =========================================================
+   SAVE BUTTON
+   ========================================================= */
+
+.save-calibration-button {
+    width: 100%;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.2s ease;
+}
+
+.save-calibration-button:hover {
+    background: #1d4ed8;
+}
+
+.save-calibration-button:active {
+    transform: scale(0.99);
+}
 
 
-    .main-content{
+/* =========================================================
+   CALIBRATION HISTORY CARD
+   ========================================================= */
 
-        margin-left:0;
-        padding:15px;
+.calibration-history-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
 
+.calibration-history-card h3 {
+    margin-bottom: 20px;
+}
+
+
+/* =========================================================
+   TABLE WRAPPER
+   ========================================================= */
+
+/*
+   IMPORTANT:
+   Horizontal scrolling is applied ONLY to the table wrapper.
+   This prevents the whole dashboard/sidebar from moving.
+*/
+
+.calibration-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+}
+
+
+/* =========================================================
+   CALIBRATION TABLE
+   ========================================================= */
+
+.calibration-table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+
+/* =========================================================
+   TABLE HEADER AND CELLS
+   ========================================================= */
+
+.calibration-table th,
+.calibration-table td {
+    padding: 14px 16px;
+    text-align: left;
+    vertical-align: middle;
+    box-sizing: border-box;
+}
+
+.calibration-table th {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.calibration-table td {
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   COLUMN WIDTHS
+   ========================================================= */
+
+/* Equipment */
+
+.calibration-table th:nth-child(1),
+.calibration-table td:nth-child(1) {
+    width: 18%;
+}
+
+/* Calibration Date */
+
+.calibration-table th:nth-child(2),
+.calibration-table td:nth-child(2) {
+    width: 15%;
+}
+
+/* Next Due Date */
+
+.calibration-table th:nth-child(3),
+.calibration-table td:nth-child(3) {
+    width: 15%;
+}
+
+/* Performed By */
+
+.calibration-table th:nth-child(4),
+.calibration-table td:nth-child(4) {
+    width: 18%;
+}
+
+/* Certificate */
+
+.calibration-table th:nth-child(5),
+.calibration-table td:nth-child(5) {
+    width: 24%;
+}
+
+/* Status */
+
+.calibration-table th:nth-child(6),
+.calibration-table td:nth-child(6) {
+    width: 10%;
+}
+
+
+/* =========================================================
+   CERTIFICATE COLUMN
+   ========================================================= */
+
+.certificate-cell {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.calibration-status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+
+/* COMPLETED */
+
+.status-completed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+
+/* PENDING */
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+
+/* EXPIRED */
+
+.status-expired {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+
+/* =========================================================
+   NO DATA
+   ========================================================= */
+
+.no-calibration-data {
+    text-align: center !important;
+    padding: 30px !important;
+    color: #64748b;
+}
+
+
+/* =========================================================
+   MOBILE / TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .calibration-date-grid {
+        grid-template-columns: 1fr;
     }
 
-
-    table{
-
-        display:block;
-
-        overflow-x:auto;
-
+    .calibration-table {
+        min-width: 850px;
     }
 
+    .calibration-table th,
+    .calibration-table td {
+        padding: 12px;
+        font-size: 13px;
+    }
+}
 
+
+@media (max-width: 600px) {
+
+    .calibration-form-card {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .calibration-table {
+        min-width: 800px;
+    }
+
+    .calibration-table th,
+    .calibration-table td {
+        padding: 10px;
+        font-size: 12px;
+    }
+
+    .save-calibration-button {
+        font-size: 14px;
+    }
 }

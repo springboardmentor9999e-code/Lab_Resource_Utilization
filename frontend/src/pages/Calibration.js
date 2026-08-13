@@ -19,22 +19,40 @@ function Calibration() {
 
     const API = "http://localhost:8080/api";
 
+    // ================================
+    // LOAD DATA
+    // ================================
+
     useEffect(() => {
         loadCalibration();
         loadEquipment();
     }, []);
 
     const loadCalibration = () => {
-        axios.get(`${API}/calibration`)
-            .then(res => setCalibrations(res.data))
-            .catch(err => console.log(err));
+        axios
+            .get(`${API}/calibration`)
+            .then((res) => {
+                setCalibrations(res.data);
+            })
+            .catch((err) => {
+                console.log("Error loading calibration:", err);
+            });
     };
 
     const loadEquipment = () => {
-        axios.get(`${API}/equipment`)
-            .then(res => setEquipment(res.data))
-            .catch(err => console.log(err));
+        axios
+            .get(`${API}/equipment`)
+            .then((res) => {
+                setEquipment(res.data);
+            })
+            .catch((err) => {
+                console.log("Error loading equipment:", err);
+            });
     };
+
+    // ================================
+    // FORM HANDLERS
+    // ================================
 
     const handleChange = (e) => {
         setForm({
@@ -47,9 +65,15 @@ function Calibration() {
         setFile(e.target.files[0]);
     };
 
+    // ================================
+    // SAVE CALIBRATION
+    // ================================
+
     const saveCalibration = async (e) => {
         e.preventDefault();
+
         const formData = new FormData();
+
         formData.append("resourceId", form.resourceId);
         formData.append("calibrationDate", form.calibrationDate);
         formData.append("nextDueDate", form.nextDueDate);
@@ -62,11 +86,22 @@ function Calibration() {
         }
 
         try {
-            await axios.post(`${API}/calibration`, formData, {
-                headers: { "Content-Type": "multipart/form-data" }
-            });
+            await axios.post(
+                `${API}/calibration`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    }
+                }
+            );
+
             alert("Calibration Saved Successfully");
+
+            // Reload calibration history
             loadCalibration();
+
+            // Reset form
             setForm({
                 resourceId: "",
                 calibrationDate: "",
@@ -75,69 +110,160 @@ function Calibration() {
                 remarks: "",
                 status: "Completed"
             });
+
             setFile(null);
+
         } catch (error) {
-            console.log(error);
+            console.log("Calibration save error:", error);
+
+            if (error.response) {
+                console.log(
+                    "Backend response:",
+                    error.response.data
+                );
+            }
+
             alert("Error saving calibration");
         }
     };
 
+    // ================================
+    // GET EQUIPMENT NAME
+    // ================================
+
+    const getEquipmentName = (resourceId) => {
+        const selectedEquipment = equipment.find(
+            (item) => item.id === resourceId
+        );
+
+        if (selectedEquipment) {
+            return selectedEquipment.equipmentName;
+        }
+
+        return `Equipment #${resourceId}`;
+    };
+
+    // ================================
+    // RENDER
+    // ================================
+
     return (
-        <div className="dashboard">
+        <div className="dashboard calibration-page">
+
+            {/* ================================
+                PAGE HEADER
+            ================================= */}
+
             <div className="dashboard-header">
-                <h1>Equipment Calibration & Compliance</h1>
-                <p>Log calibration records, track scheduled due dates, and manage compliance certificates</p>
+                <h1>
+                    Equipment Calibration & Compliance
+                </h1>
+
+                <p>
+                    Log calibration records, track scheduled
+                    due dates, and manage compliance certificates
+                </p>
             </div>
 
-            <div className="chart-card" style={{ maxWidth: "680px", margin: "0 auto 30px auto" }}>
-                <h3>Record Calibration & Certification</h3>
-                <form onSubmit={saveCalibration} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-                    <div>
-                        <label style={{ display: "block", marginBottom: "6px", fontWeight: "600" }}>Select Equipment</label>
+            {/* ================================
+                CALIBRATION FORM
+            ================================= */}
+
+            <div
+                className="chart-card calibration-form-card"
+                style={{
+                    maxWidth: "680px",
+                    margin: "0 auto 30px auto"
+                }}
+            >
+
+                <h3>
+                    Record Calibration & Certification
+                </h3>
+
+                <form
+                    onSubmit={saveCalibration}
+                    className="calibration-form"
+                >
+
+                    {/* EQUIPMENT */}
+
+                    <div className="calibration-form-group">
+
+                        <label>
+                            Select Equipment
+                        </label>
+
                         <select
                             name="resourceId"
                             value={form.resourceId}
                             onChange={handleChange}
                             required
-                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}
                         >
-                            <option value="">-- Choose Equipment --</option>
+                            <option value="">
+                                -- Choose Equipment --
+                            </option>
+
                             {equipment.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.equipmentName} ({item.category || "General"})
+                                <option
+                                    key={item.id}
+                                    value={item.id}
+                                >
+                                    {item.equipmentName} (
+                                    {item.category || "General"}
+                                    )
                                 </option>
                             ))}
                         </select>
+
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
-                        <div>
-                            <label style={{ display: "block", marginBottom: "6px", fontWeight: "600" }}>Calibration Date</label>
+                    {/* DATES */}
+
+                    <div className="calibration-date-grid">
+
+                        <div className="calibration-form-group">
+
+                            <label>
+                                Calibration Date
+                            </label>
+
                             <input
                                 type="date"
                                 name="calibrationDate"
                                 value={form.calibrationDate}
                                 onChange={handleChange}
                                 required
-                                style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}
                             />
+
                         </div>
 
-                        <div>
-                            <label style={{ display: "block", marginBottom: "6px", fontWeight: "600" }}>Next Due Date</label>
+                        <div className="calibration-form-group">
+
+                            <label>
+                                Next Due Date
+                            </label>
+
                             <input
                                 type="date"
                                 name="nextDueDate"
                                 value={form.nextDueDate}
                                 onChange={handleChange}
                                 required
-                                style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}
                             />
+
                         </div>
+
                     </div>
 
-                    <div>
-                        <label style={{ display: "block", marginBottom: "6px", fontWeight: "600" }}>Performed By</label>
+                    {/* PERFORMED BY */}
+
+                    <div className="calibration-form-group">
+
+                        <label>
+                            Performed By
+                        </label>
+
                         <input
                             type="text"
                             name="performedBy"
@@ -145,106 +271,245 @@ function Calibration() {
                             onChange={handleChange}
                             placeholder="Certifying Technician / Organization"
                             required
-                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}
                         />
+
                     </div>
 
-                    <div>
-                        <label style={{ display: "block", marginBottom: "6px", fontWeight: "600" }}>Upload Calibration Certificate</label>
+                    {/* CERTIFICATE */}
+
+                    <div className="calibration-form-group">
+
+                        <label>
+                            Upload Calibration Certificate
+                        </label>
+
                         <input
                             type="file"
-                            accept=".pdf,.jpg,.png"
+                            accept=".pdf,.jpg,.jpeg,.png"
                             onChange={handleFileChange}
-                            style={{ width: "100%", padding: "8px" }}
                         />
+
+                        {file && (
+                            <small className="selected-file-name">
+                                Selected file: {file.name}
+                            </small>
+                        )}
+
                     </div>
 
-                    <div>
-                        <label style={{ display: "block", marginBottom: "6px", fontWeight: "600" }}>Remarks</label>
+                    {/* REMARKS */}
+
+                    <div className="calibration-form-group">
+
+                        <label>
+                            Remarks
+                        </label>
+
                         <textarea
                             name="remarks"
                             value={form.remarks}
                             onChange={handleChange}
                             placeholder="Enter calibration findings and tolerances..."
-                            rows="2"
-                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}
+                            rows="3"
                         />
+
                     </div>
 
-                    <div>
-                        <label style={{ display: "block", marginBottom: "6px", fontWeight: "600" }}>Status</label>
+                    {/* STATUS */}
+
+                    <div className="calibration-form-group">
+
+                        <label>
+                            Status
+                        </label>
+
                         <select
                             name="status"
                             value={form.status}
                             onChange={handleChange}
-                            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}
                         >
-                            <option value="Completed">Completed</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Expired">Expired</option>
+                            <option value="Completed">
+                                Completed
+                            </option>
+
+                            <option value="Pending">
+                                Pending
+                            </option>
+
+                            <option value="Expired">
+                                Expired
+                            </option>
                         </select>
+
                     </div>
+
+                    {/* SAVE BUTTON */}
 
                     <button
                         type="submit"
-                        style={{
-                            background: "#2563eb",
-                            color: "white",
-                            border: "none",
-                            padding: "12px",
-                            borderRadius: "10px",
-                            fontWeight: "bold",
-                            cursor: "pointer",
-                            marginTop: "10px"
-                        }}
+                        className="save-calibration-button"
                     >
                         Save Calibration Record
                     </button>
+
                 </form>
+
             </div>
 
-            <div className="chart-card">
-                <h3>Calibration Log History</h3>
-                <table className="recent-table">
-                    <thead>
+            {/* ================================
+                CALIBRATION HISTORY
+            ================================= */}
+
+            <div className="chart-card calibration-history-card">
+
+                <h3>
+                    Calibration Log History
+                </h3>
+
+                {/* IMPORTANT:
+                    Only this container scrolls horizontally.
+                    The entire page/sidebar will not scroll.
+                */}
+
+                <div className="calibration-table-wrapper">
+
+                    <table className="calibration-table">
+
+                        <thead>
+
                         <tr>
-                            <th>Equipment</th>
-                            <th>Calibration Date</th>
-                            <th>Next Due Date</th>
-                            <th>Performed By</th>
-                            <th>Certificate</th>
-                            <th>Status</th>
+
+                            <th>
+                                Equipment
+                            </th>
+
+                            <th>
+                                Calibration Date
+                            </th>
+
+                            <th>
+                                Next Due Date
+                            </th>
+
+                            <th>
+                                Performed By
+                            </th>
+
+                            <th>
+                                Certificate
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
                         </tr>
-                    </thead>
-                    <tbody>
-                        {calibrations.map((cal) => (
-                            <tr key={cal.calibrationId}>
-                                <td>
-                                    <strong>
-                                        {equipment.find(e => e.id === cal.resourceId)?.equipmentName || `Equipment #${cal.resourceId}`}
-                                    </strong>
+
+                        </thead>
+
+                        <tbody>
+
+                        {calibrations.length === 0 ? (
+
+                            <tr>
+
+                                <td
+                                    colSpan="6"
+                                    className="no-calibration-data"
+                                >
+                                    No calibration records found.
                                 </td>
-                                <td>{cal.calibrationDate}</td>
-                                <td>{cal.nextDueDate}</td>
-                                <td>{cal.performedBy}</td>
-                                <td>{cal.certificateFile ? cal.certificateFile : "No File Uploaded"}</td>
-                                <td>
-                                    <span style={{
-                                        padding: "4px 10px",
-                                        borderRadius: "10px",
-                                        fontSize: "12px",
-                                        fontWeight: "bold",
-                                        background: cal.status === "Completed" ? "#d1fae5" : "#fee2e2",
-                                        color: cal.status === "Completed" ? "#065f46" : "#991b1b"
-                                    }}>
-                                        {cal.status}
-                                    </span>
-                                </td>
+
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+
+                        ) : (
+
+                            calibrations.map((cal) => (
+
+                                <tr
+                                    key={cal.calibrationId}
+                                >
+
+                                    {/* EQUIPMENT */}
+
+                                    <td>
+
+                                        <strong>
+                                            {getEquipmentName(
+                                                cal.resourceId
+                                            )}
+                                        </strong>
+
+                                    </td>
+
+                                    {/* CALIBRATION DATE */}
+
+                                    <td>
+                                        {cal.calibrationDate}
+                                    </td>
+
+                                    {/* NEXT DUE DATE */}
+
+                                    <td>
+                                        {cal.nextDueDate}
+                                    </td>
+
+                                    {/* PERFORMED BY */}
+
+                                    <td>
+                                        {cal.performedBy}
+                                    </td>
+
+                                    {/* CERTIFICATE */}
+
+                                    <td
+                                        className="certificate-cell"
+                                        title={
+                                            cal.certificateFile ||
+                                            "No File Uploaded"
+                                        }
+                                    >
+
+                                        {cal.certificateFile
+                                            ? cal.certificateFile
+                                            : "No File Uploaded"}
+
+                                    </td>
+
+                                    {/* STATUS */}
+
+                                    <td>
+
+                                            <span
+                                                className={`calibration-status ${
+                                                    cal.status ===
+                                                    "Completed"
+                                                        ? "status-completed"
+                                                        : cal.status ===
+                                                        "Pending"
+                                                            ? "status-pending"
+                                                            : "status-expired"
+                                                }`}
+                                            >
+                                                {cal.status}
+                                            </span>
+
+                                    </td>
+
+                                </tr>
+
+                            ))
+
+                        )}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
             </div>
+
         </div>
     );
 }

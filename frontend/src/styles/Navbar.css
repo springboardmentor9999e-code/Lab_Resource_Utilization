@@ -1,236 +1,544 @@
 /* ===========================
-   Modern Navbar (Centering & Container Fit)
+   Modern Navbar
 =========================== */
 
 .navbar {
     position: sticky;
     top: 15px;
     z-index: 900;
+
     height: 70px;
     width: 100%;
+
     margin: 0 0 25px 0;
     padding: 0 24px;
+
     display: flex;
     justify-content: space-between;
     align-items: center;
+
     background: var(--card-bg, #ffffff);
+
     backdrop-filter: blur(20px);
+
     border: 1px solid var(--border-color, #e2e8f0);
+
     border-radius: 18px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+    box-shadow:
+            0 4px 20px rgba(0, 0, 0, 0.05);
+
     transition: all 0.3s ease;
+
+    box-sizing: border-box;
 }
+
+
+/* ===========================
+   LEFT SIDE
+=========================== */
 
 .navbar-left {
     display: flex;
     align-items: center;
+
     gap: 16px;
+
     flex: 1;
+
     max-width: 55%;
+
+    min-width: 0;
 }
+
+
+/* ===========================
+   MENU BUTTON
+=========================== */
 
 .menu-btn {
     width: 40px;
     height: 40px;
+
     border: none;
+
     border-radius: 12px;
+
     cursor: pointer;
+
     background: #eff6ff;
+
     color: #2563eb;
+
     font-size: 18px;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     transition: all 0.25s ease;
+
     flex-shrink: 0;
+
+    z-index: 10;
 }
 
 .menu-btn:hover {
     background: #2563eb;
+
     color: white;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+
+    box-shadow:
+            0 4px 14px rgba(37, 99, 235, 0.3);
+
+    transform: translateY(-1px);
 }
+
+.menu-btn:active {
+    transform: scale(0.95);
+}
+
+
+/* ===========================
+   SEARCH BOX
+=========================== */
 
 .search-box {
     display: flex;
     align-items: center;
+
     gap: 10px;
+
     background: #f8fafc;
+
     border: 1px solid #cbd5e1;
+
     border-radius: 14px;
+
     padding: 9px 16px;
+
     width: 100%;
+
     max-width: 420px;
+
+    min-width: 0;
+
     transition: all 0.3s ease;
+
+    box-sizing: border-box;
 }
 
 .search-box:focus-within {
     border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+
+    box-shadow:
+            0 0 0 3px rgba(37, 99, 235, 0.15);
+
     background: #ffffff;
 }
 
-.search-box input {
-    width: 100%;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 14px;
-    color: var(--text-main, #0f172a);
-    font-family: inherit;
-}
+
+/* SEARCH ICON */
 
 .search-icon {
     color: #94a3b8;
+
+    flex-shrink: 0;
 }
+
+
+/* SEARCH INPUT */
+
+.search-box input {
+    width: 100%;
+
+    min-width: 0;
+
+    border: none;
+
+    outline: none;
+
+    background: transparent;
+
+    font-size: 14px;
+
+    color: var(--text-main, #0f172a);
+
+    font-family: inherit;
+}
+
+
+/* ===========================
+   CLEAR SEARCH BUTTON
+=========================== */
+
+.search-clear {
+    width: 22px;
+    height: 22px;
+
+    border: none;
+
+    background: transparent;
+
+    color: #64748b;
+
+    cursor: pointer;
+
+    font-size: 20px;
+
+    line-height: 1;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+}
+
+.search-clear:hover {
+    color: #ef4444;
+}
+
+
+/* ===========================
+   RIGHT SIDE
+=========================== */
 
 .navbar-right {
     display: flex;
+
     align-items: center;
+
     gap: 14px;
+
     justify-content: flex-end;
+
+    flex-shrink: 0;
 }
+
+
+/* ===========================
+   ICON BUTTON
+=========================== */
 
 .icon-btn {
     width: 42px;
     height: 42px;
+
     border: 1px solid #e2e8f0;
+
     cursor: pointer;
+
     border-radius: 14px;
+
     background: #f8fafc;
+
     color: #2563eb;
+
     font-size: 18px;
+
     position: relative;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
+
     transition: all 0.25s ease;
 }
 
 .icon-btn:hover {
     transform: translateY(-2px);
+
     background: #eff6ff;
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.15);
+
+    box-shadow:
+            0 6px 18px rgba(37, 99, 235, 0.15);
 }
+
+
+/* ===========================
+   NOTIFICATION COUNT
+=========================== */
 
 .notification-count {
     position: absolute;
+
     top: -4px;
+
     right: -4px;
+
     width: 18px;
     height: 18px;
+
     border-radius: 50%;
+
     background: #ef4444;
+
     color: white;
+
     font-size: 10px;
+
     font-weight: 800;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
+
     border: 2px solid white;
 }
 
+
+/* ===========================
+   PROFILE
+=========================== */
+
 .profile-section {
     display: flex;
+
     align-items: center;
+
     gap: 12px;
+
     padding: 6px 14px;
+
     border-radius: 14px;
+
     background: #f8fafc;
+
     border: 1px solid #e2e8f0;
+
     cursor: pointer;
+
     position: relative;
+
     transition: all 0.25s ease;
+
+    user-select: none;
 }
 
 .profile-section:hover {
     background: #eff6ff;
+
     border-color: #bfdbfe;
 }
 
+
+/* ===========================
+   PROFILE ICON
+=========================== */
+
 .profile-icon {
     font-size: 34px;
+
     color: #2563eb;
+
+    flex-shrink: 0;
 }
+
+
+/* ===========================
+   PROFILE TEXT
+=========================== */
 
 .profile-text {
     display: flex;
+
     flex-direction: column;
+
+    min-width: 0;
 }
 
 .profile-text h4 {
     font-size: 13px;
+
     font-weight: 700;
+
     margin: 0;
+
     color: #0f172a;
+
     white-space: nowrap;
+
     overflow: hidden;
+
     text-overflow: ellipsis;
+
     max-width: 160px;
 }
 
 .profile-text span {
     font-size: 11px;
+
     color: #64748b;
+
     font-weight: 600;
+
+    white-space: nowrap;
 }
+
+
+/* ===========================
+   PROFILE DROPDOWN
+=========================== */
 
 .profile-dropdown {
     position: absolute;
+
     top: 60px;
+
     right: 0;
+
     width: 200px;
+
     background: #ffffff;
+
     border-radius: 16px;
+
     border: 1px solid #e2e8f0;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+
+    box-shadow:
+            0 15px 35px rgba(0, 0, 0, 0.15);
+
     overflow: hidden;
+
     animation: dropdownFade 0.25s ease;
+
     z-index: 1000;
 }
 
 @keyframes dropdownFade {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
+
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .profile-dropdown button {
     width: 100%;
+
     padding: 12px 18px;
+
     background: none;
+
     border: none;
+
     cursor: pointer;
+
     text-align: left;
+
     font-size: 14px;
+
     font-weight: 500;
+
     color: #0f172a;
+
     transition: background 0.2s ease;
 }
 
 .profile-dropdown button:hover {
     background: #eff6ff;
+
     color: #2563eb;
 }
 
-/* Responsive */
-@media(max-width: 992px) {
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media (max-width: 1100px) {
+
+    .navbar-left {
+        max-width: 50%;
+    }
+
+    .search-box {
+        max-width: 320px;
+    }
+
+    .profile-text h4 {
+        max-width: 120px;
+    }
+}
+
+
+@media (max-width: 992px) {
+
     .navbar {
         margin-left: 0;
+
+        padding: 0 18px;
     }
+
+    .navbar-left {
+        max-width: 50%;
+    }
+
     .search-box {
         max-width: 260px;
     }
 }
 
-@media(max-width: 768px) {
+
+@media (max-width: 768px) {
+
     .navbar {
         margin-left: 0;
+
         padding: 0 14px;
     }
+
+    .navbar-left {
+        max-width: 100%;
+    }
+
     .search-box {
         display: none;
     }
+
     .profile-text {
+        display: none;
+    }
+
+    .profile-section {
+        padding: 5px 10px;
+    }
+}
+
+
+@media (max-width: 500px) {
+
+    .navbar {
+        height: 64px;
+    }
+
+    .navbar-right {
+        gap: 8px;
+    }
+
+    .icon-btn {
+        width: 38px;
+        height: 38px;
+    }
+
+    .menu-btn {
+        width: 38px;
+        height: 38px;
+    }
+
+    .profile-section svg:last-child {
         display: none;
     }
 }
