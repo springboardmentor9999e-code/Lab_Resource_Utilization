@@ -1,69 +1,75 @@
 # Lab Resource Utilization Platform
 
 ## 1. Project Overview
-The Lab Resource Utilization Platform is a comprehensive web application designed to optimize the allocation, booking, maintenance, and sharing of laboratory equipment across departments and institutions. The platform solves the problem of underutilized laboratory equipment, coordination overheads, and unscheduled maintenance by introducing automated booking approvals, real-time availability tracking, role-based dashboards, and a secure inter-institute resource-sharing mechanism.
+The Lab Resource Utilization Platform is a full-stack platform that helps institutions manage laboratory equipment, schedule resource access, share expensive equipment between institutions, monitor utilization, manage maintenance/calibration, and analyze resource efficiency. It streamlines booking workflows, tracks equipment health, and enables cross-institutional resource sharing while providing deep analytics on resource demand and utilization costs.
 
 ## 2. Objectives
-* Introduce a centralized dashboard for real-time tracking of laboratory equipment availability.
-* Enable automated booking workflows for Students and Researchers with built-in time conflict prevention.
-* Standardize equipment maintenance, certificate renewals, and calibration schedules.
-* Facilitate secure, cost-effective inter-institute resource sharing between approved academic partners.
-* Expose interactive utilization analytics and booking heat maps to assist department heads in capacity planning.
-* Implement robust role-based access control (RBAC) and secure authentication mechanisms.
+* **Laboratory Equipment Management**: Maintain a central digital repository of equipment specifications, manufacturers, documentation, and live status.
+* **Equipment Availability and Scheduling**: Implement conflict-free booking and scheduling pipelines to maximize equipment availability.
+* **Inter-Institution Resource Sharing**: Enable cross-institutional access to specialized resources with custom workflow approvals and cost configurations.
+* **Real-Time Utilization Monitoring**: Track equipment utilization rates, active hours, and booking distributions dynamically.
+* **Maintenance and Calibration Management**: Track reported equipment issues, technician assignments, calibration due dates, and license renewals.
+* **Booking and Scheduling**: Enable flexible time-slot booking with waitlist support and status management.
+* **Analytics and Resource Efficiency**: Assist administrators and department heads in capacity planning and demand analysis.
+* **Centralized Dashboard**: Provide custom, role-based dashboards to consolidate actions and insights based on user permissions.
 
 ## 3. Technologies Used
-* **Frontend**: React.js, React Router, Axios, Bootstrap 5, React Icons, Vanilla CSS
+* **Frontend**: React.js, React Router, Axios, Bootstrap 5, Vanilla CSS
 * **Backend**: Spring Boot, Spring Security, Hibernate ORM, Java Mail Sender
-* **Database**: PostgreSQL (Relational Database)
-* **Authentication**: JSON Web Tokens (JWT) for session management, Google Identity Services (GIS) OAuth 2.0
-* **Notifications**: Multi-channel system supporting In-App alerts, SMTP Email, and SMS (Gateway-simulated)
+* **Database**: PostgreSQL
+* **Authentication**: Stateless JSON Web Tokens (JWT), Google Identity Services (GIS) OAuth 2.0
+* **Notifications**: Multi-channel system supporting In-App alerts, SMTP Email, and simulated SMS
 * **Version Control**: Git / GitHub
 
 ## 4. Development Progress
 
-### Milestone 1
-* Set up the initial repository structure and version control pipelines.
-* Modeled the database schema for Core Entities including Institutions, Departments, Users, and Roles.
-* Configured the Spring Boot backend skeleton with standard dependencies (Spring Data JPA, PostgreSQL Driver).
-* Established the React frontend shell with layout components and base page routing.
-* Seeded the initial database with institutions, department roles, and test users.
+### Milestone 1 – Week 1 & 2
+*Project Initialization, Design Process & Core Setup*
+* **Project Planning & Requirements**: Outlined functional requirements, core entities, and permission matrix mappings.
+* **System Architecture & Database Design**: Modeled PostgreSQL tables for Users, Roles, Institutions, Departments, Laboratories, Equipment, and Bookings.
+* **React Frontend & Spring Boot Backend Setup**: Initialized React components and Spring Boot REST controllers with standard project structure.
+* **JWT & Role-Based Access**: Integrated Spring Security filter chain with JWT-based session security.
+* **Equipment Inventory**: Built core CRUD APIs for equipment tracking and categorized search filters.
+* **Core Booking & Scheduling**: Implemented reservation scheduling validation to prevent time-slot overlaps.
 
-### Milestone 2
-* Implemented the security filter chain using Spring Security and stateless JWT token authorization.
-* Developed User Registration and normal credentials-based Login endpoints.
-* Built the user registration approval workflow, allowing Institution Admins to approve/reject authority accounts.
-* Created the Equipment Inventory endpoints for adding, updating, searching, and deleting equipment.
-* Developed the interactive booking system with validation checks to prevent overlapping reservations.
+### Milestone 2 – Week 3 & 4
+*Utilization Monitoring & Inter-Institution Sharing*
+* **Equipment Utilization Monitoring**: Developed tracking metrics to measure daily, weekly, and total equipment active hours.
+* **Utilization Calculations**: Implemented calculations on duration, usage ratios, and institutional cost allocations.
+* **Utilization Heat Maps**: Designed interactive time-slot heat maps indicating peak usage hours.
+* **Inter-Institution Resource Sharing**: Built the sharing relation entity and cost mapping systems.
+* **Sharing/Access Request Workflow**: Developed Request, Cancel, Approve, and Reject states for administrators.
+* **Shared Equipment Booking**: Integrated external shared equipment directly into user search results for bookability.
+* **Utilization/Demand Analysis**: Created analytics charts demonstrating booking distributions by category and lab.
 
-### Milestone 3
-* Designed custom, role-based dashboards for all 7 user roles (Student, Researcher, Lab Technician, Lab Manager, Department Head, Institution Admin, System Admin).
-* Built the Maintenance and Calibration modules to track equipment status changes, assign technicians to issues, and complete calibrations.
-* Created the Inter-Institute Resource Sharing module with Cost Configuration, Cancel, Approve, and Reject controls.
-* Developed the Utilization Analytics view presenting booking counts, cost savings, and average usage durations.
-* Designed dynamic time-slot heat maps in dashboards to visualize resource utilization patterns.
+### Milestone 3 – Week 5 & 6
+*Maintenance, Cost Management & Analytics*
+* **Maintenance Scheduling & Issue Management**: Enabled reporting of issues, transitioning equipment to maintenance status, and resolving reports.
+* **Calibration Tracking**: Created tracking for calibration due dates and scheduled frequencies.
+* **Certification/License Renewal**: Developed actions to complete calibration and renew equipment safety certificates or licenses.
+* **Utilization Cost Tracking**: Implemented dynamic billing algorithms to charge hourly rates for external institutional bookings.
+* **Inter-Institution Cost/Sharing Calculations**: Designed financial metrics to report total savings and external utilization expenditures.
+* **Role-Based Analytics Dashboards**: Customized dashboard metrics for all user roles (Students, Researchers, Techs, Managers, Dept Heads, Admins).
+* **Notification & Alert System**: Enabled background notification triggers for booking approvals, maintenance assignments, and calibration dues.
 
-### Milestone 4
-* Integrated real Google OAuth 2.0 authentication with backend token verification and strict registration enforcement.
-* Developed a 3-step Password Reset wizard utilizing secure 6-digit One-Time Passwords (OTPs) dispatched via Email and SMS.
-* Extended the Notification Service to dispatch multi-channel alerts (In-App, Email, SMS) for booking lifecycles, maintenance assignments, and calibration dues.
-* Added mandatory welcome-back and registration confirmation emails across all roles.
-* Completed full end-to-end regression testing and verified all modules (auth, bookings, sharing, notifications) function cleanly.
+### Milestone 4 – Week 7 & 8
+*Testing, Deployment & Documentation*
+* **Application Testing**: Executed comprehensive unit and integration tests across controllers and services.
+* **Workflow Validation**: Verified end-to-end user flows including OTP password resets, welcome-back notifications, and Google OAuth 2.0.
+* **Performance & UI Improvements**: Resolved infinite loops in dashboard metrics and optimized startup parameters.
+* **Deployment**: Validated production bundles using npm and Maven build processes.
+* **Final Documentation**: Updated user guides, implementation plans, and deployment specifications.
+* **Final Presentation & Demonstration**: Set up verification scripts to run full-flow integration testing.
 
 ## 5. Major Features
-* **User Registration & Login**: Credentials-based registration and secure JWT authentication.
-* **Role-Based Access**: Role-based access control (RBAC) across 7 distinct platform roles.
-* **Equipment Management**: Track categories, specifications, and live status of equipment.
-* **Equipment Booking**: Reservation scheduler with overlap validation, waitlisting, and status tracking.
-* **Maintenance Management**: Assign, track, and resolve equipment issues.
-* **Calibration & License Tracking**: Log certification issue dates and get notification alerts for upcoming calibration/license expirations.
-* **Notifications**: Real-time in-app notification center modal with unread counts and mark-all-as-read options.
-* **Email/SMS Notifications**: Deliver transaction messages directly to user profiles.
-* **Google Authentication**: Real Google OAuth 2.0 account chooser popup with backend signature verification.
-* **Password Reset/OTP**: Secure password recovery via 10-minute time-limited OTPs.
-* **Inter-Institute Resource Sharing**: Sharing requests, institutional cost handling, and workflow approvals.
-* **Utilization Analytics**: Total usage hours, resource distribution charts, and cost savings tracking.
-* **Utilization Heat Maps**: Weekly calendar heat maps indicating peak equipment booking slots.
-* **Role-Based Dashboards**: Custom interfaces with tools specific to each role.
+* **User Authentication**: Secure credentials login alongside Google Identity Services OAuth 2.0 token verification.
+* **Role-Based Dashboards**: 7 custom dashboards configured with tailored metrics and actions.
+* **Conflict-Free Booking**: Automated scheduling engine with overlap validation and waitlist auto-promotion.
+* **Inter-Institute Resource Sharing**: Workflow-controlled request system for institutional equipment exchange.
+* **Maintenance & Calibration Tracking**: Complete issue logs, technician assignments, and renewal indicators.
+* **Multi-Channel Notification Center**: Dynamic dispatch of In-App, Email, and SMS notifications.
+* **Interactive Heat Maps**: Slot occupancy charts depicting lab utilization patterns.
+* **Utilization Analytics**: Graphical reports on cost distributions and resource capacity.
 
 ## 6. Project Structure
 ```text
@@ -83,5 +89,5 @@ database/
 README.md
 ```
 
-## 7. Current Project Status
-All functional requirements, integration services, analytics dashboards, and multi-channel notifications are **100% completed**. The platform has undergone thorough end-to-end regression testing and is in the final phase of documentation, deployment setup, and mentor evaluation.
+## 7. Current Status
+All milestones, functional modules, and integration endpoints are **100% complete**. The project is currently in the final Milestone 4 phase, with all automated test suites passing and ready for final evaluation.
