@@ -15,5 +15,4 @@ public interface CalibrationService {
     Calibration updateCalibration(Long id, Calibration calibration);
 
     void deleteCalibration(Long id);
-
 }

@@ -1,7 +1,6 @@
 package com.example.backend.entity;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
 
 @Entity
@@ -13,7 +12,13 @@ public class Calibration {
     @Column(name = "calibration_id")
     private Long calibrationId;
 
-    @Column(name = "resource_id")
+    /*
+     * Java property remains resourceId so your existing
+     * frontend/controller code does not need to change.
+     *
+     * In PostgreSQL, this value is stored in equipment_id.
+     */
+    @Column(name = "equipment_id", nullable = false)
     private Long resourceId;
 
     @Column(name = "calibration_date")
@@ -34,8 +39,11 @@ public class Calibration {
     @Column(name = "status")
     private String status;
 
+    // Default constructor
     public Calibration() {
     }
+
+    // Getters and Setters
 
     public Long getCalibrationId() {
         return calibrationId;

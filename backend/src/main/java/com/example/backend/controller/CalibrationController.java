@@ -11,21 +11,18 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api/calibration")
 @CrossOrigin(origins = "*")
 public class CalibrationController {
 
-
     private final CalibrationService calibrationService;
 
+    public CalibrationController(
+            CalibrationService calibrationService) {
 
-    public CalibrationController(CalibrationService calibrationService) {
         this.calibrationService = calibrationService;
     }
-
-
 
     // GET ALL CALIBRATION
     @GetMapping
@@ -36,8 +33,6 @@ public class CalibrationController {
         );
     }
 
-
-
     // GET CALIBRATION BY ID
     @GetMapping("/{id}")
     public ResponseEntity<Calibration> getCalibrationById(
@@ -47,9 +42,6 @@ public class CalibrationController {
                 calibrationService.getCalibrationById(id)
         );
     }
-
-
-
 
     // CREATE CALIBRATION WITH CERTIFICATE UPLOAD
     @PostMapping(consumes = "multipart/form-data")
@@ -63,60 +55,55 @@ public class CalibrationController {
 
             @RequestParam String performedBy,
 
-            @RequestParam(required = false) MultipartFile certificateFile,
+            @RequestParam(required = false)
+            MultipartFile certificateFile,
 
-            @RequestParam(required = false) String remarks,
+            @RequestParam(required = false)
+            String remarks,
 
             @RequestParam String status
 
     ) throws IOException {
 
-
-
         Calibration calibration = new Calibration();
 
-
+        // Equipment ID
         calibration.setResourceId(resourceId);
 
-
+        // Calibration date
         calibration.setCalibrationDate(
                 LocalDate.parse(calibrationDate)
         );
 
-
+        // Next due date
         calibration.setNextDueDate(
                 LocalDate.parse(nextDueDate)
         );
 
-
+        // Performed by
         calibration.setPerformedBy(performedBy);
 
-
+        // Remarks
         calibration.setRemarks(remarks);
 
-
+        // Status
         calibration.setStatus(status);
 
-
-
-        // Save uploaded file name
-        if(certificateFile != null && !certificateFile.isEmpty()) {
+        // Certificate filename
+        if (certificateFile != null
+                && !certificateFile.isEmpty()) {
 
             calibration.setCertificateFile(
                     certificateFile.getOriginalFilename()
             );
-
         }
 
-
-
         return ResponseEntity.ok(
-                calibrationService.createCalibration(calibration)
+                calibrationService.createCalibration(
+                        calibration
+                )
         );
     }
-
-
-
 
     // UPDATE CALIBRATION
     @PutMapping("/{id}")
@@ -129,13 +116,12 @@ public class CalibrationController {
     ) {
 
         return ResponseEntity.ok(
-                calibrationService.updateCalibration(id, calibration)
+                calibrationService.updateCalibration(
+                        id,
+                        calibration
+                )
         );
     }
-
-
-
-
 
     // DELETE CALIBRATION
     @DeleteMapping("/{id}")
@@ -147,10 +133,8 @@ public class CalibrationController {
 
         calibrationService.deleteCalibration(id);
 
-
         return ResponseEntity.ok(
                 "Calibration deleted successfully"
         );
     }
-
 }
