@@ -1,270 +1,348 @@
 # Lab Resource Utilization Platform
 
-A full-stack web application for managing laboratory resources, equipment bookings, user roles, and analytics in educational and research institutions.
+A full-stack web application for managing laboratory resources, equipment bookings, maintenance workflows, user roles, billing, notifications, and utilization analytics for educational and research institutions.
 
-The platform provides secure authentication, role-based access control, equipment management, booking workflows, utilization analytics, and real-time dashboards to improve laboratory resource allocation and monitoring.
+The platform helps institutions manage laboratory equipment, schedule shared resources, monitor equipment utilization, handle maintenance and calibration workflows, manage booking and approval processes, and generate data-driven resource utilization insights through a centralized dashboard.
 
 ---
 
 ## Features
 
 ### Authentication & Authorization
+
 - JWT-based Authentication
+- Google OAuth2 Login
 - Role-Based Access Control (RBAC)
 - Secure Login & Registration
-- Password Encryption using BCrypt
+- BCrypt Password Encryption
+- Protected REST APIs
+- Method-Level Authorization
+- User Profile Management
 
-### User Management
+### User & Institution Management
+
 - Student Management
 - Researcher Management
 - Lab Technician Management
 - Lab Manager Management
-- Department Head
-- Institution Administrator
-- System Administrator
+- Department Head Management
+- Institution Administrator Management
+- System Administrator Management
+- Department Management
+- Institution Management
+- Role-Based Permissions
 
 ### Equipment Management
+
 - Add Equipment
 - Update Equipment
 - Delete Equipment
 - Equipment Categories
 - Equipment Availability Tracking
-- Equipment Dashboard
+- Equipment Status Management
+- Equipment Details
+- Hourly Equipment Rental Rate
+- Equipment Utilization Tracking
+- Maintenance & Calibration Information
 
 ### Booking Management
+
 - Equipment Booking
 - Booking Approval
 - Booking Rejection
-- Cancel Booking
+- Booking Cancellation
 - Mark Equipment In Use
 - Complete Booking
-- No Show Management
+- No-Show Management
+- Booking History
+- Booking Status Tracking
+- Booking Cost Estimation
+- Equipment Availability Checking
 
-### Dashboard & Analytics
+### Maintenance & Calibration
+
+- Maintenance Request Management
+- Work Order Management
+- Preventive Maintenance
+- Corrective Maintenance
+- Emergency Maintenance
+- Calibration Tracking
+- Calibration Due Notifications
+- Calibration Overdue Notifications
+- Maintenance Due Notifications
+- Maintenance Overdue Notifications
+- Technician Assignment
+- Equipment Downtime Tracking
+- Maintenance History
+
+### Billing & Cost Allocation
+
+- Booking-Based Billing
+- Equipment Hourly Rate Calculation
+- Invoice Generation
+- Billing Status Management
+- Payment Status Tracking
+- Cost Allocation
+- Department-wise Cost Allocation
+- Bill Splitting
+- Allocation Approval
+- Allocation Payment
+- Cost Recovery Workflow
+
+### Notifications
+
+- Real-Time Notifications
+- Booking Notifications
+- Maintenance Notifications
+- Calibration Notifications
+- Notification Bell
+- Unread Notification Count
+- Notification Dropdown
+- Notification History
+- Mark Notification as Read
+- Delete Notification
+- Real-Time Toast Notifications
+- Email Notifications
+
+### Analytics & Dashboard
+
 - Equipment Utilization Dashboard
 - Department Statistics
-- Heatmaps
-- Booking Density Analytics
+- Institution Statistics
+- Booking Analytics
+- Booking Density
+- Monthly Heatmaps
+- Utilization Analytics
+- Equipment Usage Analysis
+- Demand Analysis
+- Cost Analysis
+- Maintenance Analytics
 - Weekly Utilization Reports
 - Live Equipment Status
 
-### Institution Management
-- Institution Registration
-- Department Management
-- Role Management
+### Reports & Audit
+
+- Audit Logs
+- Equipment Utilization Reports
+- Booking Reports
+- Maintenance Reports
+- Cost Reports
+- Department Resource Usage Reports
+- Analytics Reports
+- CSV / Export Support
 
 ---
 
-## Tech Stack
+# Development Milestones
 
-### Frontend
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- TanStack Router
-- Axios
-- Recharts
+The project was developed incrementally over an 8-week implementation plan. Each milestone focused on completing a major group of platform capabilities before moving to the next stage.
 
-### Backend
-- Java 21
-- Spring Boot
-- Spring Security
-- JWT Authentication
-- Spring Data JPA
-- Hibernate
+## Week 1 — Project Initialization & Architecture
 
-### Database
-- PostgreSQL
+### Completed
 
-### Tools
-- Maven
-- Git
-- GitHub
-- Postman
+- Defined project objectives and laboratory resource workflows.
+- Designed the overall system architecture.
+- Designed PostgreSQL database structure.
+- Created Spring Boot backend structure.
+- Initialized React + Vite frontend.
+- Configured frontend-backend communication.
+- Established Git/GitHub project structure.
+- Created initial entities, repositories, services and controllers.
+- Designed role-based application structure.
+
+### Milestone Result
+
+Core project architecture and development environment successfully established.
 
 ---
 
-## Project Structure
+## Week 2 — Authentication, RBAC & Core Equipment
 
-```
-Lab-Resource-Utilization-Platform
-│
-├── backend
-│   ├── Controllers
-│   ├── Services
-│   ├── Repositories
-│   ├── Entities
-│   ├── Security
-│   └── Configuration
-│
-├── frontend
-│   ├── Components
-│   ├── Pages
-│   ├── Services
-│   ├── Routes
-│   ├── Context
-│   └── Assets
-│
-└── Database
-    └── PostgreSQL
-```
+### Completed
+
+- Implemented JWT authentication.
+- Implemented BCrypt password encryption.
+- Implemented Spring Security.
+- Implemented role-based authorization.
+- Added multiple user roles.
+- Implemented login and registration.
+- Integrated Google OAuth login.
+- Developed equipment inventory management.
+- Implemented equipment categories.
+- Implemented equipment availability/status tracking.
+- Started core booking workflow.
+
+### Milestone Result
+
+Authentication, authorization, equipment inventory and basic booking functionality became operational.
 
 ---
 
-## User Roles
+## Week 3 — Booking & Resource Utilization
 
-- Student
-- Researcher
-- Lab Technician
-- Lab Manager
-- Department Head
-- Institution Administrator
-- System Administrator
+### Completed
 
-Each role has dedicated permissions enforced using Spring Security Role-Based Authorization.
+- Implemented complete equipment booking workflow.
+- Added booking creation.
+- Added booking approval/rejection.
+- Added booking status management.
+- Implemented equipment availability checking.
+- Added booking history.
+- Implemented booking-related role permissions.
+- Added equipment utilization tracking.
+- Started dashboard analytics.
 
----
+### Milestone Result
 
-## Booking Workflow
-
-```
-Student / Researcher
-        │
-        ▼
-Create Booking
-        │
-        ▼
-Pending
-        │
-        ▼
-Approved / Rejected
-        │
-        ▼
-In Use
-        │
-        ▼
-Completed
-```
+The core resource reservation and utilization workflow became functional.
 
 ---
 
-## Installation
+## Week 4 — Analytics, Heatmaps & Resource Sharing
 
-### Clone Repository
+### Completed
 
-```bash
-git clone https://github.com/your-username/Lab-Resource-Utilization-Platform.git
-```
+- Implemented utilization analytics.
+- Added booking density analysis.
+- Added department-level statistics.
+- Implemented utilization heatmaps.
+- Added monthly booking heatmap.
+- Implemented demand analysis where backend support was available.
+- Added equipment utilization insights.
+- Improved dashboard visualizations.
+- Implemented resource-sharing related workflows where supported.
 
----
+### Milestone Result
 
-### Backend
-
-```bash
-cd backend
-```
-
-Configure PostgreSQL database in
-
-```
-application.properties
-```
-
-Run
-
-```bash
-mvn spring-boot:run
-```
-
-Backend runs on
-
-```
-http://localhost:8080
-```
+The platform started providing meaningful utilization and resource-allocation insights.
 
 ---
 
-### Frontend
+## Week 5 — Maintenance & Calibration
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+### Completed
 
-Frontend runs on
+- Implemented maintenance management.
+- Added maintenance requests.
+- Added work order management.
+- Added maintenance status tracking.
+- Added preventive/corrective/emergency maintenance types.
+- Added technician assignment.
+- Added maintenance scheduling.
+- Added equipment downtime tracking.
+- Implemented calibration tracking.
+- Added calibration due/overdue logic.
 
-```
-http://localhost:5173
-```
+### Milestone Result
 
----
-
-## API Modules
-
-- Authentication
-- User Management
-- Institution Management
-- Equipment Management
-- Booking Management
-- Dashboard Analytics
+Equipment lifecycle, maintenance and calibration management became integrated into the platform.
 
 ---
 
-## Security
+## Week 6 — Billing, Cost Allocation & Notifications
 
-- JWT Authentication
-- Role-Based Access Control
-- BCrypt Password Encoding
-- Protected REST APIs
-- Method-Level Authorization
+### Completed
 
----
+- Implemented equipment hourly-rate management.
+- Added booking cost estimation.
+- Implemented billing module.
+- Implemented cost allocation.
+- Added bill splitting and allocation workflows.
+- Added payment/cancellation status handling.
+- Implemented notification database storage.
+- Implemented Kafka-based notification event processing.
+- Added Spring WebSocket + STOMP communication.
+- Added real-time booking notifications.
+- Added maintenance notifications.
+- Added calibration notifications.
+- Integrated email notification support.
 
-## Future Enhancements
+### Milestone Result
 
-- Email Notifications
-- QR Code Based Equipment Checkout
-- Equipment Maintenance Scheduler
-- Calendar Integration
-- Report Export (PDF / Excel)
-- AI-Based Resource Utilization Prediction
-- Real-Time Notifications
-
----
-
-## Screenshots
-
-Add project screenshots here.
-
-Example:
-
-```
-screenshots/
-├── login.png
-├── dashboard.png
-├── equipment.png
-├── booking.png
-├── analytics.png
-```
+The platform achieved an end-to-end workflow connecting booking, cost calculation, billing, maintenance and real-time notifications.
 
 ---
 
-## Author
+## Week 7 — Integration & Testing
 
-**Rohit Mali**
+### Completed
 
-Bachelor of Engineering (Electronics & Telecommunication)
+- Integrated frontend and backend modules.
+- Tested authentication and role-based access.
+- Tested equipment management.
+- Tested booking workflows.
+- Tested maintenance workflows.
+- Tested billing and cost allocation.
+- Tested analytics APIs.
+- Tested notification APIs.
+- Tested Kafka notification processing.
+- Tested WebSocket real-time notifications.
+- Tested PostgreSQL database operations.
+- Fixed API authorization issues.
+- Fixed frontend/backend integration issues.
+- Improved error handling and loading states.
 
-Mumbai University
+### Milestone Result
 
-GitHub: https://github.com/RohitMali1314
-
-LinkedIn: *(Add your LinkedIn profile)*
+Major platform modules were integrated and tested together as a single application.
 
 ---
 
-## License
+## Week 8 — Final Testing, Optimization & Documentation
 
-This project is developed for educational and academic purposes.
+### Completed
+
+- Performed end-to-end workflow testing.
+- Verified role-wise access permissions.
+- Fixed duplicate API calls and duplicate notification handling.
+- Improved frontend UI responsiveness.
+- Fixed analytics and heatmap issues.
+- Verified real-time notification flow.
+- Verified Kafka and Docker infrastructure.
+- Performed application stability testing.
+- Improved project documentation.
+- Prepared README and project documentation.
+- Prepared final project demonstration.
+
+### Milestone Result
+
+The Lab Resource Utilization Platform reached an integrated, tested and demonstration-ready stage.
+
+---
+
+# Complete System Workflow
+
+```text
+User Login
+    │
+    ▼
+JWT / Google OAuth Authentication
+    │
+    ▼
+Role-Based Dashboard
+    │
+    ├── Equipment Management
+    │
+    ├── Equipment Booking
+    │        │
+    │        ▼
+    │   Approval Workflow
+    │        │
+    │        ▼
+    │   Equipment Usage
+    │
+    ├── Maintenance
+    │        │
+    │        ▼
+    │   Calibration
+    │
+    ├── Billing
+    │        │
+    │        ▼
+    │   Cost Allocation
+    │
+    └── Analytics
+             │
+             ▼
+       Utilization Insights
