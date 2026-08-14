@@ -7,15 +7,19 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
 
-        // Don't send token while logging in
+        // Don't send token while logging in or registering
         if (
-    config.url === "/auth/login" ||
-    config.url === "/auth/register"
-) {
-    return config;
-}
+            config.url === "/auth/login" ||
+            config.url === "/auth/register"
+        ) {
+            return config;
+        }
 
         const token = localStorage.getItem("token");
+
+        console.log("API Request:", config.url);
+        console.log("Token exists:", !!token);
+        console.log("Role:", localStorage.getItem("role"));
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -27,7 +31,6 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-
     (response) => response,
 
     (error) => {
@@ -43,7 +46,6 @@ api.interceptors.response.use(
                 alert("Your session has expired. Please login again.");
 
                 window.location.href = "/";
-
             }
 
             if (error.response.status === 403) {
@@ -51,13 +53,10 @@ api.interceptors.response.use(
                 alert("You are not authorized to access this page.");
 
             }
-
         }
 
         return Promise.reject(error);
-
     }
-
 );
 
 export default api;

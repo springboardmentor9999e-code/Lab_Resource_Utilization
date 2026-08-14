@@ -5,10 +5,28 @@ import api from "../services/api";
 import "../styles/Management.css";
 
 function EditDepartment() {
-
+     const role = (localStorage.getItem("role") || "")
+    .trim()
+    .toUpperCase();
     const navigate = useNavigate();
-
+    
     const { id } = useParams();
+    useEffect(() => {
+
+    if (
+        role !== "SYSTEM_ADMIN" &&
+        role !== "INSTITUTION_ADMIN"
+    ) {
+
+        alert(
+            "You are not authorized to edit departments."
+        );
+
+        navigate("/department");
+
+    }
+
+}, [role, navigate]);
 
     const [institutionList, setInstitutionList] = useState([]);
 

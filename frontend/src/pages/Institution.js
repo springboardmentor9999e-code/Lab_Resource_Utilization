@@ -3,6 +3,10 @@ import Sidebar from "../components/Sidebar";
 import api from "../services/api";
 
 function Institution() {
+    
+    const userRole = localStorage.getItem("role");
+
+    const isInstitutionAdmin = userRole === "INSTITUTION_ADMIN";
 
     const [institutionList, setInstitutionList] = useState([]);
 
@@ -47,6 +51,7 @@ function Institution() {
     };
 
     const editInstitution = (item) => {
+       console.log("Edit clicked:", item);
 
         setInstitution({
             institutionName: item.institutionName,
@@ -129,7 +134,7 @@ function Institution() {
                 >
 
                     <h2>Institution List</h2>
-
+                {!isInstitutionAdmin && (
                     <button
                         onClick={() => {
 
@@ -148,6 +153,7 @@ function Institution() {
                     >
                         + Add Institution
                     </button>
+                )}
 
                 </div>
 
@@ -248,6 +254,7 @@ function Institution() {
                                 <td>
 
                                     <button
+                                    type="button"
                                         onClick={() => editInstitution(item)}
                                         style={{
                                             color: "black",

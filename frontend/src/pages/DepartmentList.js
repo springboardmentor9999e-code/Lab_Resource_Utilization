@@ -6,19 +6,35 @@ import "../styles/Management.css";
 
 function DepartmentList() {
 
-    const [departmentList, setDepartmentList] = useState([]);
+    const role = (localStorage.getItem("role") || "")
+        .trim()
+        .toUpperCase();
+
+    console.log("DepartmentList Role:", role);
+
+    const [departmentList, setDepartmentList] =
+        useState([]);
 
     const navigate = useNavigate();
 
+    const canManageDepartments =
+        role === "SYSTEM_ADMIN" ||
+        role === "INSTITUTION_ADMIN";
+
+
     useEffect(() => {
+
         fetchDepartments();
+
     }, []);
+
 
     const fetchDepartments = async () => {
 
         try {
 
-            const response = await api.get("/department");
+            const response =
+                await api.get("/department");
 
             setDepartmentList(response.data);
 
@@ -29,6 +45,7 @@ function DepartmentList() {
         }
 
     };
+
 
     return (
 
@@ -44,62 +61,120 @@ function DepartmentList() {
 
                 <hr />
 
+
                 <div className="page-header">
 
-                    <h2>Department List</h2>
+                    <h2>
+                        Department List
+                    </h2>
 
-                    <button
-                        className="add-btn"
-                        onClick={() => navigate("/department/add")}
-                    >
-                        + Add Department
-                    </button>
+
+                    {/* ================================
+                        ADD DEPARTMENT
+                    ================================= */}
+
+                    {canManageDepartments && (
+
+                        <button
+                            className="add-btn"
+                            onClick={() =>
+                                navigate(
+                                    "/department/add"
+                                )
+                            }
+                        >
+                            + Add Department
+                        </button>
+
+                    )}
 
                 </div>
+
 
                 <table className="management-table">
 
                     <thead>
 
-                    <tr>
+                        <tr>
 
-                        <th>ID</th>
-                        <th>Department</th>
-                        <th>Institution</th>
-                        <th>Action</th>
+                            <th>ID</th>
 
-                    </tr>
+                            <th>
+                                Department
+                            </th>
 
-                    </thead>
+                            <th>
+                                Institution
+                            </th>
 
-                    <tbody>
 
-                    {departmentList.map((item) => (
+                            {canManageDepartments && (
 
-                        <tr key={item.departmentId}>
+                                <th>
+                                    Action
+                                </th>
 
-                            <td>{item.departmentId}</td>
-
-                            <td>{item.departmentName}</td>
-
-                            <td>{item.institution.institutionName}</td>
-
-                            <td>
-
-                                <button
-                                    className="edit-btn"
-                                    onClick={() =>
-                                        navigate(`/department/edit/${item.departmentId}`)
-                                    }
-                                >
-                                    ✏ Edit
-                                </button>
-
-                            </td>
+                            )}
 
                         </tr>
 
-                    ))}
+                    </thead>
+
+
+                    <tbody>
+
+                        {departmentList.map(
+                            (item) => (
+
+                                <tr
+                                    key={
+                                        item.departmentId
+                                    }
+                                >
+
+                                    <td>
+                                        {
+                                            item.departmentId
+                                        }
+                                    </td>
+
+                                    <td>
+                                        {
+                                            item.departmentName
+                                        }
+                                    </td>
+
+                                    <td>
+                                        {
+                                            item.institution
+                                                ?.institutionName
+                                        }
+                                    </td>
+
+
+                                    {canManageDepartments && (
+
+                                        <td>
+
+                                            <button
+                                                className="edit-btn"
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/department/edit/${item.departmentId}`
+                                                    )
+                                                }
+                                            >
+                                                ✏ Edit
+                                            </button>
+
+                                        </td>
+
+                                    )}
+
+                                </tr>
+
+                            )
+                        )}
 
                     </tbody>
 

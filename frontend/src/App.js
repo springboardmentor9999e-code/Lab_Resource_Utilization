@@ -11,6 +11,13 @@ import DepartmentList from "./pages/DepartmentList";
 import AddDepartment from "./pages/AddDepartment";
 import EditDepartment from "./pages/EditDepartment";
 import Category from "./pages/Category";
+import Utilization from "./pages/Utilization";
+import Billing from "./pages/Billing";
+import Maintenance from "./pages/Maintenance";
+import CalibrationCertification from "./pages/CalibrationCertification";
+import Reports from "./pages/Reports";
+import Analytics from "./pages/Analytics";
+import Notifications from "./pages/Notifications";
 
 function App() {
 
@@ -54,20 +61,67 @@ function App() {
         </ProtectedRoute>
     }
 />
-<Route 
-path="/department"
- element={
- <DepartmentList />} />
- <Route path="/department/add" element={<AddDepartment />} />
- <Route
+<Route
+    path="/department"
+    element={
+        <ProtectedRoute>
+            <DepartmentList />
+        </ProtectedRoute>
+    }
+/>
+
+<Route
+    path="/department/add"
+    element={
+        <ProtectedRoute>
+            <AddDepartment />
+        </ProtectedRoute>
+    }
+/>
+
+<Route
     path="/department/edit/:id"
-    element={<EditDepartment />}
+    element={
+        <ProtectedRoute>
+            <EditDepartment />
+        </ProtectedRoute>
+    }
 />
 <Route
     path="/category"
     element={
         <ProtectedRoute>
             <Category />
+        </ProtectedRoute>
+    }
+/>
+<Route
+    path="/utilization"
+    element={<Utilization />}
+/>
+<Route path="/billing" element={<Billing />} />
+<Route
+    path="/maintenance"
+    element={<Maintenance />}
+/>
+<Route
+    path="/calibration"
+    element={<CalibrationCertification />}
+/>
+<Route path="/reports" element={<Reports />} />
+<Route
+    path="/analytics"
+    element={
+        <ProtectedRoute>
+            <Analytics />
+        </ProtectedRoute>
+    }
+/>
+<Route
+    path="/notifications"
+    element={
+        <ProtectedRoute>
+            <Notifications />
         </ProtectedRoute>
     }
 />

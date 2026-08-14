@@ -71,39 +71,52 @@ function Sidebar() {
         📂 Categories
     </p>
 )}
+{/* Equipment */}
+{(role === "SYSTEM_ADMIN" ||
+  role === "INSTITUTION_ADMIN" ||
+  role === "DEPARTMENT_HEAD" ||
+  role === "LAB_MANAGER" ||
+  role === "RESEARCHER") && (
+    <p
+        style={{ cursor: "pointer" }}
+        onClick={() => navigate("/equipment")}
+    >
+        📦 Equipment
+    </p>
+)}
 
-            {/* Equipment */}
-            {(role === "SYSTEM_ADMIN" ||
-              role === "INSTITUTION_ADMIN" ||
-              role === "LAB_MANAGER") && (
-                <p
-                    style={{ cursor: "pointer" }}
-                    onClick={() => navigate("/equipment")}
-                >
-                    📦 Equipment
-                </p>
-            )}
-
-            {/* Booking */}
-            {(role === "SYSTEM_ADMIN" ||
-              role === "RESEARCHER") && (
-                <p
-                    style={{ cursor: "pointer" }}
-                    onClick={() => navigate("/booking")}
-                >
-                    📅 Bookings
-                </p>
-            )}
+           {/* Booking */}
+{(role === "SYSTEM_ADMIN" ||
+  role === "RESEARCHER" ||
+  role === "INSTITUTION_ADMIN" ||
+  role=== "DEPARTMENT_HEAD") && (
+    <p
+        style={{ cursor: "pointer" }}
+        onClick={() => navigate("/booking")}
+    >
+        📅 Bookings
+    </p>
+)}
 
             {/* Utilization */}
             {(role === "SYSTEM_ADMIN" ||
               role === "RESEARCHER") && (
                 <p
                     style={{ cursor: "pointer" }}
+                    onClick={() => navigate("/utilization")}
                 >
                     📊 Utilization
                 </p>
             )}
+            {/* Billing */}
+{role === "SYSTEM_ADMIN" && (
+    <p
+        style={{ cursor: "pointer" }}
+        onClick={() => navigate("/billing")}
+    >
+        💰 Billing
+    </p>
+)}
 
             {/* Maintenance */}
             {(role === "SYSTEM_ADMIN" ||
@@ -116,15 +129,43 @@ function Sidebar() {
                     🔧 Maintenance
                 </p>
             )}
+            {/* Calibration & Certification */}
+{(role === "SYSTEM_ADMIN" ||
+  role === "LAB_MANAGER" ||
+  role === "LAB_TECHNICIAN") && (
+    <p
+        style={{ cursor: "pointer" }}
+        onClick={() => navigate("/calibration")}
+    >
+        🧪 Calibration & Certification
+    </p>
+)}
 
-            {/* Reports */}
-            <p
-                style={{ cursor: "pointer" }}
-                onClick={() => navigate("/reports")}
-            >
-                📈 Reports
-            </p>
-
+           {/* Reports - SYSTEM_ADMIN only */}
+{role === "SYSTEM_ADMIN" && (
+    <p
+        style={{ cursor: "pointer" }}
+        onClick={() => navigate("/reports")}
+    >
+        📈 Reports
+    </p>
+)}
+            {/* Analytics */}
+{role === "SYSTEM_ADMIN" && (
+    <p
+        style={{ cursor: "pointer" }}
+        onClick={() => navigate("/analytics")}
+    >
+        📊 Analytics
+    </p>
+)}
+{/* Notifications */}
+<p
+    style={{ cursor: "pointer" }}
+    onClick={() => navigate("/notifications")}
+>
+    🔔 Notifications
+</p>
             {/* Logout */}
             <p
                 style={{ cursor: "pointer" }}

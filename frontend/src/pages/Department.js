@@ -4,6 +4,11 @@ import api from "../services/api";
 import "../styles/Management.css";
 function Department() {
 
+    const role = (localStorage.getItem("role") || "")
+    .trim()
+    .toUpperCase();
+
+console.log("Current Role:", role);
     const [departmentList, setDepartmentList] = useState([]);
 
     const [institutionList, setInstitutionList] = useState([]);
@@ -155,14 +160,16 @@ const editDepartment = (item) => {
 
                     <h2>Department List</h2>
 
-                    <button
-    className="add-btn"
-    onClick={() => setShowForm(true)}
->
-                        + Add Department
-                    </button>
+                    {role !== "DEPARTMENT_HEAD" && (
+    <button
+        className="add-btn"
+        onClick={() => setShowForm(true)}
+    >
+        + Add Department
+    </button>
+)}
 
-                {showForm && (
+                {showForm && role !== "DEPARTMENT_HEAD" && (
 
     <div className="form-card">
 
@@ -216,7 +223,9 @@ const editDepartment = (item) => {
             <th>ID</th>
             <th>Department Name</th>
             <th>Institution</th>
-            <th>Action</th>
+            {role !== "DEPARTMENT_HEAD" && (
+    <th>Action</th>
+)}
         </tr>
     </thead>
 
@@ -231,7 +240,7 @@ const editDepartment = (item) => {
                 <td>{item.departmentName}</td>
 
                 <td>{item.institution.institutionName}</td>
-
+                {role !== "DEPARTMENT_HEAD" && (
                 <td>
 
                     <button
@@ -241,6 +250,7 @@ const editDepartment = (item) => {
                     </button>
 
                 </td>
+                )}
 
             </tr>
 
