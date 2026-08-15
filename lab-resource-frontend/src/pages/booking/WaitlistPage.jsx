@@ -4,10 +4,12 @@ import { bookingApi, equipmentApi } from '../../api/api';
 import toast from 'react-hot-toast';
 import { Clock, ChevronRight, UserPlus, Trash2, X, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import useConfirm from '../../hooks/useConfirm';
 
 export default function WaitlistPage() {
   const { user, isManager, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const { confirm, confirmModal } = useConfirm();
   const [waitlistEntries, setWaitlistEntries] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,13 @@ export default function WaitlistPage() {
   };
 
   const handleLeave = async (id) => {
-    if (!window.confirm('Leave this waitlist?')) return;
+    const ok = await confirm({
+      title: 'Leave Waitlist',
+      message: 'Are you sure you want to remove yourself from this waitlist?',
+      confirmText: 'Leave',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       await bookingApi.removeFromWaitlist(id);
       toast.success('Removed from waitlist');
@@ -51,7 +59,13 @@ export default function WaitlistPage() {
   };
 
   const handlePromote = async (id) => {
-    if (!window.confirm('Promote this user from the waitlist?')) return;
+    const ok = await confirm({
+      title: 'Promote from Waitlist',
+      message: 'Promote this user to a confirmed booking? This will move them out of the waitlist.',
+      confirmText: 'Promote',
+      variant: 'success',
+    });
+    if (!ok) return;
     try {
       await bookingApi.promoteFromWaitlist(id);
       toast.success('User promoted from waitlist');
@@ -139,6 +153,7 @@ export default function WaitlistPage() {
           </div>
         )}
       </div>
+      {confirmModal}
     );
   }
 
@@ -214,6 +229,7 @@ export default function WaitlistPage() {
           </tbody>
         </table>
       </div>
+      {confirmModal}
     </div>
   );
 }

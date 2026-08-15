@@ -3,6 +3,7 @@ import { Calendar, Clock, CheckCircle, XCircle, AlertTriangle, CheckSquare, Down
 import toast from 'react-hot-toast';
 import { bookingApi, reportApi } from '../../api/api';
 import { useAuth } from '../../context/AuthContext';
+import useConfirm from '../../hooks/useConfirm';
 
 const statusConfig = {
   'DRAFT': { color: 'badge-info', icon: Clock, label: 'Draft' },
@@ -94,10 +95,16 @@ export default function MyBookingsPage() {
     }
   };
 
-  const handleCancel = (id) => {
-    if (window.confirm('Are you sure you want to cancel this booking?')) {
-      cancelMutation.mutate(id);
-    }
+  const { confirm, confirmModal } = useConfirm();
+
+  const handleCancel = async (id) => {
+    const ok = await confirm({
+      title: 'Cancel Booking',
+      message: 'Are you sure you want to cancel this booking? This action cannot be undone.',
+      confirmText: 'Yes, Cancel Booking',
+      variant: 'danger',
+    });
+    if (ok) cancelMutation.mutate(id);
   };
 
   if (isLoading) {
@@ -200,5 +207,6 @@ export default function MyBookingsPage() {
         </div>
       )}
     </div>
+    {confirmModal}
   );
 }

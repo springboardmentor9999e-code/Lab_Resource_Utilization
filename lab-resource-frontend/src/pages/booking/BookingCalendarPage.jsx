@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { equipmentApi, bookingApi } from '../../api/api';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 const timeOptions = [
   '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
@@ -39,6 +40,7 @@ export default function BookingCalendarPage() {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedDate, setSelectedDate] = useState(today);
   const [lastAttemptedEquipmentId, setLastAttemptedEquipmentId] = useState(null);
+  const [waitlistModal, setWaitlistModal] = useState({ open: false, equipmentId: null, equipmentName: '' });
   const [bookingForm, setBookingForm] = useState({
     startTime: '',
     endTime: '',
@@ -93,18 +95,26 @@ export default function BookingCalendarPage() {
       const message = err.response?.data?.message || 'Failed to create booking';
       const isConflict = message.toLowerCase().includes('conflict') || message.toLowerCase().includes('time slot');
       if (isConflict && lastAttemptedEquipmentId) {
-        const equipmentName = equipment.find(e => e.id === parseInt(lastAttemptedEquipmentId))?.equipmentName || 'this equipment';
-        const wantsWaitlist = window.confirm(
-          `That time slot for "${equipmentName}" is already booked.\n\nWould you like to join the waitlist? You will be automatically notified and promoted if a slot becomes available.`
-        );
-        if (wantsWaitlist) {
-          joinWaitlistMutation.mutate({ equipmentId: parseInt(lastAttemptedEquipmentId) });
-        }
+        const eq = equipment.find(e => e.id === parseInt(lastAttemptedEquipmentId));
+        setWaitlistModal({
+          open: true,
+          equipmentId: parseInt(lastAttemptedEquipmentId),
+          equipmentName: eq?.equipmentName || 'this equipment',
+        });
       } else {
         toast.error(message);
       }
     },
   });
+
+  const handleJoinWaitlist = () => {
+    setWaitlistModal({ open: false, equipmentId: null, equipmentName: '' });
+    joinWaitlistMutation.mutate({ equipmentId: waitlistModal.equipmentId });
+  };
+
+  const handleDeclineWaitlist = () => {
+    setWaitlistModal({ open: false, equipmentId: null, equipmentName: '' });
+  };
 
   const handleCreateBooking = () => {
     if (!selectedEquipmentId) {
@@ -389,5 +399,17 @@ export default function BookingCalendarPage() {
         </div>
       )}
     </div>
+
+    {/* Waitlist join modal */}
+    <ConfirmModal
+      isOpen={waitlistModal.open}
+      title="Time Slot Already Booked"
+      message={`The selected time slot for "${waitlistModal.equipmentName}" is already taken. Would you like to join the waitlist? You'll be automatically notified and promoted when a slot opens up.`}
+      confirmText="Join Waitlist"
+      cancelText="Pick Another Slot"
+      variant="info"
+      onConfirm={handleJoinWaitlist}
+      onCancel={handleDeclineWaitlist}
+    />
   );
 }
