@@ -128,7 +128,7 @@ function App() {
               <Route path="bookings" element={<BookingCalendarPage />} />
               <Route path="bookings/my" element={<MyBookingsPage />} />
               <Route path="bookings/approvals" element={<ManagerRoute><PendingApprovalsPage /></ManagerRoute>} />
-              <Route path="bookings/waitlist" element={<NonSystemAdminRoute><WaitlistPage /></NonSystemAdminRoute>} />
+              <Route path="bookings/waitlist" element={<WaitlistPage />} />
 
               <Route path="maintenance" element={<MaintenanceRoute><MaintenanceDashboard /></MaintenanceRoute>} />
 
