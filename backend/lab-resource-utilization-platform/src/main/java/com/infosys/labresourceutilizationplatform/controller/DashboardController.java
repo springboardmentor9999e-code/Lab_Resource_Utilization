@@ -782,4 +782,174 @@ public class DashboardController {
 
         return ResponseEntity.ok(data);
     }
+
+    @GetMapping("/heatmap-v2")
+    public ResponseEntity<?> getHeatmapV2(
+            @RequestParam(defaultValue = "weekly") String filterType,
+            Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String role = user.getRole().getRoleName();
+        List<Booking> bookings = bookingRepository.findAll();
+
+        // Filter bookings based on role permissions
+        if ("SYSTEM_ADMIN".equalsIgnoreCase(role)) {
+            // No filtering - overall/cross-institution
+        } else if ("INSTITUTION_ADMIN".equalsIgnoreCase(role)) {
+            // Filter by institution
+            Long instId = user.getInstitutionId() != null ? Long.valueOf(user.getInstitutionId()) : null;
+            bookings = bookings.stream()
+                    .filter(b -> b.getEquipment() != null 
+                            && b.getEquipment().getLaboratory() != null 
+                            && b.getEquipment().getLaboratory().getDepartment() != null 
+                            && b.getEquipment().getLaboratory().getDepartment().getInstitution() != null 
+                            && b.getEquipment().getLaboratory().getDepartment().getInstitution().getInstitutionId().equals(instId))
+                    .collect(Collectors.toList());
+        } else if ("DEPARTMENT_HEAD".equalsIgnoreCase(role)) {
+            // Filter by department
+            Long deptId = user.getDepartmentId() != null ? Long.valueOf(user.getDepartmentId()) : null;
+            bookings = bookings.stream()
+                    .filter(b -> b.getEquipment() != null 
+                            && b.getEquipment().getLaboratory() != null 
+                            && b.getEquipment().getLaboratory().getDepartment() != null 
+                            && b.getEquipment().getLaboratory().getDepartment().getDepartmentId().equals(deptId))
+                    .collect(Collectors.toList());
+        } else if ("LAB_MANAGER".equalsIgnoreCase(role) || "LAB_TECHNICIAN".equalsIgnoreCase(role)) {
+            // Filter by laboratory department
+            Long deptId = user.getDepartmentId() != null ? Long.valueOf(user.getDepartmentId()) : null;
+            bookings = bookings.stream()
+                    .filter(b -> b.getEquipment() != null 
+                            && b.getEquipment().getLaboratory() != null 
+                            && b.getEquipment().getLaboratory().getDepartment() != null 
+                            && b.getEquipment().getLaboratory().getDepartment().getDepartmentId().equals(deptId))
+                    .collect(Collectors.toList());
+        } else if ("STUDENT".equalsIgnoreCase(role) || "RESEARCHER".equalsIgnoreCase(role)) {
+            // Filter by user's own bookings
+            bookings = bookings.stream()
+                    .filter(b -> b.getUser() != null && b.getUser().getUserId().equals(user.getUserId()))
+                    .collect(Collectors.toList());
+        }
+
+        // Only count completed, active, booked, approved, or confirmed bookings
+        bookings = bookings.stream()
+                .filter(b -> "Completed".equalsIgnoreCase(b.getStatus()) 
+                        || "In Use".equalsIgnoreCase(b.getStatus()) 
+                        || "Active".equalsIgnoreCase(b.getStatus())
+                        || "Approved".equalsIgnoreCase(b.getStatus())
+                        || "Confirmed".equalsIgnoreCase(b.getStatus()))
+                .collect(Collectors.toList());
+
+        // Calculate most used equipment, least used equipment
+        Map<String, Long> equipUsage = bookings.stream()
+                .filter(b -> b.getEquipment() != null)
+                .collect(Collectors.groupingBy(b -> b.getEquipment().getEquipmentName(), Collectors.counting()));
+
+        String mostUsed = equipUsage.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse("None");
+
+        String leastUsed = equipUsage.entrySet().stream()
+                .min(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse("None");
+
+        // Prepare heatmap points depending on filterType (daily, weekly, monthly)
+        List<Map<String, Object>> cells = new ArrayList<>();
+        Map<String, Integer> cellValues = new LinkedHashMap<>();
+
+        if ("daily".equalsIgnoreCase(filterType)) {
+            // 24 hours of today / aggregate by hour of day (00:00 to 23:00)
+            for (int h = 0; h < 24; h++) {
+                cellValues.put(String.format("%02d:00", h), 0);
+            }
+            for (Booking b : bookings) {
+                if (b.getStartTime() != null) {
+                    int hour = b.getStartTime().getHour();
+                    String key = String.format("%02d:00", hour);
+                    cellValues.put(key, cellValues.getOrDefault(key, 0) + 1);
+                }
+            }
+        } else if ("monthly".equalsIgnoreCase(filterType)) {
+            // Days of the current month (1 to 31)
+            int daysInMonth = LocalDate.now().lengthOfMonth();
+            for (int d = 1; d <= daysInMonth; d++) {
+                cellValues.put(String.valueOf(d), 0);
+            }
+            for (Booking b : bookings) {
+                if (b.getBookingDate() != null && b.getBookingDate().getMonth() == LocalDate.now().getMonth()) {
+                    String key = String.valueOf(b.getBookingDate().getDayOfMonth());
+                    cellValues.put(key, cellValues.getOrDefault(key, 0) + 1);
+                }
+            }
+        } else {
+            // Weekly (default): Monday to Sunday
+            String[] weekDays = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+            for (String day : weekDays) {
+                cellValues.put(day, 0);
+            }
+            for (Booking b : bookings) {
+                if (b.getBookingDate() != null) {
+                    String dayOfWeek = b.getBookingDate().getDayOfWeek().name();
+                    String formattedDay = dayOfWeek.substring(0, 1) + dayOfWeek.substring(1).toLowerCase();
+                    cellValues.put(formattedDay, cellValues.getOrDefault(formattedDay, 0) + 1);
+                }
+            }
+        }
+
+        // Find day/slot with highest utilization
+        String highestDay = "None";
+        int maxVal = -1;
+        for (Map.Entry<String, Integer> entry : cellValues.entrySet()) {
+            if (entry.getValue() > maxVal) {
+                maxVal = entry.getValue();
+                highestDay = entry.getKey();
+            }
+        }
+        if (maxVal <= 0) {
+            highestDay = "None";
+        }
+
+        // Generate cells with level (0 = none, 1 = low, 2 = moderate, 3 = high)
+        int maxCellVal = cellValues.values().stream().max(Integer::compare).orElse(0);
+
+        for (Map.Entry<String, Integer> entry : cellValues.entrySet()) {
+            Map<String, Object> cell = new HashMap<>();
+            cell.put("label", entry.getKey());
+            int val = entry.getValue();
+            cell.put("value", val);
+
+            int level = 0;
+            if (val > 0) {
+                if (maxCellVal == 0) {
+                    level = 1;
+                } else {
+                    double percent = (double) val / maxCellVal;
+                    if (percent <= 0.33) {
+                        level = 1;
+                    } else if (percent <= 0.66) {
+                        level = 2;
+                    } else {
+                        level = 3;
+                    }
+                }
+            }
+            cell.put("level", level);
+            cells.add(cell);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("cells", cells);
+        response.put("mostUsed", mostUsed);
+        response.put("leastUsed", leastUsed);
+        response.put("highestDay", highestDay);
+        response.put("totalBookings", bookings.size());
+
+        return ResponseEntity.ok(response);
+    }
 }

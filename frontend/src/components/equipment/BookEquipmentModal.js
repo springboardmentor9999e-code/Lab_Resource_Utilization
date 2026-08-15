@@ -37,6 +37,10 @@ const BookEquipmentModal = ({ show, handleClose, equipment }) => {
     };
 
     const handleBooking = async () => {
+        const confirmed = window.confirm("Are you sure you want to book this equipment?");
+        if (!confirmed) {
+            return;
+        }
         try {
             const userId = localStorage.getItem("userId");
             const booking = {

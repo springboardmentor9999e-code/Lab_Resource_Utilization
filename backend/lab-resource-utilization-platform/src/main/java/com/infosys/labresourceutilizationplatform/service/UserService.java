@@ -70,13 +70,7 @@ public class UserService {
 
         Long uId = user.getUserId() != null ? Long.valueOf(user.getUserId()) : null;
         Long instId = user.getInstitutionId() != null ? Long.valueOf(user.getInstitutionId()) : null;
-        notificationService.sendNotification(uId, null, instId, "Account Approved", "Your account has been approved by the Administrator.", "SYSTEM", "High");
-
-        // Send approval email
-        if (user.getEmail() != null) {
-            emailNotificationService.sendEmailAsync(user.getEmail(), "Account Approved",
-                    "Congratulations! Your account on the Lab Resource Utilization Platform has been approved by the Administrator. You can now log in.");
-        }
+        notificationService.sendNotification(uId, null, instId, "Account Approved", "Congratulations! Your account on the Lab Resource Utilization Platform has been approved by the Administrator. You can now log in.", "SYSTEM", "High");
 
         return "User approved successfully.";
     }
@@ -90,12 +84,7 @@ public class UserService {
 
         Long uId = user.getUserId() != null ? Long.valueOf(user.getUserId()) : null;
         Long instId = user.getInstitutionId() != null ? Long.valueOf(user.getInstitutionId()) : null;
-        notificationService.sendNotification(uId, null, instId, "Account Rejected", "Your account registration has been rejected.", "SYSTEM", "High");
-
-        if (user.getEmail() != null) {
-            emailNotificationService.sendEmailAsync(user.getEmail(), "Account Registration Update",
-                    "Your account registration on the Lab Resource Utilization Platform has been declined.");
-        }
+        notificationService.sendNotification(uId, null, instId, "Account Rejected", "Your account registration on the Lab Resource Utilization Platform has been declined.", "SYSTEM", "High");
 
         return "User rejected successfully.";
     }
@@ -105,7 +94,11 @@ public class UserService {
             return "Invalid email format!";
         }
 
-        if (request.getPhone() == null || !request.getPhone().matches("^\\+?[0-9]{10,15}$")) {
+        if (request.getPhone() == null) {
+            return "Phone number is required!";
+        }
+        String checkPhone = normalizeIndianPhoneNumber(request.getPhone());
+        if (!isValidPhoneNumber(checkPhone)) {
             return "Invalid phone number format! Must be 10-15 digits.";
         }
 
@@ -132,9 +125,12 @@ public class UserService {
             return "Please select or enter an institution.";
         }
 
-        // Validate selection/input of Department
-        if (request.getDepartmentId() == null && (request.getDepartmentName() == null || request.getDepartmentName().trim().isEmpty())) {
-            return "Please select or enter a department.";
+        // Validate selection/input of Department (NOT required for SYSTEM_ADMIN or INSTITUTION_ADMIN)
+        boolean isSysOrInstAdmin = "SYSTEM_ADMIN".equals(request.getRoleName()) || "INSTITUTION_ADMIN".equals(request.getRoleName());
+        if (!isSysOrInstAdmin) {
+            if (request.getDepartmentId() == null && (request.getDepartmentName() == null || request.getDepartmentName().trim().isEmpty())) {
+                return "Please select or enter a department.";
+            }
         }
 
         // Resolve or create Institution
@@ -184,7 +180,9 @@ public class UserService {
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setPhone(request.getPhone());
+        
+        user.setPhone(normalizeIndianPhoneNumber(request.getPhone()));
+
         user.setRole(role);
         user.setInstitutionId(instId);
         user.setDepartmentId(deptId);
@@ -200,20 +198,15 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
-        // Required Event: After successful user registration, send confirmation email
-        emailNotificationService.sendEmailAsync(
-                savedUser.getEmail(),
+        notificationService.sendNotification(
+                savedUser.getUserId().longValue(),
+                null,
+                null,
                 "Registration Confirmation",
-                "Welcome! Your registration on the Lab Resource Utilization Platform was successful."
+                "Welcome! Your registration on the Lab Resource Utilization Platform was successful.",
+                "SYSTEM",
+                "High"
         );
-
-        // Send SMS confirmation
-        if (savedUser.getPhone() != null) {
-            smsNotificationService.sendSmsAsync(
-                    savedUser.getPhone(),
-                    "Welcome! Your registration on the Lab Resource Utilization Platform was successful."
-            );
-        }
 
         if ("PENDING".equals(savedUser.getStatus())) {
             Long newInstId = savedUser.getInstitutionId() != null ? Long.valueOf(savedUser.getInstitutionId()) : null;
@@ -248,12 +241,17 @@ public class UserService {
 
         String token = jwtService.generateToken(user.getEmail());
 
-        // Required Event: After every successful login, send a short welcome-back email
-        emailNotificationService.sendEmailAsync(
-                user.getEmail(),
+        notificationService.sendNotification(
+                user.getUserId().longValue(),
+                null,
+                null,
                 "Login Notification",
-                "Welcome back to the Lab Resource Utilization Platform. You have successfully logged in."
+                "Welcome back to the Lab Resource Utilization Platform. You have successfully logged in.",
+                "SYSTEM",
+                "High"
         );
+
+
 
         return new LoginResponse(
                 token,
@@ -359,12 +357,17 @@ public class UserService {
 
         String token = jwtService.generateToken(user.getEmail());
 
-        // Send login welcome-back email
-        emailNotificationService.sendEmailAsync(
-                user.getEmail(),
-                "Google Login Notification",
-                "Welcome back to the Lab Resource Utilization Platform. You have successfully logged in via Google."
+        notificationService.sendNotification(
+                user.getUserId().longValue(),
+                null,
+                null,
+                "Login Notification",
+                "Welcome back to the Lab Resource Utilization Platform. You have successfully logged in.",
+                "SYSTEM",
+                "High"
         );
+
+
 
         return new LoginResponse(
                 token,
@@ -567,10 +570,11 @@ public class UserService {
             user.setFullName(profileDto.getFullName());
         }
         if (profileDto.getPhone() != null && !profileDto.getPhone().trim().isEmpty()) {
-            if (!profileDto.getPhone().matches("^\\+?[0-9]{10,15}$")) {
-                throw new RuntimeException("Invalid phone number format! Must be 10-15 digits.");
+            String normalizedPhone = normalizeIndianPhoneNumber(profileDto.getPhone());
+            if (!isValidPhoneNumber(normalizedPhone)) {
+                throw new RuntimeException("Invalid phone number format. Must be a valid 10-digit Indian number or international number.");
             }
-            user.setPhone(profileDto.getPhone());
+            user.setPhone(normalizedPhone);
         }
         if (profileDto.getProfilePhoto() != null) {
             user.setProfilePhoto(profileDto.getProfilePhoto());
@@ -606,5 +610,41 @@ public class UserService {
         );
 
         return "Password changed successfully.";
+    }
+
+    public String normalizeIndianPhoneNumber(String phone) {
+        if (phone == null) return null;
+        
+        // Remove all spaces, hyphens, formatting characters (except digits and '+')
+        String cleaned = phone.replaceAll("[^0-9+]", "");
+        
+        if (cleaned.startsWith("+")) {
+            String suffix = cleaned.substring(1);
+            if (suffix.startsWith("91") && suffix.length() == 12) {
+                return cleaned;
+            }
+            return cleaned;
+        }
+        
+        if (cleaned.startsWith("91") && cleaned.length() == 12) {
+            return "+" + cleaned;
+        }
+        
+        if (cleaned.length() == 10) {
+            return "+91" + cleaned;
+        }
+        
+        return cleaned;
+    }
+
+    private boolean isValidPhoneNumber(String phone) {
+        if (phone == null) return false;
+        if (phone.startsWith("+91")) {
+            return phone.matches("^\\+91[6-9]\\d{9}$");
+        }
+        if (phone.startsWith("+")) {
+            return phone.matches("^\\+\\d{7,15}$");
+        }
+        return false;
     }
 }

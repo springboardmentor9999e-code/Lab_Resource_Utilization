@@ -70,7 +70,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // Calculate and set duration automatically (in hours)
-        double durationMinutes = java.time.Duration.between(bookingStart, bookingEnd).toMinutes();
+        double durationMinutes = java.time.Duration.between(bookingStart, bookingEnd).toSeconds() / 60.0;
         if (durationMinutes <= 0) {
             throw new RuntimeException("Booking duration must be greater than zero.");
         }
@@ -139,6 +139,7 @@ public class BookingServiceImpl implements BookingService {
         String msg = "New booking request received from " + userName + " for " + eqName + ".";
 
         // Generate notifications for only the roles responsible for approval
+        notificationService.sendNotification(saved.getUser().getUserId().longValue(), null, null, "Booking Request", "Your booking request for " + eqName + " on " + saved.getBookingDate() + " has been submitted.", "BOOKING", "Medium");
         notificationService.sendNotification(null, "INSTITUTION_ADMIN", instId, "Booking Request", msg, "BOOKING", "Medium");
         notificationService.sendNotification(null, "SYSTEM_ADMIN", null, "Booking Request", msg, "BOOKING", "Medium");
         notificationService.sendNotification(null, "LAB_MANAGER", instId, "Booking Request", msg, "BOOKING", "Medium");
@@ -197,7 +198,7 @@ public class BookingServiceImpl implements BookingService {
         existingBooking.setEndTime(booking.getEndTime());
         
         if (booking.getStartTime() != null && booking.getEndTime() != null) {
-            double durationMinutes = java.time.Duration.between(booking.getStartTime(), booking.getEndTime()).toMinutes();
+            double durationMinutes = java.time.Duration.between(booking.getStartTime(), booking.getEndTime()).toSeconds() / 60.0;
             double durationHrs = durationMinutes / 60.0;
             existingBooking.setDuration(durationHrs);
 
@@ -216,11 +217,11 @@ public class BookingServiceImpl implements BookingService {
         
         if ("Approved".equalsIgnoreCase(booking.getStatus()) || "Confirmed".equalsIgnoreCase(booking.getStatus())) {
             java.time.LocalDateTime now = java.time.LocalDateTime.now(java.time.ZoneId.systemDefault());
-            java.time.LocalDateTime bookingStart = java.time.LocalDateTime.of(existingBooking.getBookingDate(), existingBooking.getStartTime());
-            if (bookingStart.isBefore(now)) {
+            java.time.LocalDateTime bookingEnd = java.time.LocalDateTime.of(existingBooking.getBookingDate(), existingBooking.getEndTime());
+            if (bookingEnd.isBefore(now)) {
                 existingBooking.setStatus("Expired");
                 bookingRepository.save(existingBooking);
-                throw new RuntimeException("This booking request has expired because the requested booking time has already passed.");
+                throw new RuntimeException("Booking request expired");
             }
         }
         

@@ -23,6 +23,7 @@ import {
 import axios from "axios";
 import DashboardLayout from "./DashboardLayout";
 import ConfirmationModal from "../common/ConfirmationModal";
+import UtilizationHeatMap from "./UtilizationHeatMap";
 
 // Register ChartJS elements
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -390,6 +391,9 @@ function LabTechnicianDashboard() {
                     </Table>
                 </Card.Body>
             </Card>
+
+            <UtilizationHeatMap />
+
             <ConfirmationModal
                 show={showConfirm}
                 title={confirmConfig.title}

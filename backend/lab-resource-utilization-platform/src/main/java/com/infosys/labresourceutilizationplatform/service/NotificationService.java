@@ -81,6 +81,15 @@ public class NotificationService {
         boolean shouldSms = "ALL".equalsIgnoreCase(channel) || "SMS".equalsIgnoreCase(channel);
 
         for (User user : targetUsers) {
+            String userRole = user.getRole() != null ? user.getRole().getRoleName() : null;
+            Long uIdVal = user.getUserId() != null ? user.getUserId().longValue() : null;
+
+            if (userId == null && !isCategoryAllowedForRole(userRole, category, uIdVal, userId)) {
+                log.info("[NOTIFICATION FILTER] Blocked category '{}' notification from dispatch to user {} (Role: {})", 
+                        category, user.getEmail(), userRole);
+                continue;
+            }
+
             if (shouldEmail && user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
                 try {
                     emailNotificationService.sendEmailAsync(user.getEmail(), title, message);
@@ -99,6 +108,54 @@ public class NotificationService {
         }
     }
 
+    private boolean isCategoryAllowedForRole(String roleName, String category, Long userId, Long targetUserId) {
+        if (roleName == null) return true;
+        switch (roleName.toUpperCase()) {
+            case "STUDENT":
+            case "RESEARCHER":
+                return "BOOKING".equals(category) || "EQUIPMENT".equals(category) || "SYSTEM".equals(category);
+
+            case "LAB_TECHNICIAN":
+                if ("BOOKING".equals(category)) {
+                    return targetUserId != null && targetUserId.equals(userId);
+                }
+                return "MAINTENANCE".equals(category) || 
+                       "CALIBRATION".equals(category) || 
+                       "LICENSE_RENEWAL".equals(category) || 
+                       "CERTIFICATE_RENEWAL".equals(category);
+
+            case "LAB_MANAGER":
+                if ("BOOKING".equals(category)) {
+                    return (targetUserId != null && targetUserId.equals(userId)) || "LAB_MANAGER".equalsIgnoreCase(roleName);
+                }
+                return "MAINTENANCE".equals(category) || 
+                       "CALIBRATION".equals(category) || 
+                       "LICENSE_RENEWAL".equals(category) || 
+                       "SYSTEM".equals(category);
+
+            case "DEPARTMENT_HEAD":
+                return "MAINTENANCE".equals(category) || 
+                       "CALIBRATION".equals(category) || 
+                       "LICENSE_RENEWAL".equals(category) || 
+                       "EQUIPMENT".equals(category) || 
+                       "SYSTEM".equals(category);
+
+            case "INSTITUTION_ADMIN":
+                return "SYSTEM".equals(category) || 
+                       "BOOKING".equals(category) || 
+                       "MAINTENANCE".equals(category) || 
+                       "CALIBRATION".equals(category) || 
+                       "LICENSE_RENEWAL".equals(category) || 
+                       "CERTIFICATE_RENEWAL".equals(category);
+
+            case "SYSTEM_ADMIN":
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
     public List<Notification> getUserNotifications(Long userId, String roleName, Long institutionId) {
         List<Notification> rawList = notificationRepository.findUserNotifications(userId, roleName, institutionId);
         if (roleName == null) {
@@ -109,7 +166,7 @@ public class NotificationService {
             switch (roleName) {
                 case "STUDENT":
                 case "RESEARCHER":
-                    return "BOOKING".equals(n.getCategory()) || "EQUIPMENT".equals(n.getCategory());
+                    return "BOOKING".equals(n.getCategory()) || "EQUIPMENT".equals(n.getCategory()) || "SYSTEM".equals(n.getCategory());
 
                 case "LAB_TECHNICIAN":
                     if ("BOOKING".equals(n.getCategory())) {

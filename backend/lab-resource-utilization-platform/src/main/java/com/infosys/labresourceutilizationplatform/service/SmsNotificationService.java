@@ -44,19 +44,34 @@ public class SmsNotificationService {
      * Synchronous send method returning boolean success/failure.
      */
     public boolean sendSms(String phoneNumber, String message) {
+        boolean isTargetMessage = message != null && (message.contains("Login Notification") || message.contains("Registration Confirmation") || message.contains("Welcome back") || message.contains("Welcome!"));
+        String cleanPhone = normalizePhoneNumber(phoneNumber);
+
+        if (isTargetMessage) {
+            log.info("Login SMS requested for: {}", cleanPhone != null ? cleanPhone : phoneNumber);
+        }
+
         if (!smsEnabled) {
             log.info("[SMS SERVICE] SMS notifications are disabled via configuration. Target: {}", phoneNumber);
+            if (isTargetMessage) {
+                log.info("SMS sending failed: SMS notifications are disabled via configuration");
+            }
             return false;
         }
 
         if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
             log.warn("[SMS SERVICE] No registered phone number provided. SMS delivery skipped.");
+            if (isTargetMessage) {
+                log.info("SMS sending failed: No registered phone number provided");
+            }
             return false;
         }
 
-        String cleanPhone = phoneNumber.replaceAll("[^0-9+]", "");
-        if (cleanPhone.length() < 10) {
+        if (cleanPhone == null || cleanPhone.trim().isEmpty() || !cleanPhone.startsWith("+")) {
             log.warn("[SMS SERVICE] Invalid phone number format: '{}'. SMS delivery skipped.", phoneNumber);
+            if (isTargetMessage) {
+                log.info("SMS sending failed: Invalid phone number format");
+            }
             return false;
         }
 
@@ -67,18 +82,50 @@ public class SmsNotificationService {
         if ("mock".equalsIgnoreCase(smsProvider) || apiKey == null || apiKey.trim().isEmpty()) {
             log.info("[SMS SERVICE (MOCK/SIMULATION)] SMS provider configured as '{}'. To enable live SMS, set SMS_PROVIDER, SMS_API_KEY, SMS_API_SECRET. " +
                     "Simulating delivery to {} (Sender: {}): \"{}\"", smsProvider, cleanPhone, senderId, shortMessage);
-            return true;
+            if (isTargetMessage) {
+                log.info("SMS sending failed: SMS provider is mock or credentials are not configured");
+            }
+            return false;
+        }
+
+        if (isTargetMessage) {
+            log.info("SMS sending started");
         }
 
         try {
             // Live SMS HTTP/REST Gateway Integration
             log.info("[SMS SERVICE] Dispatched live SMS via '{}' to {} : \"{}\"", smsProvider, cleanPhone, shortMessage);
+            if (isTargetMessage) {
+                log.info("SMS sending succeeded");
+            }
             return true;
         } catch (Exception ex) {
             log.error("[SMS SERVICE FAILURE] Failed to deliver SMS to {}: {}. Business flow will continue unaffected.",
                     cleanPhone, ex.getMessage());
+            if (isTargetMessage) {
+                log.info("SMS sending failed: {}", ex.getMessage());
+            }
             return false;
         }
+    }
+
+    private String normalizePhoneNumber(String phone) {
+        if (phone == null) return null;
+        String cleaned = phone.replaceAll("[^0-9+]", "");
+        if (cleaned.startsWith("+")) {
+            String suffix = cleaned.substring(1);
+            if (suffix.startsWith("91") && suffix.length() == 12) {
+                return cleaned;
+            }
+            return cleaned;
+        }
+        if (cleaned.startsWith("91") && cleaned.length() == 12) {
+            return "+" + cleaned;
+        }
+        if (cleaned.length() == 10) {
+            return "+91" + cleaned;
+        }
+        return cleaned;
     }
 
     private String formatSmsText(String message) {

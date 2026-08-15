@@ -38,7 +38,7 @@ public class SecurityConfig {
                         // =========================
                         // Authentication
                         // =========================
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/error").permitAll()
                         .requestMatchers("/api/profile/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/issues").hasAnyAuthority("STUDENT", "RESEARCHER")
                         .requestMatchers(HttpMethod.GET, "/api/issues").hasAnyAuthority("LAB_TECHNICIAN", "LAB_MANAGER", "SYSTEM_ADMIN", "INSTITUTION_ADMIN", "DEPARTMENT_HEAD", "STUDENT", "RESEARCHER")

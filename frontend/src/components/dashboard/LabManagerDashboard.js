@@ -21,6 +21,7 @@ import {
 import axios from "axios";
 import DashboardLayout from "./DashboardLayout";
 import ConfirmationModal from "../common/ConfirmationModal";
+import UtilizationHeatMap from "./UtilizationHeatMap";
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -233,6 +234,8 @@ function LabManagerDashboard() {
                     )}
                 </Card.Body>
             </Card>
+
+            <UtilizationHeatMap />
 
             {/* Reusable Professional Confirmation Modal */}
             <ConfirmationModal

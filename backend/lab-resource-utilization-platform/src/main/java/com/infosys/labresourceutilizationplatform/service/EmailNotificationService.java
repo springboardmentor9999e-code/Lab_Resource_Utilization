@@ -44,13 +44,25 @@ public class EmailNotificationService {
      * Synchronous send method returning boolean success/failure.
      */
     public boolean sendEmail(String toEmail, String subject, String body) {
+        boolean isTargetSubject = "Login Notification".equalsIgnoreCase(subject) || "Registration Confirmation".equalsIgnoreCase(subject);
+        
+        if (isTargetSubject) {
+            log.info("Login email requested for: {}", toEmail);
+        }
+
         if (!emailEnabled) {
             log.info("[EMAIL SERVICE] Email notifications are disabled via configuration. Target: {}", toEmail);
+            if (isTargetSubject) {
+                log.info("Email sending failed: Email notifications are disabled via configuration");
+            }
             return false;
         }
 
         if (toEmail == null || toEmail.trim().isEmpty() || !toEmail.contains("@")) {
             log.warn("[EMAIL SERVICE] Invalid recipient email address: '{}'. Email skipped.", toEmail);
+            if (isTargetSubject) {
+                log.info("Email sending failed: Invalid recipient email address");
+            }
             return false;
         }
 
@@ -59,7 +71,14 @@ public class EmailNotificationService {
             log.warn("[EMAIL SERVICE CONFIGURATION] SMTP is not fully configured (host: '{}', username: '{}'). " +
                     "To enable real email delivery, set SMTP_HOST, SMTP_PORT, SMTP_USERNAME, and SMTP_PASSWORD. " +
                     "Skipping live SMTP delivery to: {} | Subject: '{}'", smtpHost, smtpUsername, toEmail, subject);
+            if (isTargetSubject) {
+                log.info("Email sending failed: SMTP is not configured (host: " + smtpHost + ", username: " + smtpUsername + ")");
+            }
             return false;
+        }
+
+        if (isTargetSubject) {
+            log.info("Email sending started");
         }
 
         try {
@@ -71,10 +90,16 @@ public class EmailNotificationService {
 
             mailSender.send(mailMessage);
             log.info("[EMAIL SERVICE] Email successfully dispatched to {} | Subject: '{}'", toEmail, subject);
+            if (isTargetSubject) {
+                log.info("Email sending succeeded");
+            }
             return true;
         } catch (Exception ex) {
             log.error("[EMAIL SERVICE FAILURE] Failed to deliver email to {}: {}. Business flow will continue unaffected.",
                     toEmail, ex.getMessage());
+            if (isTargetSubject) {
+                log.info("Email sending failed: {}", ex.getMessage());
+            }
             return false;
         }
     }

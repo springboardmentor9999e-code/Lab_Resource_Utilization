@@ -24,6 +24,7 @@ import {
 import axios from "axios";
 import DashboardLayout from "./DashboardLayout";
 import ConfirmationModal from "../common/ConfirmationModal";
+import UtilizationHeatMap from "./UtilizationHeatMap";
 
 // Register ChartJS elements
 ChartJS.register(
@@ -560,6 +561,9 @@ function InstitutionAdminDashboard() {
                     )}
                 </Card.Body>
             </Card>
+
+            <UtilizationHeatMap />
+
             <ConfirmationModal
                 show={showConfirm}
                 title={confirmConfig.title}

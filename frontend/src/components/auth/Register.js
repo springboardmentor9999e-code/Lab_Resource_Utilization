@@ -121,14 +121,18 @@ function Register({ onRegisterSuccess }) {
             return;
         }
 
-        // Department validation
-        if (!user.departmentId) {
-            setError("Please select or enter a department.");
-            return;
-        }
-        if (user.departmentId === "CUSTOM" && !user.customDepartmentName.trim()) {
-            setError("Please enter your custom department name.");
-            return;
+        const isSysOrInstAdmin = user.roleName === "SYSTEM_ADMIN" || user.roleName === "INSTITUTION_ADMIN";
+
+        // Department validation (NOT required for SYSTEM_ADMIN or INSTITUTION_ADMIN)
+        if (!isSysOrInstAdmin) {
+            if (!user.departmentId) {
+                setError("Please select or enter a department.");
+                return;
+            }
+            if (user.departmentId === "CUSTOM" && !user.customDepartmentName.trim()) {
+                setError("Please enter your custom department name.");
+                return;
+            }
         }
 
         if (user.roleName === "STUDENT" && !user.rollNumber.trim()) {
@@ -146,8 +150,8 @@ function Register({ onRegisterSuccess }) {
                 roleName: user.roleName,
                 institutionId: user.institutionId === "CUSTOM" ? null : parseInt(user.institutionId),
                 institutionName: user.institutionId === "CUSTOM" ? user.customInstitutionName : null,
-                departmentId: user.departmentId === "CUSTOM" ? null : parseInt(user.departmentId),
-                departmentName: user.departmentId === "CUSTOM" ? user.customDepartmentName : null,
+                departmentId: isSysOrInstAdmin ? null : (user.departmentId === "CUSTOM" ? null : parseInt(user.departmentId)),
+                departmentName: isSysOrInstAdmin ? null : (user.departmentId === "CUSTOM" ? user.customDepartmentName : null),
                 rollNumber: user.roleName === "STUDENT" ? user.rollNumber : null,
                 researchId: user.roleName === "RESEARCHER" ? user.researchId : null
             });
@@ -177,8 +181,9 @@ function Register({ onRegisterSuccess }) {
             setError(err.response?.data || "Registration Failed. Email might be already registered or server is down.");
             console.error(err);
         }
-
     };
+
+    const isSysOrInstAdmin = user.roleName === "SYSTEM_ADMIN" || user.roleName === "INSTITUTION_ADMIN";
 
     return (
         <>
@@ -365,37 +370,39 @@ function Register({ onRegisterSuccess }) {
                 )}
 
                 {/* Select Department */}
-                <div className="mb-3">
-                    <label className="form-label small fw-semibold">
-                        Select Department
-                    </label>
-                    <div className="input-group">
-                        <span className="input-group-text">
-                            <BsBuilding />
-                        </span>
-                        <select
-                            className="form-select"
-                            name="departmentId"
-                            value={user.departmentId}
-                            onChange={handleChange}
-                            disabled={!user.institutionId}
-                            required
-                        >
-                            <option value="">-- Select Department --</option>
-                            {departments.map(dept => (
-                                <option key={dept.departmentId} value={dept.departmentId}>
-                                    {dept.departmentName}
-                                </option>
-                            ))}
-                            {user.institutionId && (
-                                <option value="CUSTOM" className="fw-bold text-primary">+ -- Enter Custom Department --</option>
-                            )}
-                        </select>
+                {!isSysOrInstAdmin && (
+                    <div className="mb-3">
+                        <label className="form-label small fw-semibold">
+                            Select Department
+                        </label>
+                        <div className="input-group">
+                            <span className="input-group-text">
+                                <BsBuilding />
+                            </span>
+                            <select
+                                className="form-select"
+                                name="departmentId"
+                                value={user.departmentId}
+                                onChange={handleChange}
+                                disabled={!user.institutionId}
+                                required
+                            >
+                                <option value="">-- Select Department --</option>
+                                {departments.map(dept => (
+                                    <option key={dept.departmentId} value={dept.departmentId}>
+                                        {dept.departmentName}
+                                    </option>
+                                ))}
+                                {user.institutionId && (
+                                    <option value="CUSTOM" className="fw-bold text-primary">+ -- Enter Custom Department --</option>
+                                )}
+                            </select>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Conditional Field: Custom Department Name */}
-                {user.departmentId === "CUSTOM" && (
+                {!isSysOrInstAdmin && user.departmentId === "CUSTOM" && (
                     <div className="mb-3 ps-3 border-start border-primary border-2">
                         <label className="form-label small fw-semibold text-primary">
                             Custom Department Name

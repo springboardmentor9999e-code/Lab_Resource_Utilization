@@ -26,6 +26,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import DashboardLayout from "./DashboardLayout";
+import UtilizationHeatMap from "./UtilizationHeatMap";
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
@@ -345,6 +346,9 @@ function ResearcherDashboard() {
                     )}
                 </Card.Body>
             </Card>
+
+            <UtilizationHeatMap />
+
         </DashboardLayout>
     );
 }

@@ -31,6 +31,7 @@ import * as equipService from "../../services/equipmentService";
 import axios from "axios";
 import DashboardLayout from "./DashboardLayout";
 import ConfirmationModal from "../common/ConfirmationModal";
+import UtilizationHeatMap from "./UtilizationHeatMap";
 
 // Register ChartJS elements
 ChartJS.register(
@@ -1092,6 +1093,10 @@ function SystemAdminDashboard() {
                                     </Card>
                                 </Col>
                             </Row>
+
+                            <div className="mt-4">
+                                <UtilizationHeatMap />
+                            </div>
                         </div>
                     ) : activeTab === "institutions" ? (
                         institutions.length === 0 ? (

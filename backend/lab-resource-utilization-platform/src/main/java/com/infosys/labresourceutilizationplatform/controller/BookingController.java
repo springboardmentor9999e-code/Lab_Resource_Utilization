@@ -17,12 +17,14 @@ public class BookingController {
     private BookingService bookingService;
 
     @PostMapping
-    public ResponseEntity<Booking> createBooking(@RequestBody Booking booking) {
-
-        System.out.println("Booking API Hit");
-
-        Booking savedBooking = bookingService.createBooking(booking);
-        return ResponseEntity.ok(savedBooking);
+    public ResponseEntity<?> createBooking(@RequestBody Booking booking) {
+        try {
+            System.out.println("Booking API Hit");
+            Booking savedBooking = bookingService.createBooking(booking);
+            return ResponseEntity.ok(savedBooking);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        }
     }
 
     @GetMapping
@@ -43,18 +45,21 @@ public class BookingController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Booking> updateBooking(
+    public ResponseEntity<?> updateBooking(
             @PathVariable Long id,
             @RequestBody Booking booking) {
+        try {
+            Booking updatedBooking =
+                    bookingService.updateBooking(id, booking);
 
-        Booking updatedBooking =
-                bookingService.updateBooking(id, booking);
+            if (updatedBooking == null) {
+                return ResponseEntity.notFound().build();
+            }
 
-        if (updatedBooking == null) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(updatedBooking);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
         }
-
-        return ResponseEntity.ok(updatedBooking);
     }
 
     @PutMapping("/{id}/cancel")

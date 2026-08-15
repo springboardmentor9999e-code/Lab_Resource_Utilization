@@ -13,7 +13,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+// @Component
 public class BookingScheduler {
 
     @Autowired
@@ -22,7 +22,7 @@ public class BookingScheduler {
     @Autowired
     private EquipmentRepository equipmentRepository;
 
-    @Scheduled(fixedRate = 60000)
+    // @Scheduled(fixedRate = 60000)
     public void processAutomaticTransitions() {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
