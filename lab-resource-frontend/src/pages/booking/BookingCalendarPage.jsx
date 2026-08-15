@@ -38,6 +38,7 @@ export default function BookingCalendarPage() {
   const [selectedEquipmentId, setSelectedEquipmentId] = useState('');
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedDate, setSelectedDate] = useState(today);
+  const [lastAttemptedEquipmentId, setLastAttemptedEquipmentId] = useState(null);
   const [bookingForm, setBookingForm] = useState({
     startTime: '',
     endTime: '',
@@ -70,6 +71,16 @@ export default function BookingCalendarPage() {
     },
   });
 
+  const joinWaitlistMutation = useMutation({
+    mutationFn: (data) => bookingApi.joinWaitlist(data),
+    onSuccess: () => {
+      toast.success('You have been added to the waitlist! We will notify you when the slot opens up.');
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Failed to join waitlist');
+    },
+  });
+
   const createBookingMutation = useMutation({
     mutationFn: (data) => bookingApi.create(data),
     onSuccess: () => {
@@ -79,7 +90,19 @@ export default function BookingCalendarPage() {
       setBookingForm({ startTime: '', endTime: '', purpose: '' });
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || 'Failed to create booking');
+      const message = err.response?.data?.message || 'Failed to create booking';
+      const isConflict = message.toLowerCase().includes('conflict') || message.toLowerCase().includes('time slot');
+      if (isConflict && lastAttemptedEquipmentId) {
+        const equipmentName = equipment.find(e => e.id === parseInt(lastAttemptedEquipmentId))?.equipmentName || 'this equipment';
+        const wantsWaitlist = window.confirm(
+          `That time slot for "${equipmentName}" is already booked.\n\nWould you like to join the waitlist? You will be automatically notified and promoted if a slot becomes available.`
+        );
+        if (wantsWaitlist) {
+          joinWaitlistMutation.mutate({ equipmentId: parseInt(lastAttemptedEquipmentId) });
+        }
+      } else {
+        toast.error(message);
+      }
     },
   });
 
@@ -112,6 +135,7 @@ export default function BookingCalendarPage() {
       toast.error('End time must be after start time');
       return;
     }
+    setLastAttemptedEquipmentId(selectedEquipmentId);
     createBookingMutation.mutate({
       equipment: { id: parseInt(selectedEquipmentId) },
       bookingDate: selectedDate,
