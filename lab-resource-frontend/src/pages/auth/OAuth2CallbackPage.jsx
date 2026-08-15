@@ -33,20 +33,14 @@ export default function OAuth2CallbackPage() {
         if (accessToken && refreshToken) {
           try {
             await authApi.oauth2Success({ accessToken, refreshToken });
-            let currentUser = null;
-            if (checkAuth) {
-              await checkAuth();
-              // After checkAuth, the user state will be updated in the context,
-              // but we need the actual user object to check institutionId immediately.
-              const meRes = await authApi.getMe();
-              currentUser = meRes.data;
-            }
+            // checkAuth now returns the user directly — no extra getMe() needed
+            const currentUser = checkAuth ? await checkAuth() : null;
             
             if (mounted) {
               if (currentUser && !currentUser.institutionId) {
                 navigate('/oauth2/complete-profile', { replace: true });
               } else if (currentUser) {
-                window.location.href = '/dashboard';
+                navigate('/dashboard', { replace: true });
               } else {
                 toast.error('Failed to load user profile.');
                 navigate('/login', { replace: true });
