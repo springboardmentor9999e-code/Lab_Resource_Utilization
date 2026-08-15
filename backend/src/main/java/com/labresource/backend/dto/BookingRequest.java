@@ -24,5 +24,7 @@ public class BookingRequest {
     private LocalTime endTime;
 
     private String purpose;
+    
+    private Long institutionId;
 
 }

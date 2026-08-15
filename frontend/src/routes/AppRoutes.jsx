@@ -10,7 +10,7 @@ import Bookings from "../pages/Admin/Bookings";
 import Maintenance from "../pages/Maintenance/Maintenance";
 import Notifications from "../pages/Notifications/Notifications";
 import Reports from "../pages/Reports/Reports";
-
+import Utilization from "../pages/Utilization/Utilization";
 import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import RoleProtectedRoute from "./RoleProtectedRoute";
@@ -21,6 +21,9 @@ import InstitutionLayout from "../layouts/InstitutionLayout";
 import StudentDashboard from "../pages/Student/Dashboard";
 import InstitutionDashboard from "../pages/Institution/Dashboard";
 import InterInstitutionSharing from "../pages/InterInstitutionSharing/InterInstitutionSharing";
+import Billing from "../pages/Billing/Billing";
+import Certification from "../pages/Certification/Certification";
+import RoleDashboard from "../pages/RoleDashboard";
 
 function AppRoutes() {
   return (
@@ -34,7 +37,7 @@ function AppRoutes() {
           <DashboardLayout />
           </ProtectedRoute>
         }>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<RoleDashboard />} />
           <Route
   path="/users"
   element={
@@ -54,6 +57,9 @@ function AppRoutes() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/inter-sharing" element={<InterInstitutionSharing />}/>
+          <Route path="/utilization" element={<Utilization />} />
+          <Route path="/billing" element={<Billing />} />
+          <Route path="/certification" element={<Certification />} />
         </Route>
 
       </Routes>

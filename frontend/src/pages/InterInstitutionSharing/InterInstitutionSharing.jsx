@@ -287,7 +287,7 @@ function InterInstitutionSharing() {
 
               {(
                     role === "SYSTEM_ADMIN" ||
-                    role === "INSTITUTION_ADMIN" ||
+                    role === "INSTITUTE_ADMIN" ||
                     role === "LAB_ASSISTANT"
                 ) && (
                     <TableCell>

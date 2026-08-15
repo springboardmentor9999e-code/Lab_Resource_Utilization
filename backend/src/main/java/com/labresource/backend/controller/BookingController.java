@@ -22,8 +22,10 @@ public class BookingController {
     // Create Booking
     @PostMapping
         public ResponseEntity<Booking> createBooking(
+            
                 @RequestBody BookingRequest request,
                 Authentication authentication) {
+                    System.out.println("========== CREATE BOOKING CONTROLLER HIT ==========");
 
             return ResponseEntity.ok(
                     bookingService.createBooking(request, authentication)

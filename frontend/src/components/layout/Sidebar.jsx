@@ -2,6 +2,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import BusinessIcon from "@mui/icons-material/Business";
 import ShareIcon from "@mui/icons-material/Share";
+import InsightsIcon from "@mui/icons-material/Insights";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import VerifiedIcon from "@mui/icons-material/Verified";
 
 import {
   Dashboard,
@@ -43,9 +46,13 @@ function Sidebar() {
       { text: "Resources", icon: <Category />, path: "/resources" },
       { text: "Bookings", icon: <EventNote />, path: "/bookings" },
       { text: "Maintenance", icon: <Build />, path: "/maintenance" },
+      { text: "Utilization",path: "/utilization",icon: <InsightsIcon />, },
       { text: "Inter Institution Sharing", icon: <ShareIcon />, path: "/inter-sharing",},
+      { text: "Billing", path: "/billing", icon: <ReceiptLongIcon /> },
+      { text: "Certification", icon: <VerifiedIcon />, path: "/certification" },
       { text: "Notifications", icon: <Notifications />, path: "/notifications" },
       { text: "Reports", icon: <Assessment />, path: "/reports" },
+      
     ],
 
     FACULTY: [
@@ -54,14 +61,18 @@ function Sidebar() {
       { text: "Equipment", icon: <Inventory />, path: "/equipment" },
       { text: "Bookings", icon: <EventNote />, path: "/bookings" },
       //{ text: "Inter Institution Sharing", icon: <ShareIcon />, path: "/inter-sharing",},
+      {text: "Billing", path: "/billing", icon: <ReceiptLongIcon /> },
+      { text: "Certification", icon: <VerifiedIcon />, path: "/certification" },
       { text: "Notifications", icon: <Notifications />, path: "/notifications" },
-      { text: "Reports", icon: <Assessment />, path: "/reports" },
+      //{ text: "Reports", icon: <Assessment />, path: "/reports" },
     ],
 
     STUDENT: [
       { text: "Dashboard", icon: <Dashboard />, path: "/dashboard" },
       { text: "Bookings", icon: <EventNote />, path: "/bookings" },
      // { text: "Inter Institution Sharing", icon: <ShareIcon />, path: "/inter-sharing",},
+     {text: "Billing", path: "/billing", icon: <ReceiptLongIcon /> },
+     { text: "Certification", icon: <VerifiedIcon />, path: "/certification" },
       { text: "Notifications", icon: <Notifications />, path: "/notifications" },
     ],
 
@@ -71,8 +82,12 @@ function Sidebar() {
         { text: "Resources", icon: <Category />, path: "/resources" },
         { text: "Bookings", icon: <EventNote />, path: "/bookings" },
         { text: "Maintenance", icon: <Build />, path: "/maintenance" },
+        { text: "Utilization",path: "/utilization",icon: <InsightsIcon />, },
         { text: "Inter Institution Sharing", icon: <ShareIcon />, path: "/inter-sharing",},
+        //{text: "Billing", path: "/billing", icon: <ReceiptLongIcon /> },
+        { text: "Certification", icon: <VerifiedIcon />, path: "/certification" },
         { text: "Notifications", icon: <Notifications />, path: "/notifications" },
+        { text: "Reports", icon: <Assessment />, path: "/reports" },
       ],
 
     INSTITUTE_ADMIN: [
@@ -82,7 +97,10 @@ function Sidebar() {
         { text: "Resources", icon: <Category />, path: "/resources" },
         { text: "Bookings", icon: <EventNote />, path: "/bookings" },
         { text: "Maintenance", icon: <Build />, path: "/maintenance" },
+        { text: "Utilization",path: "/utilization",icon: <InsightsIcon />, },
         { text: "Inter Institution Sharing", icon: <ShareIcon />, path: "/inter-sharing",},
+        {text: "Billing", path: "/billing", icon: <ReceiptLongIcon /> },
+        { text: "Certification", icon: <VerifiedIcon />, path: "/certification" },
         { text: "Notifications", icon: <Notifications />, path: "/notifications" },
         { text: "Reports", icon: <Assessment />, path: "/reports" },
       ],
@@ -90,9 +108,13 @@ function Sidebar() {
     DEPARTMENT_HEAD: [
       { text: "Dashboard", icon: <Dashboard />, path: "/dashboard" },
       { text: "Bookings", icon: <EventNote />, path: "/bookings" },
+      { text: "Utilization",path: "/utilization",icon: <InsightsIcon />, },
       //{ text: "Inter Institution Sharing", icon: <ShareIcon />, path: "/inter-sharing",},
+      {text: "Billing", path: "/billing", icon: <ReceiptLongIcon /> },
+      { text: "Certification", icon: <VerifiedIcon />, path: "/certification" },
       { text: "Reports", icon: <Assessment />, path: "/reports" },
       { text: "Notifications", icon: <Notifications />, path: "/notifications" },
+      { text: "Reports", icon: <Assessment />, path: "/reports" },
     ],
   };
 

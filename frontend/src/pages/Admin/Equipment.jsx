@@ -313,7 +313,7 @@ const maintenanceEquipment = equipment.filter(
 
         <Table>
 
-          <TableHead>
+          <TableHead sx={{ background:"#1976d2" }} >
 
             <TableRow>
 

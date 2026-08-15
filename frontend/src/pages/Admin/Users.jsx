@@ -43,6 +43,7 @@ function Users() {
   const [roles, setRoles] = useState([]);
   const [institutions, setInstitutions] = useState([]);
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [filteredLabs, setFilteredLabs] = useState([]);
   const [newUser, setNewUser] = useState({
     fullName: "",
     email: "",
@@ -104,13 +105,30 @@ const loadLaboratories = async () => {
   setEditingId(user.userId);
 
   setNewUser({
+
     fullName: user.fullName,
     email: user.email,
     password: "",
     phone: user.phone,
     department: user.department,
-    roleId: user.role.roleId,
-  });
+
+    roleId: user.role?.roleId || "",
+
+    institutionId:
+        user.institution?.institutionId || "",
+
+    labId:
+        user.laboratory?.labId || ""
+
+});
+
+const labs = laboratories.filter(
+    (lab) =>
+        lab.institution?.institutionId ===
+        user.institution?.institutionId
+);
+
+setFilteredLabs(labs);
 
   setOpen(true);
 };
@@ -146,6 +164,24 @@ const handleDelete = async (id) => {
   // Save User
   const handleSave = async () => {
   try {
+
+    const rolesRequireLab = [2,3,4];
+
+if (
+    rolesRequireLab.includes(newUser.roleId) &&
+    !newUser.labId
+) {
+
+    setSnackbarMessage(
+        "Please select a laboratory."
+    );
+
+    setSnackbarSeverity("error");
+
+    setSnackbarOpen(true);
+
+    return;
+}
 
     if (editing) {
 
@@ -238,15 +274,16 @@ const handleDelete = async (id) => {
       <TableContainer component={Paper}>
         <Table>
 
-          <TableHead>
+          <TableHead sx={{ background:"#1976d2" }} >
 
             <TableRow>
-              <TableCell><b>ID</b></TableCell>
-              <TableCell><b>Name</b></TableCell>
-              <TableCell><b>Email</b></TableCell>
-              <TableCell><b>Department</b></TableCell>
-              <TableCell><b>Role</b></TableCell>
-              <TableCell align="center"><b>Actions</b> </TableCell>
+              <TableCell sx={{color:"white",fontWeight:"bold"}}><b>ID</b></TableCell>
+              <TableCell sx={{color:"white",fontWeight:"bold"}}><b>Name</b></TableCell>
+              <TableCell sx={{color:"white",fontWeight:"bold"}}><b>Email</b></TableCell>
+              <TableCell sx={{color:"white",fontWeight:"bold"}}><b>Department</b></TableCell>
+              <TableCell sx={{color:"white",fontWeight:"bold"}}><b>Laboratory</b></TableCell>
+              <TableCell sx={{color:"white",fontWeight:"bold"}}><b>Role</b></TableCell>
+              <TableCell align="center" sx={{color:"white",fontWeight:"bold"}}><b>Actions</b> </TableCell>
             </TableRow>
 
           </TableHead>
@@ -264,6 +301,9 @@ const handleDelete = async (id) => {
     <TableCell>{user.email}</TableCell>
 
     <TableCell>{user.department}</TableCell>
+    <TableCell>
+    {user.laboratory?.labName || "-"}
+</TableCell>
 
     <TableCell>{user.role?.roleName}</TableCell>
 
@@ -359,12 +399,24 @@ const handleDelete = async (id) => {
             select
             fullWidth
             value={newUser.institutionId}
-            onChange={(e) =>
-                setNewUser({
-                    ...newUser,
-                    institutionId: Number(e.target.value),
-                })
-            }
+            onChange={(e) => {
+
+    const institutionId = Number(e.target.value);
+
+    const labs = laboratories.filter(
+        (lab) =>
+            lab.institution?.institutionId === institutionId
+    );
+
+    setFilteredLabs(labs);
+
+    setNewUser({
+        ...newUser,
+        institutionId,
+        labId: "",
+    });
+
+}}
         >
 
             {institutions.map((institution) => (
@@ -378,7 +430,7 @@ const handleDelete = async (id) => {
 
         </TextField>
 
-                {newUser.roleId === 5 && (
+                {[3,2,4].includes(newUser.roleId) && (
         <TextField
             margin="dense"
             label="Laboratory"
@@ -393,7 +445,7 @@ const handleDelete = async (id) => {
             }
         >
 
-            {laboratories.map((lab)=>(
+            {filteredLabs.map((lab) => (
                 <MenuItem
                     key={lab.labId}
                     value={lab.labId}
@@ -411,12 +463,23 @@ const handleDelete = async (id) => {
             select
             fullWidth
             value={newUser.roleId}
-            onChange={(e) =>
+            onChange={(e) => {
+
+              const roleId = Number(e.target.value);
+
               setNewUser({
-                ...newUser,
-                roleId: Number(e.target.value),
-              })
-            }
+
+                  ...newUser,
+
+                  roleId,
+
+                  labId: [3, 5, 6].includes(roleId)
+                      ? newUser.labId
+                      : ""
+
+              });
+
+          }}
           >
             {roles.map((role)=>(
                 <MenuItem

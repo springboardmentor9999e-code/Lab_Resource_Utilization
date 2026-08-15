@@ -11,6 +11,9 @@ import com.labresource.backend.entity.Laboratory;
 import com.labresource.backend.repository.InstitutionRepository;
 import com.labresource.backend.repository.LaboratoryRepository;
 import java.util.List;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.Authentication;
+import com.labresource.backend.dto.ChangePasswordRequest;
 
 @Service
 public class UserService {
@@ -19,18 +22,21 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final InstitutionRepository institutionRepository;
     private final LaboratoryRepository laboratoryRepository;
+    private final PasswordEncoder passwordEncoder;
+       
+    public UserService(
+        UserRepository userRepository,
+        RoleRepository roleRepository,
+        InstitutionRepository institutionRepository,
+        LaboratoryRepository laboratoryRepository,
+        PasswordEncoder passwordEncoder) {
 
-        public UserService(
-            UserRepository userRepository,
-            RoleRepository roleRepository,
-            InstitutionRepository institutionRepository,
-            LaboratoryRepository laboratoryRepository) {
-
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.institutionRepository = institutionRepository;
-        this.laboratoryRepository = laboratoryRepository;
-    }
+    this.userRepository = userRepository;
+    this.roleRepository = roleRepository;
+    this.institutionRepository = institutionRepository;
+    this.laboratoryRepository = laboratoryRepository;
+    this.passwordEncoder = passwordEncoder;
+}
 
     // Get all users
     public List<User> getAllUsers() {
@@ -61,7 +67,9 @@ public class UserService {
 
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        user.setPassword(
+            passwordEncoder.encode(request.getPassword())
+    );
         user.setPhone(request.getPhone());
         user.setDepartment(request.getDepartment());
         user.setRole(role);
@@ -92,7 +100,13 @@ public class UserService {
 
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        if (request.getPassword() != null &&
+            !request.getPassword().isBlank()) {
+
+            user.setPassword(
+                    passwordEncoder.encode(request.getPassword())
+            );
+        }
         user.setPhone(request.getPhone());
         user.setDepartment(request.getDepartment());
         user.setRole(role);
@@ -136,7 +150,13 @@ public class UserService {
 
     existing.setFullName(request.getFullName());
     existing.setEmail(request.getEmail());
-    existing.setPassword(request.getPassword());
+            if (request.getPassword() != null &&
+            !request.getPassword().isBlank()) {
+
+            existing.setPassword(
+                    passwordEncoder.encode(request.getPassword())
+            );
+        }
     existing.setPhone(request.getPhone());
     existing.setDepartment(request.getDepartment());
     existing.setRole(role);
@@ -167,5 +187,54 @@ public void deleteUserByInstitution(
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
+
+    public User updateProfile(UserRequest request, Authentication authentication) {
+
+    String email = authentication.getName();
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new RuntimeException("User not found"));
+
+    user.setFullName(request.getFullName());
+    user.setEmail(request.getEmail());
+    user.setPhone(request.getPhone());
+    user.setDepartment(request.getDepartment());
+
+    return userRepository.save(user);
+}
+
+public void changePassword(
+        ChangePasswordRequest request,
+        Authentication authentication) {
+
+    String email = authentication.getName();
+
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new RuntimeException("Logged-in user not found"));
+
+    // Check current password
+    if (!passwordEncoder.matches(
+            request.getCurrentPassword(),
+            user.getPassword())) {
+
+        throw new RuntimeException("Current password is incorrect");
+    }
+
+    // Check new password and confirmation
+    if (!request.getNewPassword()
+            .equals(request.getConfirmPassword())) {
+
+        throw new RuntimeException("New passwords do not match");
+    }
+
+    // Update password
+    user.setPassword(
+            passwordEncoder.encode(request.getNewPassword())
+    );
+
+    userRepository.save(user);
+}
 
 }

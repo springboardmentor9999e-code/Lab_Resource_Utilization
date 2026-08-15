@@ -107,6 +107,7 @@ const handleSaveBooking = async (booking) => {
       await bookingService.updateBooking(booking.bookingId, booking);
       showSnackbar("Booking updated successfully!");
     } else {
+      console.log("Booking Payload:", booking);
       await bookingService.createBooking(booking);
       showSnackbar("Booking created successfully!");
     }
@@ -115,9 +116,16 @@ const handleSaveBooking = async (booking) => {
     handleCloseDialog();
 
   } catch (error) {
-    console.error(error);
-    showSnackbar("Failed to save booking!", "error");
-  }
+    console.log("Backend Error:", error.response);
+
+    const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Failed to save booking!";
+
+    showSnackbar(errorMessage, "error");
+}
+
 };
 
   const filteredBookings = bookings.filter((booking) =>
@@ -431,6 +439,7 @@ color="warning.main"
                       size="small"
                       sx={{
                       fontWeight:"bold"
+                      
                       }}
                     color={
                       booking.status==="APPROVED"
@@ -617,7 +626,7 @@ color="warning.main"
       <>
         <Button
           size="small"
-          variant="outlined"
+          variant="contained"
           onClick={() => handleOpenDialog(booking)}
         >
           Edit
@@ -643,7 +652,7 @@ color="warning.main"
 
         <Button
           size="small"
-          variant="outlined"
+          variant="contained"
           color="secondary"
           onClick={() => handleDelete(booking.bookingId)}
         >
@@ -656,7 +665,7 @@ color="warning.main"
       <>
         <Button
           size="small"
-          variant="outlined"
+          variant="contained"
           disabled
         >
           View
@@ -664,7 +673,7 @@ color="warning.main"
 
         <Button
           size="small"
-          variant="outlined"
+          variant="contained"
           color="secondary"
           onClick={() => handleDelete(booking.bookingId)}
         >
@@ -677,7 +686,7 @@ color="warning.main"
       <>
         <Button
           size="small"
-          variant="outlined"
+          variant="contained"
           disabled
         >
           View
@@ -685,7 +694,7 @@ color="warning.main"
 
         <Button
           size="small"
-          variant="outlined"
+          variant="contained"
           color="secondary"
           onClick={() => handleDelete(booking.bookingId)}
         >
@@ -698,7 +707,7 @@ color="warning.main"
       <>
         <Button
           size="small"
-          variant="outlined"
+          variant="contained"
           disabled
         >
           View
@@ -706,7 +715,7 @@ color="warning.main"
 
         <Button
           size="small"
-          variant="outlined"
+          variant="contained"
           color="secondary"
           onClick={() => handleDelete(booking.bookingId)}
         >
@@ -719,7 +728,7 @@ color="warning.main"
       <>
         <Button
           size="small"
-          variant="outlined"
+          variant="contained"
           disabled
         >
           View
@@ -727,7 +736,7 @@ color="warning.main"
 
         <Button
           size="small"
-          variant="outlined"
+          variant="contained"
           color="secondary"
           onClick={() => handleDelete(booking.bookingId)}
         >
@@ -757,6 +766,24 @@ color="warning.main"
           handleSave={handleSaveBooking}
           booking={selectedBooking}
         />
+        <Snackbar
+    open={snackbar.open}
+    autoHideDuration={4000}
+    onClose={handleCloseSnackbar}
+    anchorOrigin={{
+        vertical: "top",
+        horizontal: "right",
+    }}
+>
+    <Alert
+        onClose={handleCloseSnackbar}
+        severity={snackbar.severity}
+        variant="filled"
+        sx={{ width: "100%" }}
+    >
+        {snackbar.message}
+    </Alert>
+</Snackbar>
     </>
   );
 }

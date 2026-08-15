@@ -8,7 +8,12 @@ import {
     CartesianGrid
 } from "recharts";
 
-function ReportsBarChart({ data }) {
+function ReportsBarChart({
+        data,
+        title = "Platform Statistics",
+        xKey = "name",
+        barKey = "value"
+    }) {
 
     return (
 
@@ -32,7 +37,7 @@ function ReportsBarChart({ data }) {
                     fontWeight: 600
                 }}
             >
-                Platform Statistics
+                {title}
             </h2>
 
             <div
@@ -43,41 +48,38 @@ function ReportsBarChart({ data }) {
 
                 <ResponsiveContainer
                     width="100%"
-                    height="82%"
+                    height="80%"
                 >
 
                     <BarChart
                         data={data}
+                        layout="vertical"
                         margin={{
                             top: 20,
-                            right: 20,
-                            left: 0,
-                            bottom: 40
+                            right: 10,
+                            left: 10,
+                            bottom: 10
                         }}
                     >
+                        <CartesianGrid strokeDasharray="3 3" />
 
-                        <CartesianGrid
-                            strokeDasharray="3 3"
+                        <XAxis type="number" />
+
+                        <YAxis
+                            type="category"
+                            dataKey={xKey}
+                            width={140}
                         />
-
-                        <XAxis
-                            dataKey="name"
-                            angle={-15}
-                            textAnchor="end"
-                        />
-
-                        <YAxis />
 
                         <Tooltip />
 
                         <Bar
-                            dataKey="value"
+                            dataKey={barKey}
                             fill="#1976d2"
-                            radius={[8,8,0,0]}
+                            radius={[0, 8, 8, 0]}
+                             barSize={21}
                         />
-
                     </BarChart>
-
                 </ResponsiveContainer>
 
             </div>

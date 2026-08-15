@@ -28,7 +28,35 @@ const markAsRead = async (id) => {
 };
 
 const deleteNotification = async (id) => {
-    return axios.delete(`${API}/${id}`);
+    const response = await axiosInstance.delete(`${API}/${id}`);
+    return response.data;
+};
+
+const getUnreadCount = async (userId) => {
+  const response = await axiosInstance.get(
+    `${API}/user/${userId}/unread-count`
+  );
+  return response.data;
+};
+
+const markAllAsRead = async (userId) => {
+    console.log("Calling:", `${API}/user/${userId}/read-all`);
+
+    const response = await axiosInstance.put(
+        `${API}/user/${userId}/read-all`
+    );
+
+    return response.data;
+};
+
+const deleteAllRead = async (userId) => {
+    console.log("Calling:", `${API}/user/${userId}/delete-read`);
+
+    const response = await axiosInstance.delete(
+        `${API}/user/${userId}/delete-read`
+    );
+
+    return response.data;
 };
 
 export default {
@@ -38,4 +66,7 @@ export default {
     updateNotification,
     markAsRead,
     deleteNotification,
+    getUnreadCount,
+    markAllAsRead,
+    deleteAllRead,
 };

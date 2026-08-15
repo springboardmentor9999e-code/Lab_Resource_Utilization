@@ -190,35 +190,18 @@ function Institution() {
 
                 <Table>
 
-                    <TableHead>
+                    <TableHead sx={{ background:"#1976d2" }} >
 
                         <TableRow>
 
-                            <TableCell>Name</TableCell>
-                            <TableCell>City</TableCell>
-                            <TableCell>State</TableCell>
-                            <TableCell>Email</TableCell>
-                            <TableCell>Phone</TableCell>
-                            <TableCell>Type</TableCell>
-                            <TableCell>Actions</TableCell>
-                            <TableCell>
-
-    <Button
-        size="small"
-        onClick={() => handleOpenDialog(institution)}
-    >
-        Edit
-    </Button>
-
-    <Button
-        size="small"
-        color="error"
-        onClick={() => handleDeleteInstitution(institution.institutionId)}
-    >
-        Delete
-    </Button>
-
-</TableCell>
+                            <TableCell sx={{color:"white",fontWeight:"bold"}}>Name</TableCell>
+                            <TableCell sx={{color:"white",fontWeight:"bold"}}>City</TableCell>
+                            <TableCell sx={{color:"white",fontWeight:"bold"}}>State</TableCell>
+                            <TableCell sx={{color:"white",fontWeight:"bold"}}>Email</TableCell>
+                            <TableCell sx={{color:"white",fontWeight:"bold"}}>Phone</TableCell>
+                            <TableCell sx={{color:"white",fontWeight:"bold"}}>Type</TableCell>
+                            <TableCell sx={{color:"white",fontWeight:"bold"}}>Actions</TableCell>
+            
                         </TableRow>
 
                     </TableHead>
@@ -254,6 +237,27 @@ function Institution() {
                                 <TableCell>
                                     {institution.type}
                                 </TableCell>
+
+                                <TableCell>
+
+    <Button
+        size="small"
+        variant="contained"
+        onClick={() => handleOpenDialog(institution)}
+    >
+        Edit
+    </Button>
+
+    <Button
+        size="small"
+        variant="contained"
+        color="error"
+        onClick={() => handleDeleteInstitution(institution.institutionId)}
+    >
+        Delete
+    </Button>
+
+</TableCell>
 
                             </TableRow>
 

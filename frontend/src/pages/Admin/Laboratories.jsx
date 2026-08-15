@@ -244,17 +244,17 @@ const handleDelete = async (id) => {
       <TableContainer component={Paper}>
         <Table>
 
-          <TableHead>
+          <TableHead sx={{ background:"#1976d2" }} >
             <TableRow>
 
-              <TableCell><b>ID</b></TableCell>
-              <TableCell><b>Lab Name</b></TableCell>
-              <TableCell><b>Lab Code</b></TableCell>
-              <TableCell><b>Location</b></TableCell>
-              <TableCell><b>Capacity</b></TableCell>
-              <TableCell><b>Status</b></TableCell>
+              <TableCell sx={{color:"white",fontWeight:"bold"}}><b>ID</b></TableCell>
+              <TableCell sx={{color:"white",fontWeight:"bold"}}><b>Lab Name</b></TableCell>
+              <TableCell sx={{color:"white",fontWeight:"bold"}}><b>Lab Code</b></TableCell>
+              <TableCell sx={{color:"white",fontWeight:"bold"}}><b>Location</b></TableCell>
+              <TableCell sx={{color:"white",fontWeight:"bold"}}><b>Capacity</b></TableCell>
+              <TableCell sx={{color:"white",fontWeight:"bold"}}><b>Status</b></TableCell>
               
-              <TableCell align="center"> <b>Actions</b></TableCell>
+              <TableCell align="center" sx={{color:"white",fontWeight:"bold"}}> <b>Actions</b></TableCell>
             </TableRow>
           </TableHead>
 

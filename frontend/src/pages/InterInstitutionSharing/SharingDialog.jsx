@@ -211,6 +211,7 @@ function SharingDialog({
             value={formData.availableFrom}
             onChange={handleChange}
             InputLabelProps={{ shrink: true }}
+            
           />
 
           <TextField

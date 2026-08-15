@@ -1,5 +1,7 @@
 package com.labresource.backend.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -45,4 +47,7 @@ public class Equipment {
     @ManyToOne
     @JoinColumn(name = "lab_id", nullable = false)
     private Laboratory laboratory;
+
+    @Column(name = "purchase_date")
+    private LocalDate purchaseDate;
 }

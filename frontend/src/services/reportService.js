@@ -1,12 +1,30 @@
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 
-const API = "http://localhost:8080/api/reports";
+const API = "/reports";
 
 const getSummary = async () => {
-    const response = await axios.get(`${API}/summary`);
+    const response = await axiosInstance.get(`${API}/summary`);
+    return response.data;
+};
+
+const getEquipmentUtilization = async () => {
+    const response = await axiosInstance.get(`${API}/equipment-utilization`);
+    return response.data;
+};
+
+const getProcurementCostAnalysis = async () => {
+    const response = await axiosInstance.get("/reports/procurement-cost");
+    return response.data;
+};
+
+const getInstitutionSharingReport = async () => {
+    const response = await axiosInstance.get("/reports/institution-sharing");
     return response.data;
 };
 
 export default {
-    getSummary
+    getSummary,
+    getEquipmentUtilization,
+    getProcurementCostAnalysis,
+    getInstitutionSharingReport
 };

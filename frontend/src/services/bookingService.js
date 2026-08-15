@@ -1,6 +1,5 @@
 import axiosInstance from "../utils/axiosInstance";
 
-
 const API = "http://localhost:8080/api/bookings";
 
 const getAllBookings = async () => {

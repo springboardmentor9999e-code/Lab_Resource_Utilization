@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import reportService from "../../services/reportService";
 import ReportsChart from "../../components/reports/ReportsChart";
 import ReportsBarChart from "../../components/reports/ReportsBarChart";
-
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useAuth } from "../../context/AuthContext";
 
 import {
     Typography,
@@ -21,10 +23,34 @@ function Reports() {
     const [summary, setSummary] = useState({});
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
+    const [equipmentUtilization, setEquipmentUtilization] = useState([]);
+    const [procurementData, setProcurementData] = useState([]);
+    const [institutionSharingData, setInstitutionSharingData] = useState([]);
+    const { role } = useAuth();
+    
 
     useEffect(() => {
+    if (role === "SYSTEM_ADMIN") {
         loadSummary();
-    }, []);
+        loadEquipmentUtilization();
+        loadProcurementCost();
+        loadInstitutionSharing();
+    }
+
+    else if (role === "INSTITUTE_ADMIN") {
+        loadSummary();
+        loadEquipmentUtilization();
+        loadInstitutionSharing();
+    }
+
+    else if (
+        role === "LAB_ASSISTANT" ||
+        role === "DEPARTMENT_HEAD"
+    ) {
+        loadEquipmentUtilization();
+    }
+
+}, [role]);
 
     const loadSummary = async () => {
         try {
@@ -59,6 +85,92 @@ function Reports() {
 
         doc.save("Lab_Report.pdf");
     };
+
+    const loadEquipmentUtilization = async () => {
+    try {
+        const data = await reportService.getEquipmentUtilization();
+
+        const formattedData = data.map(item => ({
+            name: item.equipment,
+            value: item.bookings
+        }));
+
+        setEquipmentUtilization(formattedData);
+
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+const loadProcurementCost = async () => {
+    try {
+        const data = await reportService.getProcurementCostAnalysis();
+        setProcurementData([
+            {
+                name: "Average Cost",
+                value: data.AverageEquipmentCost
+            },
+            {
+                name: "Total Cost",
+                value: data.TotalProcurementCost
+            }
+        ]);
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+const loadInstitutionSharing = async () => {
+    try {
+        const data = await reportService.getInstitutionSharingReport();
+
+        console.log("Institution Sharing API:", data);
+
+        const formatted = data.map(item => ({
+            name: item.institution,
+            value: item.shares
+        }));
+
+        console.log("Formatted:", formatted);
+
+        setInstitutionSharingData(formatted);
+
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+const exportExcel = () => {
+    const reportData = [
+        { Category: "Users", Count: summary.Users || 0 },
+        { Category: "Laboratories", Count: summary.Laboratories || 0 },
+        { Category: "Equipment", Count: summary.Equipment || 0 },
+        { Category: "Resources", Count: summary.Resources || 0 },
+        { Category: "Bookings", Count: summary.Bookings || 0 },
+        { Category: "Maintenance", Count: summary.Maintenance || 0 },
+        { Category: "Approved Bookings", Count: summary.ApprovedBookings || 0 },
+        { Category: "Pending Bookings", Count: summary.PendingBookings || 0 },
+        { Category: "Rejected Bookings", Count: summary.RejectedBookings || 0 },
+        { Category: "Completed Bookings", Count: summary.CompletedBookings || 0 }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(reportData);
+
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Reports");
+
+    const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+    });
+
+    const file = new Blob([excelBuffer], {
+        type: "application/octet-stream",
+    });
+
+    saveAs(file, "Lab_Resource_Report.xlsx");
+};
 
     const cards = [
 
@@ -165,7 +277,9 @@ function Reports() {
         }
 
     ];
-    
+
+const procurementChart = procurementData;
+
   return (
   <Box
     sx={{
@@ -201,7 +315,7 @@ function Reports() {
         spacing={3}
         alignItems="center"
       >
-        <Grid item xs={12} md={3}>
+        {/*<Grid item xs={12} md={3}>
           <TextField
             fullWidth
             type="date"
@@ -210,9 +324,9 @@ function Reports() {
             onChange={(e) => setFromDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
           />
-        </Grid>
+        </Grid>*/}
 
-        <Grid item xs={12} md={3}>
+        {/*<Grid item xs={12} md={3}>
           <TextField
             fullWidth
             type="date"
@@ -221,7 +335,7 @@ function Reports() {
             onChange={(e) => setToDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
           />
-        </Grid>
+        </Grid>*/}
 
         <Grid
           item
@@ -235,6 +349,10 @@ function Reports() {
             },
           }}
         >
+
+          {["SYSTEM_ADMIN","INSTITUTE_ADMIN"].includes(role) && (
+
+<>
           <Button
             variant="contained"
             size="large"
@@ -246,12 +364,28 @@ function Reports() {
           >
             Export PDF
           </Button>
+
+          <Button
+          variant="contained"
+          size="large"
+          onClick={exportExcel}
+          sx={{
+              ml: 2,
+              px: 5,
+              borderRadius: 3,
+          }}
+      >
+          Export Excel
+      </Button>
+      </>
+          )}
+
         </Grid>
       </Grid>
     </Card>
 
     {/* ================= SUMMARY ================= */}
-
+    {["SYSTEM_ADMIN", "INSTITUTE_ADMIN"].includes(role) && (
     <Grid container spacing={3} mb={5}>
       {cards.map((card, index) => (
         <Grid item xs={12} sm={6} md={4} lg={2} key={index}>
@@ -290,6 +424,7 @@ function Reports() {
         </Grid>
       ))}
     </Grid>
+    )}
 
     {/* ================= ANALYTICS ================= */}
 
@@ -312,24 +447,65 @@ function Reports() {
     width: "100%",
   }}
 >
+  {["SYSTEM_ADMIN","INSTITUTE_ADMIN",].includes(role) && (
+
   <ReportsChart
     title="Overall Platform Statistics"
     data={overallData}
   />
-
+)}
+{role === "SYSTEM_ADMIN" && (
   <ReportsBarChart
     data={overallData}
-  />
-
+  />)}
+  
+{[
+    "SYSTEM_ADMIN",
+    "INSTITUTE_ADMIN"
+].includes(role) && (
   <ReportsChart
     title="Booking Status"
     data={bookingChart}
   />
+)}
 
-  <ReportsChart
+{(
+    role === "SYSTEM_ADMIN" ||
+    role === "INSTITUTE_ADMIN"  
+) && (
+    <ReportsChart
     title="Maintenance Status"
     data={maintenanceChart}
   />
+)}
+
+{[
+    "SYSTEM_ADMIN",
+    "INSTITUTE_ADMIN",
+    "LAB_ASSISTANT",
+    "DEPARTMENT_HEAD"
+].includes(role) && (
+  <ReportsBarChart
+      title="Equipment Utilization"
+      data={equipmentUtilization}
+      xKey="name"
+      barKey="value"
+  />
+)}
+
+{role === "SYSTEM_ADMIN" && (
+  <ReportsChart
+    title="Procurement Cost Analysis"
+    data={procurementChart}
+/>
+)}
+{["SYSTEM_ADMIN", "INSTITUTE_ADMIN"].includes(role) && (
+<ReportsChart
+    title="Inter Institution Sharing"
+    data={institutionSharingData}
+/>
+)}
+
 </Box>
   </Box>
 );

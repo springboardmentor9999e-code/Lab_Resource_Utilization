@@ -87,4 +87,31 @@ public class NotificationController {
 
         return ResponseEntity.ok("Notification deleted successfully");
     }
+
+    @PutMapping("/user/{userId}/read-all")
+    public ResponseEntity<String> markAllAsRead(
+            @PathVariable Long userId) {
+                 System.out.println("===== MARK ALL READ CONTROLLER HIT =====");
+        notificationService.markAllAsRead(userId);
+
+        return ResponseEntity.ok("All notifications marked as read");
+    }
+
+    @DeleteMapping("/user/{userId}/delete-read")
+    public ResponseEntity<String> deleteAllRead(
+            @PathVariable Long userId) {
+
+        notificationService.deleteAllRead(userId);
+
+        return ResponseEntity.ok("All read notifications deleted");
+    }
+
+    @GetMapping("/user/{userId}/unread-count")
+    public ResponseEntity<Long> unreadCount(
+            @PathVariable Long userId) {
+
+        return ResponseEntity.ok(
+                notificationService.getUnreadCount(userId)
+        );
+    }
 }

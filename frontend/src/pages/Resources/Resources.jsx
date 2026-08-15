@@ -92,15 +92,23 @@ function Resources() {
 
     } catch (error) {
 
-      console.error(error);
+    console.log(error);
 
-      setSnackbar({
+    console.log(error.response);
+
+    console.log(error.response?.data);
+
+    console.log(error.response?.status);
+
+    setSnackbar({
         open: true,
-        message: "Operation failed!",
+        message:
+            error.response?.data?.message ||
+            error.message,
         severity: "error",
-      });
+    });
 
-    }
+}
 
   };
 
@@ -318,7 +326,7 @@ function Resources() {
                       </Button>
 
                       <Button
-                        variant="outlined"
+                        variant="contained"
                         color="error"
                         size="small"
                         onClick={() => handleDelete(resource.resourceId)}

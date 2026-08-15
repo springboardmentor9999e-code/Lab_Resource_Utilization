@@ -1,5 +1,4 @@
 import { Outlet } from "react-router-dom";
-
 import Sidebar from "../components/layout/Sidebar";
 import Navbar from "../components/layout/Navbar";
 
@@ -10,6 +9,7 @@ function DashboardLayout() {
         display: "flex",
         minHeight: "100vh",
         background: "#f5f7fb",
+        overflowX: "hidden",
       }}
     >
       <Sidebar />
@@ -18,22 +18,26 @@ function DashboardLayout() {
         style={{
           flex: 1,
           marginLeft: "240px",
+          display: "flex",
+          flexDirection: "column",
+          background: "#f5f7fb",
+          minWidth: 0,
         }}
       >
         <Navbar />
 
-        <div
+        <main
           style={{
-            padding: "25px",
+            flex: 1,
             marginTop: "70px",
-            width: "100%",
-            minHeight: "calc(100vh - 70px)",
+            padding: "25px",
             background: "#f5f7fb",
             boxSizing: "border-box",
+            overflowX: "hidden",
           }}
         >
           <Outlet />
-        </div>
+        </main>
       </div>
     </div>
   );

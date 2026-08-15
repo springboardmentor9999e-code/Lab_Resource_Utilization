@@ -150,10 +150,10 @@ const loadLaboratories = async () => {
 
     const { name, value } = e.target;
 
-    setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-    }));
+    setFormData(prev => ({
+    ...prev,
+    [name]: value,
+}));
 
     if (name === "institutionId") {
 
@@ -162,14 +162,13 @@ const loadLaboratories = async () => {
 
     setLaboratories(labs);
 
+    setEquipment([]);
     setFormData(prev => ({
             ...prev,
             institutionId: value,
             labId: "",
             equipmentId: ""
         }));
-
-    setEquipment([]);
 
     return;
 }

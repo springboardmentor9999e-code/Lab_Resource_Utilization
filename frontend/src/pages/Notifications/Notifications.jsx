@@ -46,19 +46,19 @@ const [snackbar, setSnackbar] = useState({
   }, []);
 
   const loadNotifications = async () => {
+  try {
 
-    try {
+    const userId = localStorage.getItem("userId");
 
-      const data = await notificationService.getAllNotifications();
-      setNotifications(data);
+    const data =
+      await notificationService.getNotificationsByUser(userId);
 
-    } catch (error) {
+    setNotifications(data);
 
-      console.error(error);
-
-    }
-
-  };
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const handleOpenDialog = (notification = null) => {
 
@@ -79,12 +79,13 @@ const [snackbar, setSnackbar] = useState({
     try {
 
       const request = {
-        user: {
-          userId: notification.userId
-        },
-        title: notification.title,
-        message: notification.message
-      };
+    user: {
+        userId: notification.userId
+    },
+    title: notification.title,
+    message: notification.message,
+    type: notification.type
+};
 
       if (notification.notificationId) {
 
@@ -171,6 +172,54 @@ const confirmDelete = async () => {
   const filteredNotifications = notifications.filter((item) =>
     item.title?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleMarkAllRead = async () => {
+
+    try {
+
+        const userId = localStorage.getItem("userId");
+
+        await notificationService.markAllAsRead(userId);
+
+        loadNotifications();
+
+        setSnackbar({
+            open: true,
+            message: "All notifications marked as read",
+            severity: "success",
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+};
+
+const handleDeleteRead = async () => {
+
+    try {
+
+        const userId = localStorage.getItem("userId");
+
+        await notificationService.deleteAllRead(userId);
+
+        loadNotifications();
+
+        setSnackbar({
+            open: true,
+            message: "All read notifications deleted",
+            severity: "success",
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+};
 
   return (
     <>
@@ -287,6 +336,23 @@ const confirmDelete = async () => {
         />
 
         <Button
+            variant="contained"
+            color="success"
+            onClick={handleMarkAllRead}
+        >
+            Mark All Read
+        </Button>
+
+        <Button
+            variant="contained"
+            color="error"
+            onClick={handleDeleteRead}
+        >
+            Delete Read
+        </Button>
+
+        {localStorage.getItem("role") !== "STUDENT" && (
+        <Button
           variant="contained"
           size="large"
           onClick={() => handleOpenDialog()}
@@ -297,7 +363,7 @@ const confirmDelete = async () => {
         >
           New Notification
         </Button>
-
+        )}
       </Box>
 
       <TableContainer
@@ -305,7 +371,7 @@ const confirmDelete = async () => {
             sx={{
               borderRadius: 4,
               boxShadow: 3,
-              overflow: "hidden",
+              //overflow: "hidden",
             }}
           >
 
@@ -327,6 +393,7 @@ const confirmDelete = async () => {
               <TableCell><b>User</b></TableCell>
               <TableCell><b>Title</b></TableCell>
               <TableCell><b>Message</b></TableCell>
+              <TableCell><b>Type</b></TableCell>
               <TableCell><b>Status</b></TableCell>
               <TableCell><b>Date</b></TableCell>
               <TableCell><b>Actions</b></TableCell>
@@ -351,6 +418,14 @@ const confirmDelete = async () => {
 
                 <TableCell>
                   {item.message}
+                </TableCell>
+
+                <TableCell>
+                    <Chip
+                        label={item.type}
+                        color="primary"
+                        variant="outlined"
+                    />
                 </TableCell>
 
                 <TableCell>
@@ -395,8 +470,9 @@ const confirmDelete = async () => {
 
                       <Button
                         size="small"
-                        variant="outlined"
+                        variant="contained"
                         color="primary"
+                        disabled={item.isRead}
                         onClick={() => handleOpenDialog(item)}
                         sx={{
                           width: 110,
@@ -408,7 +484,7 @@ const confirmDelete = async () => {
 
                       <Button
                         size="small"
-                        variant="outlined"
+                        variant="contained"
                         color="error"
                         onClick={() => handleDelete(item.notificationId)}
                         sx={{

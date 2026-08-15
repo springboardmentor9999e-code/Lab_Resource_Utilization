@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-
+import userService from "../../services/userService";
+import { MenuItem } from "@mui/material";
 import {
   Dialog,
   DialogTitle,
@@ -16,12 +17,13 @@ function NotificationDialog({
   handleSave,
   notification,
 }) {
-
+  const [users, setUsers] = useState([]);
   const [formData, setFormData] = useState({
     notificationId: null,
     userId: "",
     title: "",
     message: "",
+    type: "",
   });
 
   useEffect(() => {
@@ -33,6 +35,7 @@ function NotificationDialog({
         userId: notification.user?.userId || "",
         title: notification.title,
         message: notification.message,
+        type: notification.type || "",
       });
 
     } else {
@@ -42,6 +45,7 @@ function NotificationDialog({
         userId: "",
         title: "",
         message: "",
+        type: "",
       });
 
     }
@@ -58,6 +62,19 @@ function NotificationDialog({
     });
 
   };
+
+  useEffect(() => {
+    const loadUsers = async () => {
+        try {
+            const data = await userService.getAllUsers();
+            setUsers(data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    loadUsers();
+}, []);
 
   return (
 
@@ -79,12 +96,38 @@ function NotificationDialog({
         <Stack spacing={2} mt={2}>
 
           <TextField
-            fullWidth
-            label="User ID"
-            name="userId"
-            value={formData.userId}
-            onChange={handleChange}
-          />
+    fullWidth
+    select
+    label="User"
+    name="userId"
+    value={formData.userId}
+    onChange={handleChange}
+>
+    {users.map(user => (
+        <MenuItem
+            key={user.userId}
+            value={user.userId}
+        >
+            {user.fullName}
+        </MenuItem>
+    ))}
+</TextField>
+
+<TextField
+    fullWidth
+    select
+    label="Type"
+    name="type"
+    value={formData.type}
+    onChange={handleChange}
+>
+    <MenuItem value="BOOKING">Booking</MenuItem>
+    <MenuItem value="CERTIFICATION">Certification</MenuItem>
+    <MenuItem value="MAINTENANCE">Maintenance</MenuItem>
+    <MenuItem value="SHARING">Sharing</MenuItem>
+    <MenuItem value="IDLE_EQUIPMENT">Idle Equipment</MenuItem>
+    <MenuItem value="REPORT">Report</MenuItem>
+</TextField>
 
           <TextField
             fullWidth

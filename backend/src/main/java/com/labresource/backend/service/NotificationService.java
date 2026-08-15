@@ -3,7 +3,7 @@ package com.labresource.backend.service;
 import com.labresource.backend.entity.Notification;
 import com.labresource.backend.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -48,6 +48,9 @@ public Notification createNotification(Notification notification) {
     if (notification.getIsRead() == null) {
         notification.setIsRead(false);
     }
+    if (notification.getType() == null) {
+        notification.setType("GENERAL");
+    }
 
     return notificationRepository.save(notification);
 }
@@ -85,5 +88,26 @@ public Notification createNotification(Notification notification) {
         Notification notification = getNotificationById(id);
 
         notificationRepository.delete(notification);
+    }
+
+    @Transactional
+public void markAllAsRead(Long userId) {
+
+    notificationRepository.markAllAsRead(userId);
+
+}
+
+@Transactional
+public void deleteAllRead(Long userId) {
+
+    notificationRepository.deleteAllRead(userId);
+
+}
+
+    public long getUnreadCount(Long userId) {
+
+        return notificationRepository
+                .countByUserUserIdAndIsReadFalse(userId);
+
     }
 }
