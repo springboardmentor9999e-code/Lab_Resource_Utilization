@@ -398,18 +398,17 @@ export default function BookingCalendarPage() {
           </div>
         </div>
       )}
+      {/* Waitlist join modal */}
+      <ConfirmModal
+        isOpen={waitlistModal.open}
+        title="Time Slot Already Booked"
+        message={`The selected time slot for "${waitlistModal.equipmentName}" is already taken. Would you like to join the waitlist? You'll be automatically notified and promoted when a slot opens up.`}
+        confirmText="Join Waitlist"
+        cancelText="Pick Another Slot"
+        variant="info"
+        onConfirm={handleJoinWaitlist}
+        onCancel={handleDeclineWaitlist}
+      />
     </div>
-
-    {/* Waitlist join modal */}
-    <ConfirmModal
-      isOpen={waitlistModal.open}
-      title="Time Slot Already Booked"
-      message={`The selected time slot for "${waitlistModal.equipmentName}" is already taken. Would you like to join the waitlist? You'll be automatically notified and promoted when a slot opens up.`}
-      confirmText="Join Waitlist"
-      cancelText="Pick Another Slot"
-      variant="info"
-      onConfirm={handleJoinWaitlist}
-      onCancel={handleDeclineWaitlist}
-    />
   );
 }
