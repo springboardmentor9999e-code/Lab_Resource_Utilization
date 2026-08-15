@@ -152,8 +152,8 @@ export default function WaitlistPage() {
             </div>
           </div>
         )}
+        {confirmModal}
       </div>
-      {confirmModal}
     );
   }
 

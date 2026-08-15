@@ -206,7 +206,7 @@ export default function MyBookingsPage() {
           })}
         </div>
       )}
+      {confirmModal}
     </div>
-    {confirmModal}
   );
 }
