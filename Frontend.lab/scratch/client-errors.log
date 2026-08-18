@@ -1,0 +1,27 @@
+[2026-07-19T07:23:21.931Z] ERROR:
+{
+  "message": "Uncaught ReferenceError: CircularProgress is not defined",
+  "source": "http://localhost:5175/src/pages/admin/Users.jsx",
+  "lineno": 171,
+  "colno": 159,
+  "stack": "ReferenceError: CircularProgress is not defined\n    at AdminUsers (http://localhost:5175/src/pages/admin/Users.jsx:171:159)\n    at Object.react_stack_bottom_frame (http://localhost:5175/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:18509:20)\n    at renderWithHooks (http://localhost:5175/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:5654:24)\n    at updateFunctionComponent (http://localhost:5175/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:7475:21)\n    at beginWork (http://localhost:5175/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:8525:20)\n    at runWithFiberInDEV (http://localhost:5175/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:997:72)\n    at performUnitOfWork (http://localhost:5175/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:12561:98)\n    at workLoopSync (http://localhost:5175/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:12424:43)\n    at renderRootSync (http://localhost:5175/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:12408:13)\n    at performWorkOnRoot (http://localhost:5175/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:11827:37)"
+}
+
+[2026-07-19T07:46:36.873Z] ERROR:
+{
+  "message": "Uncaught ReferenceError: Paper is not defined",
+  "source": "http://192.168.1.56:5176/src/pages/technician/Dashboard.jsx",
+  "lineno": 469,
+  "colno": 32,
+  "stack": "ReferenceError: Paper is not defined\n    at TechnicianDashboard (http://192.168.1.56:5176/src/pages/technician/Dashboard.jsx:469:32)\n    at Object.react_stack_bottom_frame (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:18509:20)\n    at renderWithHooks (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:5654:24)\n    at updateFunctionComponent (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:7475:21)\n    at beginWork (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:8525:20)\n    at runWithFiberInDEV (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:997:72)\n    at performUnitOfWork (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:12561:98)\n    at workLoopSync (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:12424:43)\n    at renderRootSync (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:12408:13)\n    at performWorkOnRoot (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:11827:37)"
+}
+
+[2026-07-19T07:47:22.234Z] ERROR:
+{
+  "message": "Uncaught ReferenceError: Grid is not defined",
+  "source": "http://192.168.1.56:5176/src/pages/technician/EquipmentManagement.jsx",
+  "lineno": 206,
+  "colno": 42,
+  "stack": "ReferenceError: Grid is not defined\n    at TechnicianEquipmentManagement (http://192.168.1.56:5176/src/pages/technician/EquipmentManagement.jsx:206:42)\n    at Object.react_stack_bottom_frame (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:18509:20)\n    at renderWithHooks (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:5654:24)\n    at updateFunctionComponent (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:7475:21)\n    at beginWork (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:8525:20)\n    at runWithFiberInDEV (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:997:72)\n    at performUnitOfWork (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:12561:98)\n    at workLoopSync (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:12424:43)\n    at renderRootSync (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:12408:13)\n    at performWorkOnRoot (http://192.168.1.56:5176/node_modules/.vite/deps/react-dom_client.js?v=3f3c1eb5:11827:37)"
+}
+

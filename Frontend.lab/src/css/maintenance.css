@@ -1,0 +1,197 @@
+/* ================================
+   Maintenance Dashboard
+================================ */
+
+.maintenance-dashboard {
+  padding: 20px;
+}
+
+.maintenance-card {
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: 0.3s;
+}
+
+.maintenance-card:hover {
+  transform: translateY(-5px);
+}
+
+
+/* ================================
+   Maintenance Table
+================================ */
+
+.maintenance-table {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.maintenance-table th {
+  text-align: center;
+}
+
+.maintenance-table td {
+  vertical-align: middle;
+  text-align: center;
+}
+
+
+/* ================================
+   Maintenance Form
+================================ */
+
+.maintenance-form {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+}
+
+
+.maintenance-form label {
+  font-weight: 600;
+}
+
+
+.maintenance-form input,
+.maintenance-form textarea,
+.maintenance-form select {
+
+  border-radius: 8px;
+
+}
+
+
+/* ================================
+   Status Badges
+================================ */
+
+.status-badge {
+
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: bold;
+
+}
+
+
+.status-pending {
+
+  background-color: #ffc107;
+  color: black;
+
+}
+
+
+.status-progress {
+
+  background-color: #0d6efd;
+  color: white;
+
+}
+
+
+.status-completed {
+
+  background-color: #198754;
+  color: white;
+
+}
+
+
+.status-cancelled {
+
+  background-color: #dc3545;
+  color: white;
+
+}
+
+
+/* ================================
+   Buttons
+================================ */
+
+.maintenance-btn {
+
+  border-radius: 8px;
+  padding: 8px 15px;
+  font-weight: 600;
+
+}
+
+
+.add-maintenance-btn {
+
+  background: #198754;
+  color: white;
+
+}
+
+
+.edit-maintenance-btn {
+
+  background: #ffc107;
+  color: black;
+
+}
+
+
+.delete-maintenance-btn {
+
+  background: #dc3545;
+  color:white;
+
+}
+
+
+/* ================================
+   History Page
+================================ */
+
+.history-card {
+
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+
+}
+
+
+.history-table th {
+
+  background:#212529;
+  color:white;
+
+}
+
+
+.history-table td {
+
+  vertical-align:middle;
+
+}
+
+
+/* ================================
+   Responsive
+================================ */
+
+@media(max-width:768px){
+
+  .maintenance-card {
+
+    margin-bottom:15px;
+
+  }
+
+
+  .maintenance-table {
+
+    font-size:14px;
+
+  }
+
+}

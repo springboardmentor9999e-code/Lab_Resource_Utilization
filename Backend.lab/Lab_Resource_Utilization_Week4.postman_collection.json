@@ -1,0 +1,515 @@
+{
+	"info": {
+		"_postman_id": "a9b8c7d6-e5f4-4321-8765-1234567890ab",
+		"name": "Lab Resource Utilization - Week 4 APIs",
+		"description": "Postman Collection testing all Week 4 APIs: Utilization, Dashboard, Resource Sharing, External Booking, Waitlist, and Booking Optimization.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Step 2 - Dashboard & Utilization Statistics",
+			"item": [
+				{
+					"name": "Get Dashboard Response",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/dashboard/response",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"dashboard",
+								"response"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard Main Overview",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/dashboard",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"dashboard"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard Stats Map",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/dashboard/stats",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"dashboard",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard Utilization DTO",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/dashboard/utilization",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"dashboard",
+								"utilization"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Overall Utilization Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/utilization/overall",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"utilization",
+								"overall"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Top Used Equipment",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/utilization/top-used",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"utilization",
+								"top-used"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Step 3 - Inter-Institution Resource Sharing",
+			"item": [
+				{
+					"name": "Share Equipment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"requestedById\": 1,\n  \"equipmentId\": 1,\n  \"sourceLaboratoryId\": 1,\n  \"targetLaboratoryId\": 2,\n  \"startDate\": \"2026-08-10\",\n  \"endDate\": \"2026-08-15\",\n  \"purpose\": \"Joint Inter-Institution Research\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/resource-sharing/share",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resource-sharing",
+								"share"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "View Shared Equipment",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/resource-sharing/shared",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resource-sharing",
+								"shared"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Approve Share Request",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/resource-sharing/1/approve",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resource-sharing",
+								"1",
+								"approve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Share Request",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/resource-sharing/1/reject",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"resource-sharing",
+								"1",
+								"reject"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Step 4 - External Booking",
+			"item": [
+				{
+					"name": "Book Shared Equipment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"externalInstitutionName\": \"MIT Partner Lab\",\n  \"externalUserEmail\": \"external.researcher@mit.edu\",\n  \"externalUserName\": \"Dr. Sarah Connor\",\n  \"equipmentId\": 1,\n  \"bookingDate\": \"2026-08-20\",\n  \"returnDate\": \"2026-08-25\",\n  \"purpose\": \"Spectroscopy Analysis\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/external-bookings/book",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"external-bookings",
+								"book"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Booking History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/external-bookings/history?email=external.researcher@mit.edu",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"external-bookings",
+								"history"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "external.researcher@mit.edu"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel External Booking",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/external-bookings/1/cancel",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"external-bookings",
+								"1",
+								"cancel"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Step 5 - Waitlist Management",
+			"item": [
+				{
+					"name": "Join Waitlist",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"resourceId\": 1,\n  \"userId\": 1,\n  \"startDate\": \"2026-09-01\",\n  \"endDate\": \"2026-09-05\",\n  \"priority\": 1\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/waitlist/join",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"waitlist",
+								"join"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Waitlist by Equipment",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/waitlist/equipment/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"waitlist",
+								"equipment",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Waitlist",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/waitlist/user/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"waitlist",
+								"user",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Leave Waitlist",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/waitlist/leave/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"waitlist",
+								"leave",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Step 6 - Booking Optimization",
+			"item": [
+				{
+					"name": "Suggest Next Available Slot",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/booking-optimization/next-slot/1?durationDays=3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"booking-optimization",
+								"next-slot",
+								"1"
+							],
+							"query": [
+								{
+									"key": "durationDays",
+									"value": "3"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Recommend Alternative Equipment",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/booking-optimization/alternatives/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"booking-optimization",
+								"alternatives",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Detect Booking Conflicts / Check Overlap",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/booking-optimization/check-overlap?equipmentId=1&startDate=2026-08-20&endDate=2026-08-25",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"booking-optimization",
+								"check-overlap"
+							],
+							"query": [
+								{
+									"key": "equipmentId",
+									"value": "1"
+								},
+								{
+									"key": "startDate",
+									"value": "2026-08-20"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-08-25"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

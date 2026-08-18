@@ -1,0 +1,127 @@
+### 1. Utilization Monitoring APIs
+### Start Equipment Utilization
+POST http://localhost:8080/api/utilization/start
+Content-Type: application/json
+
+{
+  "equipmentId": 1,
+  "userId": 1,
+  "department": "Computer Science",
+  "purpose": "AI Model Training Lab Work"
+}
+
+### End Equipment Utilization
+PUT http://localhost:8080/api/utilization/end/1
+
+### Get All Utilization Logs
+GET http://localhost:8080/api/utilization
+
+### Get Utilization Log by ID
+GET http://localhost:8080/api/utilization/1
+
+### Get Utilization by Equipment
+GET http://localhost:8080/api/utilization/equipment/1
+
+### Get Utilization by Department
+GET http://localhost:8080/api/utilization/department/Computer%20Science
+
+### Get Overall Utilization Metrics
+GET http://localhost:8080/api/utilization/overall
+
+### Get Top Used Equipment
+GET http://localhost:8080/api/utilization/top-used
+
+
+### 2. Dashboard Statistics APIs
+### Get Dashboard Overview Stats Map
+GET http://localhost:8080/api/dashboard/stats
+
+### Get Utilization Dashboard DTO
+GET http://localhost:8080/api/dashboard/utilization
+
+### Get Full Dashboard Response DTO
+GET http://localhost:8080/api/dashboard/response
+
+
+### 3. Inter-Institution Resource Sharing APIs
+### Share Equipment Request
+POST http://localhost:8080/api/resource-sharing/share
+Content-Type: application/json
+
+{
+  "requestedById": 1,
+  "equipmentId": 1,
+  "sourceLaboratoryId": 1,
+  "targetLaboratoryId": 2,
+  "startDate": "2026-08-10",
+  "endDate": "2026-08-15",
+  "purpose": "Joint Research Project"
+}
+
+### View Shared Equipment
+GET http://localhost:8080/api/resource-sharing/shared
+
+### Approve Resource Share Request
+PUT http://localhost:8080/api/resource-sharing/1/approve
+
+### Reject Resource Share Request
+PUT http://localhost:8080/api/resource-sharing/1/reject
+
+
+### 4. External Booking APIs
+### Book Shared Equipment (External Institution User)
+POST http://localhost:8080/api/external-bookings
+Content-Type: application/json
+
+{
+  "externalInstitutionName": "MIT Partner Lab",
+  "externalUserEmail": "external.researcher@mit.edu",
+  "externalUserName": "Dr. Sarah Connor",
+  "equipmentId": 1,
+  "bookingDate": "2026-08-20",
+  "returnDate": "2026-08-25",
+  "purpose": "Spectroscopy Testing"
+}
+
+### View All External Bookings (Booking History)
+GET http://localhost:8080/api/external-bookings/history?email=external.researcher@mit.edu
+
+### Get External Booking by ID
+GET http://localhost:8080/api/external-bookings/1
+
+### Cancel External Booking
+PUT http://localhost:8080/api/external-bookings/1/cancel
+
+
+### 5. Waitlist Management APIs
+### Join Waitlist
+POST http://localhost:8080/api/waitlist/join
+Content-Type: application/json
+
+{
+  "resourceId": 1,
+  "userId": 1,
+  "startDate": "2026-09-01",
+  "endDate": "2026-09-05",
+  "priority": 1
+}
+
+### Get Waitlist by Equipment
+GET http://localhost:8080/api/waitlist/equipment/1
+
+### Get User Waitlist
+GET http://localhost:8080/api/waitlist/user/1
+
+### Leave Waitlist
+DELETE http://localhost:8080/api/waitlist/leave/1
+
+
+### 6. Booking Optimization APIs
+### Suggest Next Available Slot
+GET http://localhost:8080/api/booking-optimization/next-slot/1?durationDays=3
+
+### Suggest Alternative Equipment
+GET http://localhost:8080/api/booking-optimization/alternatives/1
+
+### Check / Prevent Overlapping Bookings
+GET http://localhost:8080/api/booking-optimization/check-overlap?equipmentId=1&startDate=2026-08-20&endDate=2026-08-25
