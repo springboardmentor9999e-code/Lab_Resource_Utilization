@@ -20,6 +20,8 @@ import com.lrplatform.repository.PasswordResetTokenRepository;
 import com.lrplatform.repository.RefreshTokenRepository;
 import com.lrplatform.repository.UserRepository;
 import com.lrplatform.security.JwtTokenProvider;
+import com.lrplatform.model.enums.NotificationType;
+import com.lrplatform.model.enums.NotificationPriority;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +56,7 @@ public class AuthService {
     private final AuditLogService auditLogService;
     private final InstitutionRepository institutionRepository;
     private final DepartmentRepository departmentRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
@@ -128,6 +131,21 @@ public class AuthService {
         log.info("User registered successfully: {}", request.getEmail());
         auditLogService.log(user, "AUTH", "REGISTER", "User", user.getId(),
                 null, "User registered with role RESEARCHER", getRequest());
+
+        try {
+            java.util.List<User> admins = userRepository.findByRole(UserRole.SYSTEM_ADMIN);
+            for (User admin : admins) {
+                notificationService.createNotification(
+                        admin,
+                        "New User Registration",
+                        "A new user (" + request.getFirstName() + " " + request.getLastName() + ") has registered on the platform.",
+                        NotificationType.GENERAL,
+                        NotificationPriority.MEDIUM
+                );
+            }
+        } catch (Exception e) {
+            log.warn("Failed to send new user notification to admins: {}", e.getMessage());
+        }
     }
 
     @Transactional
