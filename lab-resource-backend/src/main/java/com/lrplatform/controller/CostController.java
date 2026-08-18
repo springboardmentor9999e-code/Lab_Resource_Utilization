@@ -124,8 +124,8 @@ public class CostController {
             HttpServletRequest httpRequest,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        LocalDate start = startDate != null ? startDate : LocalDate.now().withDayOfMonth(1);
-        LocalDate end = endDate != null ? endDate : LocalDate.now();
+        LocalDate start = startDate != null ? startDate : LocalDate.now().minusDays(30);
+        LocalDate end = endDate != null ? endDate : LocalDate.now().plusDays(30);
 
         Long institutionId = getInstitutionIdIfInstitutionAdmin(httpRequest);
         Long departmentId = getDepartmentIdIfDepartmentHead(httpRequest);

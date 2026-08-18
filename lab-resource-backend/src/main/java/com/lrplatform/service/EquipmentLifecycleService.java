@@ -60,7 +60,7 @@ public class EquipmentLifecycleService {
             LEFT JOIN (
                 SELECT equipment_id, COUNT(id) as booking_count
                 FROM bookings
-                WHERE booking_status = 'COMPLETED'
+                WHERE booking_status IN ('APPROVED', 'CONFIRMED', 'IN_USE', 'COMPLETED')
                 GROUP BY equipment_id
             ) b ON b.equipment_id = e.id
             ORDER BY e.equipment_name
@@ -87,7 +87,7 @@ public class EquipmentLifecycleService {
             LEFT JOIN (
                 SELECT equipment_id, COUNT(id) as booking_count
                 FROM bookings
-                WHERE booking_status = 'COMPLETED'
+                WHERE booking_status IN ('APPROVED', 'CONFIRMED', 'IN_USE', 'COMPLETED')
                 GROUP BY equipment_id
             ) b ON b.equipment_id = e.id
             WHERE d.institution_id = ?
@@ -114,7 +114,7 @@ public class EquipmentLifecycleService {
             LEFT JOIN (
                 SELECT equipment_id, COUNT(id) as booking_count
                 FROM bookings
-                WHERE booking_status = 'COMPLETED'
+                WHERE booking_status IN ('APPROVED', 'CONFIRMED', 'IN_USE', 'COMPLETED')
                 GROUP BY equipment_id
             ) b ON b.equipment_id = e.id
             WHERE l.department_id = ?

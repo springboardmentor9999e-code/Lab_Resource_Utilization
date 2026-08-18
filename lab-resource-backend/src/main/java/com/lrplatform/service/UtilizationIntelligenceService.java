@@ -26,7 +26,7 @@ public class UtilizationIntelligenceService {
     private static final int OPERATING_DAY_START_HOUR = 8;
     private static final int OPERATING_DAY_END_HOUR = 20;
     private static final int DEFAULT_MAX_DAILY_HOURS = 8;
-    private static final String BOOKING_STATUS_FILTER = "('COMPLETED', 'CONFIRMED', 'IN_USE')";
+    private static final String BOOKING_STATUS_FILTER = "('APPROVED', 'CONFIRMED', 'IN_USE', 'COMPLETED')";
 
     public UtilizationIntelligenceResponse getUtilizationIntelligence(LocalDate startDate, LocalDate endDate) {
         return buildResponse(null, null, startDate, endDate);

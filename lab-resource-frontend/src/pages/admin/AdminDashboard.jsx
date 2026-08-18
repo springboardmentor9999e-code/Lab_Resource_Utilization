@@ -5,6 +5,14 @@ import toast from 'react-hot-toast';
 import { adminDashboardApi, bookingApi, costApi, systemMonitorApi } from '../../api/api';
 import { useAuth } from '../../context/AuthContext';
 
+const formatUptime = (ms) => {
+  if (!ms) return 'N/A';
+  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+  return `${days}d ${hours}h ${minutes}m`;
+};
+
 export default function AdminDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -291,11 +299,11 @@ export default function AdminDashboard() {
                   <p className="text-xs text-blue-600">Overall Utilization</p>
                 </div>
                 <div className="p-3 bg-amber-50 rounded-lg text-center">
-                  <p className="text-2xl font-bold text-amber-700">{utilization.idleEquipmentCount || 0}</p>
+                  <p className="text-2xl font-bold text-amber-700">{utilization.idleEquipment?.length || 0}</p>
                   <p className="text-xs text-amber-600">Idle Equipment</p>
                 </div>
                 <div className="p-3 bg-green-50 rounded-lg text-center">
-                  <p className="text-2xl font-bold text-green-700">{utilization.peakHour || 'N/A'}</p>
+                  <p className="text-2xl font-bold text-green-700">{utilization.peakUsage?.peakHour || 'N/A'}</p>
                   <p className="text-xs text-green-600">Peak Hour</p>
                 </div>
               </div>
@@ -307,7 +315,7 @@ export default function AdminDashboard() {
                       <div key={d.departmentName} className="flex items-center gap-2">
                         <span className="text-xs text-gray-500 w-28 truncate">{d.departmentName}</span>
                         <div className="flex-1 bg-gray-200 rounded-full h-1.5">
-                          <div className="h-1.5 rounded-full bg-primary-500" style={{ width: `${d.utilizationRate || 0}%` }} />
+                          <div className="h-1.5 rounded-full bg-primary-500" style={{ width: `${Math.min(100, d.utilizationRate || 0)}%` }} />
                         </div>
                         <span className="text-xs font-medium w-8 text-right">{d.utilizationRate || 0}%</span>
                       </div>
@@ -322,7 +330,7 @@ export default function AdminDashboard() {
                   </p>
                   <div className="space-y-1">
                     {utilization.idleEquipment.slice(0, 3).map((e, i) => (
-                      <p key={i} className="text-xs text-gray-600">{e.name || e.equipmentName} — {e.daysSinceLastUse || 0} days idle</p>
+                      <p key={i} className="text-xs text-gray-600">{e.equipmentName || e.name} — {e.idleDays >= 999 ? 'Never used' : `${e.idleDays || 0} days idle`}</p>
                     ))}
                   </div>
                 </div>
@@ -355,24 +363,29 @@ export default function AdminDashboard() {
                   <p className="text-xs text-red-600">Maintenance Cost</p>
                 </div>
                 <div className="p-3 bg-green-50 rounded-lg text-center">
-                  <p className="text-lg font-bold text-green-700">{lifecycle.averageROI || 0}%</p>
+                  <p className="text-lg font-bold text-green-700">
+                    {lifecycle.equipmentLifecycles?.length > 0
+                      ? Math.round(lifecycle.equipmentLifecycles.reduce((acc, curr) => acc + (curr.roi || 0), 0) / lifecycle.equipmentLifecycles.length * 10) / 10
+                      : 0}%
+                  </p>
                   <p className="text-xs text-green-600">Average ROI</p>
                 </div>
               </div>
-              {lifecycle.equipmentItems?.length > 0 && (
+              {lifecycle.equipmentLifecycles?.length > 0 && (
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-2">Equipment Health</p>
                   <div className="space-y-2">
-                    {lifecycle.equipmentItems.slice(0, 4).map((e) => (
-                      <div key={e.name || e.equipmentName} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-xs text-gray-600 truncate">{e.name || e.equipmentName}</span>
+                    {lifecycle.equipmentLifecycles.slice(0, 4).map((e) => (
+                      <div key={e.equipmentId || e.equipmentName} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-xs text-gray-600 truncate">{e.equipmentName}</span>
                         <div className="flex items-center gap-2">
-                          <span className={`text-xs px-1.5 py-0.5 rounded ${
-                            (e.conditionRating || 0) >= 70 ? 'bg-green-100 text-green-700' :
-                            (e.conditionRating || 0) >= 40 ? 'bg-yellow-100 text-yellow-700' :
+                          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                            e.condition === 'EXCELLENT' ? 'bg-green-100 text-green-700' :
+                            e.condition === 'GOOD' ? 'bg-blue-100 text-blue-700' :
+                            e.condition === 'FAIR' ? 'bg-yellow-100 text-yellow-700' :
                             'bg-red-100 text-red-700'
-                          }`}>{e.conditionRating || 0}%</span>
-                          <span className="text-xs text-gray-400">{e.ageYears || 0}y</span>
+                          }`}>{e.condition || 'GOOD'}</span>
+                          <span className="text-xs text-gray-400">{Math.round((e.ageMonths || 0) / 12 * 10) / 10}y</span>
                         </div>
                       </div>
                     ))}
@@ -386,7 +399,7 @@ export default function AdminDashboard() {
                   </p>
                   <div className="space-y-1">
                     {lifecycle.procurementRecommendations.slice(0, 3).map((r, i) => (
-                      <p key={i} className="text-xs text-gray-600">{r.equipmentName || r.name} — {r.reason} (Est: ${(r.estimatedCost || 0).toLocaleString()})</p>
+                      <p key={i} className="text-xs text-gray-600">{r.equipmentName} — {r.reason || r.recommendation} (Est: ${(r.currentCost || 0).toLocaleString()})</p>
                     ))}
                   </div>
                 </div>
@@ -413,23 +426,23 @@ export default function AdminDashboard() {
               <p className="text-xs text-green-600">Status</p>
             </div>
             <div className="p-3 bg-blue-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-blue-700">{systemHealth.uptime || 'N/A'}</p>
+              <p className="text-lg font-bold text-blue-700">{formatUptime(systemHealth.uptimeMs)}</p>
               <p className="text-xs text-blue-600">Uptime</p>
             </div>
             <div className="p-3 bg-purple-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-purple-700">{systemHealth.memoryUsed || 'N/A'}</p>
+              <p className="text-lg font-bold text-purple-700">{systemHealth.usedMemoryMB || 0} MB</p>
               <p className="text-xs text-purple-600">Memory Used</p>
             </div>
             <div className="p-3 bg-amber-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-amber-700">{systemHealth.cpuUsage || 'N/A'}</p>
-              <p className="text-xs text-amber-600">CPU Usage</p>
+              <p className="text-lg font-bold text-amber-700">{systemHealth.availableProcessors || 0} Cores</p>
+              <p className="text-xs text-amber-600">CPU Cores</p>
             </div>
             <div className="p-3 bg-teal-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-teal-700">{systemHealth.apiAvgLatency || 'N/A'}</p>
+              <p className="text-lg font-bold text-teal-700">{Math.round(systemHealth.avgResponseTimeMs || 0)} ms</p>
               <p className="text-xs text-teal-600">Avg Latency</p>
             </div>
             <div className="p-3 bg-red-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-red-700">{systemHealth.apiErrorRate || '0%'}</p>
+              <p className="text-lg font-bold text-red-700">{(systemHealth.apiErrorRate || 0).toFixed(1)}%</p>
               <p className="text-xs text-red-600">Error Rate</p>
             </div>
           </div>
