@@ -25,11 +25,14 @@ public class EmailService {
 
     @Async
     public void sendPasswordResetEmail(String toEmail, String resetToken) {
-        try {
-            String resetUrl = frontendUrl + "/reset-password?token=" + resetToken;
+        String resetUrl = frontendUrl + "/reset-password?token=" + resetToken;
+        log.info("=================================================================");
+        log.info("[PASSWORD RESET LINK GENERATED] User: {} | Link: {}", toEmail, resetUrl);
+        log.info("=================================================================");
 
+        try {
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromAddress);
+            message.setFrom(fromAddress != null ? fromAddress : "noreply@lrplatform.com");
             message.setTo(toEmail);
             message.setSubject("Password Reset Request - Lab Resource Platform");
             message.setText("You requested a password reset.\n\n"
@@ -39,9 +42,9 @@ public class EmailService {
                     + "If you did not request this, please ignore this email.");
 
             mailSender.send(message);
-            log.info("Password reset email sent to: {}", toEmail);
+            log.info("Password reset email successfully sent via SMTP to: {}", toEmail);
         } catch (Exception e) {
-            log.error("Failed to send password reset email to {}: {}", toEmail, e.getMessage());
+            log.warn("Failed to send password reset email via SMTP to {}: {}. You can use the logged reset link above.", toEmail, e.getMessage());
         }
     }
 
