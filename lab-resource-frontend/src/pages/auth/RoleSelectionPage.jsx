@@ -187,7 +187,7 @@ export default function RoleSelectionPage() {
 
             <button
               type="submit"
-              disabled={loading || !role || !institutionId || (isOther ? !customInstitutionName.trim() : !departmentId)}
+              disabled={loading || !role || !institutionId || (isOther ? !customInstitutionName.trim() : (departments.length > 0 && !departmentId))}
               className="w-full btn-primary py-3 flex items-center justify-center"
             >
               {loading ? (

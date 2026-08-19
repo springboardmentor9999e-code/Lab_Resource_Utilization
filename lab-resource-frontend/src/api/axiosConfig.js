@@ -35,7 +35,11 @@ api.interceptors.response.use(
         await refreshPromise;
         return api(originalRequest);
       } catch (refreshError) {
-        if (window.location.pathname !== '/login') {
+        const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/oauth2/'];
+        const currentPath = window.location.pathname;
+        const isPublicPath = publicPaths.some(p => currentPath === p || currentPath.startsWith(p));
+        
+        if (!isPublicPath) {
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);

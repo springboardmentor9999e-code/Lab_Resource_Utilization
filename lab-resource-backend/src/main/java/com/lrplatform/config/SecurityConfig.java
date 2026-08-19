@@ -25,6 +25,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+
 import java.util.List;
 
 @Configuration
@@ -38,6 +42,7 @@ public class SecurityConfig {
     private final OAuth2AuthenticationSuccessHandler oauth2SuccessHandler;
     private final CookieOAuth2AuthorizationRequestRepository cookieOAuth2AuthorizationRequestRepository;
     private final Environment environment;
+    private final ClientRegistrationRepository clientRegistrationRepository;
 
     @Value("${app.oauth2.frontend-url:http://localhost:3000}")
     private String frontendUrl;
@@ -89,6 +94,7 @@ public class SecurityConfig {
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
             .oauth2Login(oauth2 -> oauth2
                 .authorizationEndpoint(auth -> auth
+                    .authorizationRequestResolver(authorizationRequestResolver(clientRegistrationRepository))
                     .authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository)
                 )
                 .redirectionEndpoint(redir -> redir
@@ -122,5 +128,14 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    private OAuth2AuthorizationRequestResolver authorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
+        DefaultOAuth2AuthorizationRequestResolver authorizationRequestResolver =
+                new DefaultOAuth2AuthorizationRequestResolver(
+                        clientRegistrationRepository, "/oauth2/authorization");
+        authorizationRequestResolver.setAuthorizationRequestCustomizer(
+                customizer -> customizer.additionalParameters(params -> params.put("prompt", "select_account")));
+        return authorizationRequestResolver;
     }
 }
