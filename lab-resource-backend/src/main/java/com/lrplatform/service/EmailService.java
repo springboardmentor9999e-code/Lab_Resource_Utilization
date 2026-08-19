@@ -31,20 +31,29 @@ public class EmailService {
         log.info("=================================================================");
 
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromAddress != null ? fromAddress : "noreply@lrplatform.com");
-            message.setTo(toEmail);
-            message.setSubject("Password Reset Request - Lab Resource Platform");
-            message.setText("You requested a password reset.\n\n"
-                    + "Click the link below to reset your password:\n"
-                    + resetUrl + "\n\n"
-                    + "This link will expire in 1 hour.\n\n"
-                    + "If you did not request this, please ignore this email.");
+            String title = "Password Reset Request";
+            String message = "<p>You requested a password reset for your Lab Resource Platform account.</p>"
+                    + "<p>Click the button below to reset your password:</p>"
+                    + "<div style=\"text-align: center; margin: 20px 0;\">"
+                    + "<a href=\"" + resetUrl + "\" style=\"background-color: #0d6efd; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;\">Reset Password</a>"
+                    + "</div>"
+                    + "<p>Or copy and paste this link into your browser:</p>"
+                    + "<p style=\"word-break: break-all; color: #6c757d;\">" + resetUrl + "</p>"
+                    + "<p>This link will expire in 1 hour. If you did not request this, please ignore this email.</p>";
 
-            mailSender.send(message);
-            log.info("Password reset email successfully sent via SMTP to: {}", toEmail);
+            String htmlBody = buildNotificationHtml(title, message, "SECURITY_ALERT");
+
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setFrom(fromAddress != null ? fromAddress : "noreply@lrplatform.com");
+            helper.setTo(toEmail);
+            helper.setSubject(title + " - Lab Resource Platform");
+            helper.setText(htmlBody, true);
+
+            mailSender.send(mimeMessage);
+            log.info("Password reset HTML email successfully sent via SMTP to: {}", toEmail);
         } catch (Exception e) {
-            log.warn("Failed to send password reset email via SMTP to {}: {}. You can use the logged reset link above.", toEmail, e.getMessage());
+            log.warn("Failed to send HTML password reset email via SMTP to {}: {}. You can use the logged reset link above.", toEmail, e.getMessage());
         }
     }
 

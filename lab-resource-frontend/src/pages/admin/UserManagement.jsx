@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Users, Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight, UserCheck, UserX, KeyRound } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { userManagementApi, institutionApi, departmentApi } from '../../api/api';
+import useConfirm from '../../hooks/useConfirm';
 
 const ROLES = ['RESEARCHER', 'STUDENT', 'LAB_TECHNICIAN', 'LAB_MANAGER', 'DEPARTMENT_HEAD', 'INSTITUTION_ADMIN', 'SYSTEM_ADMIN'];
 
@@ -27,6 +28,7 @@ export default function UserManagement() {
   const [editingUser, setEditingUser] = useState(null);
   const [resetModal, setResetModal] = useState(null);
   const [resetPassword, setResetPassword] = useState('');
+  const { confirm, confirmModal } = useConfirm();
 
   const { data: institutions = [] } = useQuery({
     queryKey: ['institutions'],
@@ -185,9 +187,10 @@ export default function UserManagement() {
                         <select
                           className={`text-xs font-medium px-2 py-1 rounded-full border-0 ${roleColors[user.role] || 'bg-gray-100'}`}
                           value={user.role}
-                          onChange={(e) => {
-                            if (window.confirm(`Change role from ${user.role} to ${e.target.value}?`)) {
-                              changeRoleMutation.mutate({ id: user.id, role: e.target.value });
+                          onChange={async (e) => {
+                            const newRole = e.target.value;
+                            if (await confirm({ title: 'Change Role', message: `Change role from ${user.role} to ${newRole}?`, confirmText: 'Change', variant: 'warning' })) {
+                              changeRoleMutation.mutate({ id: user.id, role: newRole });
                             }
                           }}
                         >
@@ -222,8 +225,10 @@ export default function UserManagement() {
                             className="p-1.5 hover:bg-yellow-100 rounded text-yellow-600" title="Reset Password">
                             <KeyRound size={14} />
                           </button>
-                          <button onClick={() => {
-                            if (window.confirm('Delete this user?')) deleteMutation.mutate(user.id);
+                          <button onClick={async () => {
+                            if (await confirm({ title: 'Delete User', message: 'Are you sure you want to delete this user? This cannot be undone.', confirmText: 'Delete', variant: 'danger' })) {
+                              deleteMutation.mutate(user.id);
+                            }
                           }} className="p-1.5 hover:bg-red-100 rounded text-red-600" title="Delete">
                             <Trash2 size={14} />
                           </button>
@@ -329,6 +334,8 @@ export default function UserManagement() {
           </div>
         </div>
       )}
+      {/* Confirm Modal */}
+      {confirmModal}
     </div>
   );
 }
