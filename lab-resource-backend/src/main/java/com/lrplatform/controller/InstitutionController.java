@@ -34,7 +34,15 @@ public class InstitutionController {
     private final CurrentUserUtil currentUserUtil;
 
     @GetMapping
-    public ResponseEntity<List<InstitutionResponse>> getAll() {
+    public ResponseEntity<List<InstitutionResponse>> getAll(HttpServletRequest request) {
+        User currentUser = currentUserUtil.getCurrentUser(request);
+        if (currentUser.getRole().name().equals("INSTITUTION_ADMIN")) {
+            Institution myInst = currentUser.getInstitution();
+            if (myInst != null) {
+                return ResponseEntity.ok(List.of(toDto(myInst)));
+            }
+            return ResponseEntity.ok(List.of());
+        }
         return ResponseEntity.ok(institutionService.getAllInstitutions().stream().map(this::toDto).toList());
     }
 
@@ -105,8 +113,29 @@ class DepartmentController {
     private final DepartmentRepository departmentRepository;
 
     @GetMapping
-    public ResponseEntity<List<DepartmentResponse>> getByInstitution(@RequestParam Long institutionId) {
-        return ResponseEntity.ok(institutionService.getDepartmentsByInstitution(institutionId)
+    public ResponseEntity<List<DepartmentResponse>> getByInstitution(@RequestParam(required = false) Long institutionId, HttpServletRequest request) {
+        User currentUser = currentUserUtil.getCurrentUser(request);
+        Long targetInstitutionId = institutionId;
+
+        if (currentUser.getRole().name().equals("INSTITUTION_ADMIN") || currentUser.getRole().name().equals("DEPARTMENT_HEAD")) {
+            Long myInstitutionId = currentUser.getInstitution() != null ? currentUser.getInstitution().getId() : null;
+            if (myInstitutionId == null) {
+                return ResponseEntity.ok(List.of()); // No institution assigned
+            }
+            // Enforce that they can only query their own institution's departments
+            if (institutionId != null && !institutionId.equals(myInstitutionId)) {
+                throw new ForbiddenException("You can only view departments within your institution");
+            }
+            targetInstitutionId = myInstitutionId;
+        }
+
+        if (targetInstitutionId == null) {
+            // If system admin requests without ID, we could either return all or return empty. 
+            // The repository method expects an ID, so let's throw an exception if null.
+            throw new com.lrplatform.exception.BadRequestException("institutionId is required");
+        }
+
+        return ResponseEntity.ok(institutionService.getDepartmentsByInstitution(targetInstitutionId)
                 .stream().map(this::toDto).toList());
     }
 

@@ -8,6 +8,7 @@ import com.lrplatform.dto.request.UserUpdateRequest;
 import com.lrplatform.dto.response.UserListResponse;
 import com.lrplatform.dto.response.UserResponse;
 import com.lrplatform.exception.DuplicateResourceException;
+import com.lrplatform.exception.BadRequestException;
 import com.lrplatform.exception.ResourceNotFoundException;
 import com.lrplatform.model.entity.Department;
 import com.lrplatform.model.entity.Institution;
@@ -18,6 +19,7 @@ import com.lrplatform.repository.InstitutionRepository;
 import com.lrplatform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -194,8 +196,14 @@ public class UserManagementService {
         User user = userRepository.findById(Objects.requireNonNull(id))
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        userRepository.delete(user);
-        log.info("User deleted by admin: {}", user.getEmail());
+        try {
+            userRepository.delete(user);
+            userRepository.flush();
+            log.info("User deleted by admin: {}", user.getEmail());
+        } catch (DataIntegrityViolationException e) {
+            log.error("Failed to delete user {} due to foreign key constraints", id);
+            throw new BadRequestException("Cannot delete user because they have associated records (e.g., bookings, logs). Please disable their account instead.");
+        }
     }
 
     @Transactional(readOnly = true)
