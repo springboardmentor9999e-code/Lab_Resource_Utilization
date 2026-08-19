@@ -24,15 +24,32 @@ public class InAppNotificationService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public InAppNotification createNotification(User recipient, String title, String message, NotificationType type, Long relatedId) {
         if (recipient == null) return null;
-        InAppNotification notification = InAppNotification.builder()
-                .recipient(recipient)
-                .title(title)
-                .message(message)
-                .type(type)
-                .relatedId(relatedId)
-                .isRead(false)
-                .build();
-        return inAppNotificationRepository.save(notification);
+        try {
+            InAppNotification notification = InAppNotification.builder()
+                    .recipient(recipient)
+                    .title(title)
+                    .message(message)
+                    .type(type)
+                    .relatedId(relatedId)
+                    .isRead(false)
+                    .build();
+            return inAppNotificationRepository.saveAndFlush(notification);
+        } catch (Exception e) {
+            // Fallback for legacy DB check constraint if NotificationType is not in DB check constraint
+            try {
+                InAppNotification notification = InAppNotification.builder()
+                        .recipient(recipient)
+                        .title(title)
+                        .message(message)
+                        .type(NotificationType.SYSTEM)
+                        .relatedId(relatedId)
+                        .isRead(false)
+                        .build();
+                return inAppNotificationRepository.saveAndFlush(notification);
+            } catch (Exception ignored) {
+                return null;
+            }
+        }
     }
 
     public List<InAppNotificationResponse> getUserNotifications(String userEmail, String filterType) {

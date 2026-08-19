@@ -44,4 +44,9 @@ public class InstitutionController {
     public ResponseEntity<InstitutionResponse> approve(@PathVariable Long id) {
         return ResponseEntity.ok(institutionService.approve(id));
     }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<InstitutionResponse>> all(){
+        return ResponseEntity.ok((institutionService.all()));
+    }
 }

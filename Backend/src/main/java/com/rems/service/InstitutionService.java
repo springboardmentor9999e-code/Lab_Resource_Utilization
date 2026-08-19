@@ -19,6 +19,13 @@ public class InstitutionService {
 
     private final InstitutionRepository institutionRepository;
 
+    public List<InstitutionResponse> all() {
+        return institutionRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     @Transactional
     public InstitutionResponse register(InstitutionRequest request) {
 

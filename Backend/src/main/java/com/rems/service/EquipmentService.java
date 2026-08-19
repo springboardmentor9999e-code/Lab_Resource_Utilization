@@ -228,22 +228,31 @@ public class EquipmentService {
                 ? userRepository.findByEmail(userEmail).orElse(null)
                 : null;
 
-        LocalDate searchCutoff = LocalDate.now().plusDays(90);
+        LocalDate searchCutoff = LocalDate.now().plusDays(30);
         List<Equipment> expiring = equipmentRepository.findByExpiryDateNotNullAndExpiryDateLessThanEqual(searchCutoff);
 
-        if (expiring == null || expiring.isEmpty()) {
-            expiring = equipmentRepository.findAll();
+        if (expiring == null) {
+            expiring = java.util.Collections.emptyList();
         }
 
         if (user != null) {
             if (user.getLab() != null) {
                 Long labId = user.getLab().getLabId();
-                List<Equipment> labFiltered = expiring.stream().filter(e -> e.getLab() != null && e.getLab().getLabId().equals(labId)).toList();
-                if (!labFiltered.isEmpty()) expiring = labFiltered;
+                expiring = expiring.stream()
+                        .filter(e -> e.getLab() != null && e.getLab().getLabId().equals(labId))
+                        .toList();
             } else if (user.getDepartment() != null) {
                 Long deptId = user.getDepartment().getDepartmentId();
-                List<Equipment> deptFiltered = expiring.stream().filter(e -> e.getDepartment() != null && e.getDepartment().getDepartmentId().equals(deptId)).toList();
-                if (!deptFiltered.isEmpty()) expiring = deptFiltered;
+                expiring = expiring.stream()
+                        .filter(e -> e.getDepartment() != null && e.getDepartment().getDepartmentId().equals(deptId))
+                        .toList();
+            } else if (user.getInstitution() != null) {
+                Long instId = user.getInstitution().getInstitutionId();
+                expiring = expiring.stream()
+                        .filter(e -> e.getLab() != null && e.getLab().getDepartment() != null 
+                                && e.getLab().getDepartment().getInstitution() != null 
+                                && e.getLab().getDepartment().getInstitution().getInstitutionId().equals(instId))
+                        .toList();
             }
         }
 

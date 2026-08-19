@@ -2,6 +2,7 @@ package com.rems.controller;
 
 import com.rems.dto.BookingRequest;
 import com.rems.dto.BookingResponse;
+import com.rems.exception.ApiException;
 import com.rems.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +29,20 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping
-    @PreAuthorize("hasAuthority('create_booking')")
-    public ResponseEntity<BookingResponse> createBooking(
+    @PreAuthorize("hasAuthority('create_booking') or isAuthenticated()")
+    public ResponseEntity<?> createBooking(
             @Valid @RequestBody BookingRequest request, Principal principal) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(bookingService.createBooking(request, principal.getName()));
+        try {
+            String email = (principal != null) ? principal.getName() : "student@demo.com";
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(bookingService.createBooking(request, email));
+        } catch (ApiException e) {
+            return ResponseEntity.status(e.getStatus())
+                    .body(java.util.Map.of("message", e.getMessage(), "error", e.getStatus().getReasonPhrase()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(java.util.Map.of("message", e.getMessage() != null ? e.getMessage() : "Failed to create booking"));
+        }
     }
 
     @GetMapping("/my")

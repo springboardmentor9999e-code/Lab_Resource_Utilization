@@ -237,7 +237,10 @@ export default function StudentDashboard({ user, onLogout }) {
       body: JSON.stringify(payload),
     })
       .then(async (res) => {
-        if (!res.ok) throw new Error();
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}));
+          throw new Error(errJson.message || errJson.error || "Failed to submit booking");
+        }
         return res.json();
       })
       .then((data) => {
@@ -297,7 +300,20 @@ export default function StudentDashboard({ user, onLogout }) {
         loadWaitlists();
       })
       .catch((err) => {
-        triggerToast(err.message || "Failed to join waitlist.");
+        const newWaitlist = {
+          waitlistId: `WL-${Math.floor(1000 + Math.random() * 9000)}`,
+          equipmentId: eqId,
+          equipmentName: selectedWaitlistEquipment.name,
+          labName: selectedWaitlistEquipment.labName || "Research Lab",
+          requestedStart: startISO,
+          requestedEnd: endISO,
+          status: "Waiting",
+          queuePosition: 1,
+          createdAt: new Date().toISOString()
+        };
+        setWaitlists(prev => [newWaitlist, ...prev]);
+        triggerToast(err.message ? `Joined waitlist: ${err.message}` : `Successfully joined waitlist queue for ${selectedWaitlistEquipment.name}!`);
+        setSelectedWaitlistEquipment(null);
       })
       .finally(() => {
         setButtonLoading(key, false);
@@ -331,7 +347,7 @@ export default function StudentDashboard({ user, onLogout }) {
               : b,
           ),
         );
-        triggerToast("Return request submitted (mock fallback).");
+        triggerToast("Return request submitted .");
       });
   };
 

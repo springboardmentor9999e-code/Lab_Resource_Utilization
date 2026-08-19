@@ -33,6 +33,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+        Throwable cause = ex;
+        while (cause != null) {
+            if (cause instanceof ApiException apiEx) {
+                return handleApiException(apiEx);
+            }
+            cause = cause.getCause();
+        }
         return ResponseEntity.internalServerError()
                 .body(buildBody(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage()));
     }

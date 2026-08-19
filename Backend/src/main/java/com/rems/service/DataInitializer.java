@@ -66,10 +66,18 @@ public class DataInitializer implements CommandLineRunner {
     private final IdleAlertRepository idleAlertRepository;
     private final LabRepository labRepository;
     private final RollupJobService rollupJobService;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @Override
     public void run(String... args) throws Exception {
         log.info("Starting REMS DataInitializer...");
+
+        try {
+            jdbcTemplate.execute("ALTER TABLE in_app_notifications DROP CONSTRAINT IF EXISTS in_app_notifications_type_check;");
+            log.info("[DATA INITIALIZER] Successfully dropped check constraint in_app_notifications_type_check.");
+        } catch (Exception e) {
+            log.warn("[DATA INITIALIZER] Could not drop constraint: {}", e.getMessage());
+        }
 
         // Ensure Test User Akshay is registered & updated with testing contact info
         userRepository.findByEmail("as7708209@gmail.com").ifPresent(user -> {

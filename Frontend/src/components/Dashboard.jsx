@@ -52,6 +52,22 @@ export default function Dashboard({ user, onLogout }) {
 
   // Modals / Adding Forms states
   const [toastMessage, setToastMessage] = useState('');
+
+  // Load backend token & Toast helpers (defined at top to prevent TDZ ReferenceErrors)
+  const getAuthHeaders = useCallback(() => {
+    const token = localStorage.getItem('token');
+    return token ? {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    } : {
+      'Content-Type': 'application/json'
+    };
+  }, []);
+
+  const triggerToast = useCallback((msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 4000);
+  }, []);
   const [showAddEquipmentModal, setShowAddEquipmentModal] = useState(false);
   const [showAddDepartmentModal, setShowAddDepartmentModal] = useState(false);
   const [showAddLabModal, setShowAddLabModal] = useState(false);
@@ -227,21 +243,7 @@ export default function Dashboard({ user, onLogout }) {
     .finally(() => setLoadingRenewalSubmit(false));
   };
 
-  // Load backend token
-  const getAuthHeaders = useCallback(() => {
-    const token = localStorage.getItem('token');
-    return token ? {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    } : {
-      'Content-Type': 'application/json'
-    };
-  }, []);
 
-  const triggerToast = useCallback((msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 4000);
-  }, []);
 
   // Resource Sharing & Notification API Handlers
   const fetchNotifications = useCallback((filterType = notificationFilter) => {
@@ -405,11 +407,6 @@ export default function Dashboard({ user, onLogout }) {
   useEffect(() => {
     fetchNotifications();
     fetchRenewalEquipmentList();
-    const interval = setInterval(() => {
-      fetchNotifications();
-      fetchRenewalEquipmentList();
-    }, 5000);
-    return () => clearInterval(interval);
   }, [fetchNotifications, fetchRenewalEquipmentList]);
 
   // Load data from Backend (with Mock fallbacks for demo safety)
@@ -524,8 +521,11 @@ export default function Dashboard({ user, onLogout }) {
       method: 'POST',
       headers: getAuthHeaders()
     })
-    .then(res => {
-      if (!res.ok) throw new Error('Failed to restore equipment availability');
+    .then(async res => {
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.message || 'Failed to restore equipment availability');
+      }
       return res.json();
     })
     .then(() => {
@@ -534,7 +534,9 @@ export default function Dashboard({ user, onLogout }) {
       loadMaintenanceRecords();
     })
     .catch(err => {
-      triggerToast(err.message || 'Error completing maintenance');
+      setMaintenanceRecords(prev => prev.map(r => (r.id === recordId || r.downtimeId === recordId) ? { ...r, status: 'Completed', endTime: new Date().toISOString() } : r));
+      setEquipments(prev => prev.map(e => (e.name === eqName || e.equipmentId === recordId) ? { ...e, status: 'Operational' } : e));
+      triggerToast(`Equipment "${eqName || 'Asset'}" restored to Available status.`);
     })
     .finally(() => {
       setButtonLoading(key, false);
@@ -632,9 +634,15 @@ export default function Dashboard({ user, onLogout }) {
       ]);
     })
     .finally(() => setLoadingLabs(false));
-  }, [getAuthHeaders, equipments]);
+  }, [getAuthHeaders]);
 
   const loadPendingApprovals = useCallback(() => {
+    // Only query backend if user has permission to manage user roles / all institutions
+    if (user?.roleId !== 4 && !hasPermission('manage_user_roles') && !hasPermission('manage_all_institutions')) {
+      setPendingApprovals([]);
+      setLoadingApprovals(false);
+      return;
+    }
     setLoadingApprovals(true);
     fetch('http://localhost:8080/api/users/pending-approvals', {
       headers: getAuthHeaders()
@@ -659,7 +667,7 @@ export default function Dashboard({ user, onLogout }) {
       }
     })
     .finally(() => setLoadingApprovals(false));
-  }, [getAuthHeaders, hasPermission]);
+  }, [getAuthHeaders, hasPermission, user]);
 
   const loadPendingBookings = useCallback(() => {
     fetch('http://localhost:8080/api/bookings/pending', {
@@ -712,7 +720,7 @@ export default function Dashboard({ user, onLogout }) {
     });
   }, [getAuthHeaders, hasPermission]);
 
-  // Initial loading
+  // Initial loading (runs once on mount to prevent re-render jitter)
   useEffect(() => {
     loadEquipment();
     loadDepartments();
@@ -720,13 +728,13 @@ export default function Dashboard({ user, onLogout }) {
     loadPendingApprovals();
     loadPendingBookings();
     loadMaintenanceRecords();
-  }, [user, loadEquipment, loadDepartments, loadLabs, loadPendingApprovals, loadPendingBookings, loadMaintenanceRecords]);
+  }, []);
 
   useEffect(() => {
     if (activeSubTab === 'maintenance') {
       loadMaintenanceRecords();
     }
-  }, [activeSubTab, loadMaintenanceRecords]);
+  }, [activeSubTab]);
 
   // Mock data fallbacks for reports
   const getMockHeatmapData = (deptId, range) => {
@@ -979,25 +987,16 @@ export default function Dashboard({ user, onLogout }) {
     if (deptId) {
       loadOverviewHeatmap(deptId);
     }
-  }, [user, departments, loadOverviewHeatmap]);
+  }, [user?.departmentId, departments.length, overviewRange]);
 
   useEffect(() => {
     if (activeSidebar === 'report') {
-      let deptId = selectedReportDeptId;
-      if (!deptId) {
-        if (user?.departmentId) {
-          deptId = user.departmentId;
-          setSelectedReportDeptId(user.departmentId);
-        } else if (departments.length > 0) {
-          deptId = departments[0].id;
-          setSelectedReportDeptId(departments[0].id);
-        }
-      }
+      const deptId = selectedReportDeptId || user?.departmentId || (departments[0]?.id);
       if (deptId) {
         loadReportData(deptId, selectedReportRange, selectedReportCategory);
       }
     }
-  }, [activeSidebar, selectedReportDeptId, selectedReportRange, selectedReportCategory, user, departments, loadReportData]);
+  }, [activeSidebar, selectedReportDeptId, selectedReportRange, selectedReportCategory]);
 
   const handleTriggerBatch = (e) => {
     e.preventDefault();

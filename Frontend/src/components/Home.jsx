@@ -1,11 +1,40 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import heroImg from '/hero.jpg';
-import microscope from '/microscope.png'
+import microscope from '/microscope.png';
 
 export default function Home({ onNavigate }) {
   const [activeSection, setActiveSection] = useState('home');
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [institutionsDirectory, setInstitutionsDirectory] = useState([]);
+  const [loadingInstitutions, setLoadingInstitutions] = useState(true);
+
+  const defaultPartners = [
+    { id: 1, name: 'IISc Bangalore', address: 'Bengaluru, Karnataka, IND', type: 'Premier Research Institute' },
+    { id: 2, name: 'IIT Delhi', address: 'New Delhi, Delhi, IND', type: 'Engineering & Advanced Nanotech Hub' },
+    { id: 3, name: 'BHU Varanasi', address: 'Varanasi, Uttar Pradesh, IND', type: 'Central Medical & Scientific Research' },
+    { id: 4, name: 'AIIMS New Delhi', address: 'New Delhi, Delhi, IND', type: 'Bio-Medical & Clinical Research Center' }
+  ];
+
+  useEffect(() => {
+    fetch('http://localhost:8080/api/institutions/all')
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setInstitutionsDirectory(data);
+        } else {
+          setInstitutionsDirectory(defaultPartners);
+        }
+      })
+      .catch(() => {
+        setInstitutionsDirectory(defaultPartners);
+      })
+      .finally(() => setLoadingInstitutions(false));
+  }, []);
+
+  const displayInstitutions = (institutionsDirectory && institutionsDirectory.length > 0)
+    ? institutionsDirectory.slice(0, 4)
+    : defaultPartners;
 
   return (
     <div className="min-h-screen bg-surface-bg text-on-surface flex flex-col font-sans">
@@ -13,7 +42,7 @@ export default function Home({ onNavigate }) {
       {/* Sticky Public Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-outline-variant/30 py-4 px-6 md:px-10 flex items-center justify-between">
         <div className="flex items-center cursor-pointer" onClick={() => onNavigate('home')}>
-          <img className='w-[5%] mr-5' src={microscope} alt="logo" />
+          <img className='w-8 mr-3' src={microscope} alt="logo" />
           <span className="text-xl md:text-2xl font-bold text-primary logo-font tracking-tight">LabMaintain</span>
         </div>
         
@@ -206,64 +235,33 @@ export default function Home({ onNavigate }) {
               <h2 className="text-3xl font-bold text-primary">Partner Institutions</h2>
               <p className="text-sm text-on-surface-variant mt-1">Trusted by leading research centers globally.</p>
             </div>
-            <a href="#all-partners" className="text-sm font-semibold text-primary hover:text-primary-light flex items-center gap-1 transition">
-              View All Partners &rarr;
-            </a>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Inst 1 */}
-            <div className="bg-white border border-outline-variant/30 rounded-xl p-5 shadow-sm hover:shadow-md transition space-y-4">
-              <div className="h-28 bg-surface-low rounded-lg flex items-center justify-center text-primary-light">
-                <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <div>
-                <h4 className="font-bold text-on-surface font-sans">AIIMS Delhi.</h4>
-                <p className="text-xs text-on-surface-variant mt-0.5">Delhi, IND</p>
-              </div>
-            </div>
-
-            {/* Inst 2 */}
-            <div className="bg-white border border-outline-variant/30 rounded-xl p-5 shadow-sm hover:shadow-md transition space-y-4">
-              <div className="h-28 bg-surface-low rounded-lg flex items-center justify-center text-primary-light">
-                <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
-              </div>
-              <div>
-                <h4 className="font-bold text-on-surface font-sans">IIT delhi</h4>
-                <p className="text-xs text-on-surface-variant mt-0.5">Delhi, IND</p>
-              </div>
-            </div>
-
-            {/* Inst 3 */}
-            <div className="bg-white border border-outline-variant/30 rounded-xl p-5 shadow-sm hover:shadow-md transition space-y-4">
-              <div className="h-28 bg-surface-low rounded-lg flex items-center justify-center text-primary-light">
-                <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <div>
-                <h4 className="font-bold text-on-surface font-sans">BHU</h4>
-                <p className="text-xs text-on-surface-variant mt-0.5">Uttar Pradesh, IND</p>
-              </div>
-            </div>
-
-            {/* Inst 4 */}
-            <div className="bg-white border border-outline-variant/30 rounded-xl p-5 shadow-sm hover:shadow-md transition space-y-4">
-              <div className="h-28 bg-surface-low rounded-lg flex items-center justify-center text-primary-light">
-                <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 009 11a13.916 13.916 0 00-1.127-6.44l-.054-.09A13.916 13.916 0 004.316 2.05L4 2m8 9h12m-6 0a6 6 0 11-12 0 6 6 0 0112 0z" />
-                </svg>
-              </div>
-              <div>
-                <h4 className="font-bold text-on-surface font-sans">Quantum Research</h4>
-                <p className="text-xs text-on-surface-variant mt-0.5">Chennai, IND</p>
-              </div>
-            </div>
-          </div>
+            {loadingInstitutions ? (
+              [1, 2, 3, 4].map(i => (
+                <div key={i} className="bg-white border border-outline-variant/30 rounded-xl p-5 shadow-sm space-y-4">
+                  <Skeleton height={112} borderRadius={8} />
+                  <Skeleton height={20} width="70%" />
+                  <Skeleton height={14} width="50%" />
+                </div>
+              ))
+            ) : (
+              displayInstitutions.map((inst, idx) => (
+                <div key={inst.id || inst.institutionId || idx} className="bg-white border border-outline-variant/30 rounded-xl p-5 shadow-sm hover:shadow-md transition space-y-4">
+                  <div className="h-28 bg-surface-low rounded-lg flex items-center justify-center text-primary-light">
+                    <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-on-surface font-sans">{inst.name}</h4>
+                    <p className="text-xs text-on-surface-variant mt-0.5">{inst.address || inst.type || 'Research Institute'}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div> 
         </section>
 
       </main>

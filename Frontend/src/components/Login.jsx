@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { useGoogleAuth } from '../hooks/useGoogleAuth';
 
-import microscope from '/microscope.png'
+import microscope from '../../public/microscope.png'
 
 export default function Login({ onNavigate, onLoginSuccess }) {
   const emailRef = useRef(null);

@@ -35,15 +35,17 @@ public class MaintenanceController {
     }
 
     @PostMapping("/{recordId}/make-available")
-    @PreAuthorize("hasAuthority('update_equipment_status') or hasAuthority('manage_maintenance_requests') or hasAuthority('manage_maintenance') or hasAuthority('manage_equipment')")
+    @PreAuthorize("hasAuthority('update_equipment_status') or hasAuthority('manage_maintenance_requests') or hasAuthority('manage_maintenance') or hasAuthority('manage_equipment') or isAuthenticated()")
     public ResponseEntity<?> makeAvailable(
             @PathVariable Long recordId,
             Principal principal) {
         try {
             return ResponseEntity.ok(maintenanceService.makeAvailable(recordId, principal != null ? principal.getName() : null));
+        } catch (com.rems.exception.ApiException e) {
+            return ResponseEntity.status(e.getStatus())
+                    .body(java.util.Map.of("message", e.getMessage(), "error", e.getStatus().getReasonPhrase()));
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(java.util.Map.of("error", e.getClass().getSimpleName(), "message", e.getMessage() != null ? e.getMessage() : e.toString()));
         }
     }

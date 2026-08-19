@@ -62,11 +62,19 @@ public class EquipmentRenewalScheduler {
                 String message = "Asset '" + eq.getName() + "' (ID: " + eq.getEquipmentId() + ") in " 
                         + (eq.getLab() != null ? eq.getLab().getName() : "your lab") + " " + urgencyMsg + ". Renewal is required!";
 
-                // 1. In-App Notification
-                inAppNotificationService.createNotification(staff, title, message, NotificationType.MAINTENANCE, eq.getEquipmentId());
+                try {
+                    // 1. In-App Notification
+                    inAppNotificationService.createNotification(staff, title, message, NotificationType.MAINTENANCE, eq.getEquipmentId());
+                } catch (Exception e) {
+                    log.warn("Could not create in-app renewal notification: {}", e.getMessage());
+                }
 
-                // 2. Email Notification
-                notificationService.sendApprovalRequestNotification(staff, title, message);
+                try {
+                    // 2. Email Notification
+                    notificationService.sendApprovalRequestNotification(staff, title, message);
+                } catch (Exception e) {
+                    log.warn("Could not send email renewal notification: {}", e.getMessage());
+                }
                 count++;
             }
         }
