@@ -1,10 +1,45 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import "../App.css";
+import Sidebar from "../admin/Sidebar";
+import DashboardPage from "../admin/DashboardPage";
+import InstitutionPage from "../admin/InstitutionPage";
+import DepartmentPage from "../admin/DepartmentPage";
+import LaboratoryPage from "../admin/LaboratoryPage";
+import EquipmentPage from "../admin/EquipmentPage";
+import BookingPage from "../admin/BookingPage";
+import NotificationBell from "../components/NotificationBell";
 
-const token = localStorage.getItem("token");
-
-axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+import {
+    getDepartments,
+    addDepartment,
+    updateDepartment,
+    deleteDepartment as removeDepartment
+} from "../services/departmentService";
+import {
+    getInstitutions,
+    addInstitution,
+    updateInstitution,
+    deleteInstitution as removeInstitution
+} from "../services/institutionService";
+import {
+    getLaboratories,
+    addLaboratory,
+    updateLaboratory,
+    deleteLaboratory as removeLaboratory
+} from "../services/laboratoryService";
+import {
+    getEquipment,
+    addEquipment,
+    updateEquipment,
+    deleteEquipment as removeEquipment
+} from "../services/equipmentService";
+import {
+    getBookings,
+    addBooking,
+    updateBooking,
+    deleteBooking as removeBooking
+} from "../services/bookingService";
+import { getDashboard } from "../services/dashboardService";
 
 function AdminDashboard() {
 
@@ -52,6 +87,7 @@ function AdminDashboard() {
     const [status, setStatus] = useState("");
     const [availability, setAvailability] = useState("");
     const [location, setLocation] = useState("");
+    const [equipmentCost, setEquipmentCost] = useState("");
 
     const [selectedLaboratoryId, setSelectedLaboratoryId] = useState("");
     const [editingEquipmentId, setEditingEquipmentId] = useState(null);
@@ -94,10 +130,10 @@ function AdminDashboard() {
 
     const fetchDashboard = async () => {
         try {
-            const response = await axios.get("http://localhost:8080/api/dashboard");
+            const response = await getDashboard();
             setDashboard(response.data);
         } catch (error) {
-            console.error("Error fetching dashboard data:", error);
+            console.error(error);
         }
     };
 
@@ -107,9 +143,7 @@ function AdminDashboard() {
 
     const fetchDepartments = async () => {
         try {
-            const response = await axios.get(
-                "http://localhost:8080/api/departments"
-            );
+            const response = await getDepartments();
             setDepartments(response.data);
         } catch (error) {
             console.error(error);
@@ -121,19 +155,13 @@ function AdminDashboard() {
 
         try {
             if (editingDepartmentId === null) {
-                await axios.post(
-                    "http://localhost:8080/api/departments",
-                    {
-                        departmentName: departmentName
-                    }
-                );
+                await addDepartment({
+                    departmentName
+                });
             } else {
-                await axios.put(
-                    `http://localhost:8080/api/departments/${editingDepartmentId}`,
-                    {
-                        departmentName: departmentName
-                    }
-                );
+                await updateDepartment(editingDepartmentId, {
+                    departmentName
+                });
 
                 setEditingDepartmentId(null);
             }
@@ -153,10 +181,7 @@ function AdminDashboard() {
 
     const deleteDepartment = async (id) => {
         try {
-            await axios.delete(
-                `http://localhost:8080/api/departments/${id}`
-            );
-
+            await removeDepartment(id);
             fetchDepartments();
 
         } catch (error) {
@@ -170,12 +195,8 @@ function AdminDashboard() {
 
     const fetchInstitutions = async () => {
         try {
-            const response = await axios.get(
-                "http://localhost:8080/api/institutions"
-            );
-
+            const response = await getInstitutions();
             setInstitutions(response.data);
-
         } catch (error) {
             console.error(error);
         }
@@ -187,20 +208,14 @@ function AdminDashboard() {
         try {
 
             if (editingInstitutionId === null) {
-
-                await axios.post(
-                    "http://localhost:8080/api/institutions",
-                    {
-                        institutionName: institutionName
-                    }
-                );
-
+                await addInstitution({
+                    institutionName
+                });
             } else {
-
-                await axios.put(
-                    `http://localhost:8080/api/institutions/${editingInstitutionId}`,
+                await updateInstitution(
+                    editingInstitutionId,
                     {
-                        institutionName: institutionName
+                        institutionName
                     }
                 );
 
@@ -222,12 +237,8 @@ function AdminDashboard() {
 
     const deleteInstitution = async (id) => {
         try {
-            await axios.delete(
-                `http://localhost:8080/api/institutions/${id}`
-            );
-
+            await removeInstitution(id);
             fetchInstitutions();
-
         } catch (error) {
             console.error(error);
         }
@@ -239,12 +250,8 @@ function AdminDashboard() {
 
     const fetchLaboratories = async () => {
         try {
-            const response = await axios.get(
-                "http://localhost:8080/api/laboratories"
-            );
-
+            const response = await getLaboratories();
             setLaboratories(response.data);
-
         } catch (error) {
             console.error(error);
         }
@@ -268,16 +275,10 @@ function AdminDashboard() {
             };
 
             if (editingLaboratoryId === null) {
-
-                await axios.post(
-                    "http://localhost:8080/api/laboratories",
-                    body
-                );
-
+                await addLaboratory(body);
             } else {
-
-                await axios.put(
-                    `http://localhost:8080/api/laboratories/${editingLaboratoryId}`,
+                await updateLaboratory(
+                    editingLaboratoryId,
                     body
                 );
 
@@ -308,11 +309,7 @@ function AdminDashboard() {
     const deleteLaboratory = async (id) => {
 
         try {
-
-            await axios.delete(
-                `http://localhost:8080/api/laboratories/${id}`
-            );
-
+            await removeLaboratory(id);
             fetchLaboratories();
 
         } catch (error) {
@@ -325,15 +322,9 @@ function AdminDashboard() {
     // ===========================
 
     const fetchEquipment = async () => {
-
         try {
-
-            const response = await axios.get(
-                "http://localhost:8080/api/equipment"
-            );
-
+            const response = await getEquipment();
             setEquipmentList(response.data);
-
         } catch (error) {
             console.error(error);
         }
@@ -341,7 +332,7 @@ function AdminDashboard() {
 
     const fetchBookings = async () => {
         try {
-            const response = await axios.get("http://localhost:8080/api/bookings");
+            const response = await getBookings();
             setBookingList(response.data);
         } catch (error) {
             console.error("Error fetching bookings:", error);
@@ -374,22 +365,17 @@ function AdminDashboard() {
                 status,
                 availability,
                 location,
+                equipmentCost,
                 laboratory: {
                     id: selectedLaboratoryId
                 }
             };
 
             if (editingEquipmentId === null) {
-
-                await axios.post(
-                    "http://localhost:8080/api/equipment",
-                    body
-                );
-
+                await addEquipment(body);
             } else {
-
-                await axios.put(
-                    `http://localhost:8080/api/equipment/${editingEquipmentId}`,
+                await updateEquipment(
+                    editingEquipmentId,
                     body
                 );
 
@@ -409,6 +395,7 @@ function AdminDashboard() {
             setStatus("");
             setAvailability("");
             setLocation("");
+            setEquipmentCost("");
             setSelectedLaboratoryId("");
 
             fetchEquipment();
@@ -433,15 +420,12 @@ function AdminDashboard() {
             };
 
             if (editingBookingId) {
-                await axios.put(
-                    `http://localhost:8080/api/bookings/${editingBookingId}`,
+                await updateBooking(
+                    editingBookingId,
                     booking
                 );
             } else {
-                await axios.post(
-                    "http://localhost:8080/api/bookings",
-                    booking
-                );
+                await addBooking(booking);
             }
 
             fetchBookings();
@@ -475,6 +459,7 @@ function AdminDashboard() {
         setStatus(equipment.status || "");
         setAvailability(equipment.availability || "");
         setLocation(equipment.location || "");
+        setEquipmentCost(equipment.equipmentCost || "");
 
         if (equipment.laboratory) {
             setSelectedLaboratoryId(equipment.laboratory.id);
@@ -486,11 +471,7 @@ function AdminDashboard() {
     const deleteEquipment = async (id) => {
 
         try {
-
-            await axios.delete(
-                `http://localhost:8080/api/equipment/${id}`
-            );
-
+            await removeEquipment(id);
             fetchEquipment();
 
         } catch (error) {
@@ -511,7 +492,7 @@ function AdminDashboard() {
 
     const deleteBooking = async (id) => {
         try {
-            await axios.delete(`http://localhost:8080/api/bookings/${id}`);
+            await removeBooking(id);
             fetchBookings();
         } catch (error) {
             console.error("Error deleting booking:", error);
@@ -762,675 +743,155 @@ function AdminDashboard() {
         }
     };
 
-    const navItems = [
-        { id: "dashboard", label: "Dashboard" },
-        { id: "institutions", label: "Institutions" },
-        { id: "departments", label: "Departments" },
-        { id: "laboratories", label: "Laboratories" },
-        { id: "equipment", label: "Equipment" },
-        { id: "bookings", label: "Bookings" }
-    ];
-
     return (
         <div style={styles.container}>
             {/* Sidebar */}
-            <div style={styles.sidebar}>
-                <div style={styles.sidebarHeader}>
-                    <div>
-                        <h2 style={styles.sidebarTitle}>Lab Resource</h2>
-                        <p style={styles.sidebarSubtitle}>Management System</p>
-                    </div>
-                </div>
-
-                <div style={styles.navList}>
-                    {navItems.map((item) => (
-                        <button
-                            key={item.id}
-                            style={styles.navButton(activePage === item.id)}
-                            onClick={() => setActivePage(item.id)}
-                            onMouseEnter={(e) => {
-                                if (activePage !== item.id) {
-                                    e.currentTarget.style.backgroundColor = "#1e293b";
-                                    e.currentTarget.style.color = "#ffffff";
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (activePage !== item.id) {
-                                    e.currentTarget.style.backgroundColor = "transparent";
-                                    e.currentTarget.style.color = "#94a3b8";
-                                }
-                            }}
-                        >
-                            {item.label}
-                        </button>
-                    ))}
-                </div>
-
-                <button
-                    style={styles.logoutButton}
-                    onClick={() => {
-                        localStorage.removeItem("token");
-                        window.location.reload();
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "#ef4444";
-                        e.currentTarget.style.color = "#ffffff";
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "transparent";
-                        e.currentTarget.style.color = "#ef4444";
-                    }}
-                >
-                    Logout
-                </button>
-            </div>
+            <Sidebar
+                activePage={activePage}
+                setActivePage={setActivePage}
+                styles={styles}
+            />
 
             {/* Main Content */}
             <div style={styles.mainContent}>
-                {/* DASHBOARD PAGE */}
-                {activePage === "dashboard" && (
-                    <div>
-                        <div style={styles.headerArea}>
+                {/* Header Area with Notification Bell */}
+                <div style={styles.headerArea}>
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center"
+                        }}
+                    >
+                        <div>
                             <h1 style={styles.pageTitle}>Dashboard Overview</h1>
                             <p style={styles.pageSubtitle}>System metrics and resource summaries</p>
                         </div>
-
-                        <div style={styles.statsGrid}>
-                            <div style={styles.statCard("#3b82f6")}>
-                                <span style={styles.statTitle}>Institutions</span>
-                                <span style={styles.statValue}>{dashboard.totalInstitutions}</span>
-                            </div>
-
-                            <div style={styles.statCard("#10b981")}>
-                                <span style={styles.statTitle}>Departments</span>
-                                <span style={styles.statValue}>{dashboard.totalDepartments}</span>
-                            </div>
-
-                            <div style={styles.statCard("#f59e0b")}>
-                                <span style={styles.statTitle}>Laboratories</span>
-                                <span style={styles.statValue}>{dashboard.totalLaboratories}</span>
-                            </div>
-
-                            <div style={styles.statCard("#8b5cf6")}>
-                                <span style={styles.statTitle}>Equipment</span>
-                                <span style={styles.statValue}>{dashboard.totalEquipment}</span>
-                            </div>
-
-                            <div style={styles.statCard("#ec4899")}>
-                                <span style={styles.statTitle}>Bookings</span>
-                                <span style={styles.statValue}>{dashboard.totalBookings}</span>
-                            </div>
-                        </div>
+                        <NotificationBell />
                     </div>
+                </div>
+
+                {/* DASHBOARD PAGE */}
+                {activePage === "dashboard" && (
+                    <DashboardPage
+                        dashboard={dashboard}
+                        styles={styles}
+                    />
                 )}
 
                 {/* INSTITUTIONS PAGE */}
                 {activePage === "institutions" && (
-                    <div>
-                        <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Institutions</h1>
-                            <p style={styles.pageSubtitle}>Manage affiliated institutions and organizations</p>
-                        </div>
-
-                        <div style={styles.card}>
-                            <h3 style={styles.cardTitle}>
-                                {editingInstitutionId ? "Edit Institution" : "Add New Institution"}
-                            </h3>
-                            <div style={{ display: "flex", gap: "12px", maxWidth: "500px" }}>
-                                <input
-                                    type="text"
-                                    placeholder="Institution Name"
-                                    value={institutionName}
-                                    onChange={(e) => setInstitutionName(e.target.value)}
-                                    style={{ ...styles.input, flex: 1 }}
-                                />
-                                <button onClick={saveInstitution} style={styles.primaryButton}>
-                                    {editingInstitutionId ? "Update" : "Add"}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div style={styles.card}>
-                            <h3 style={styles.cardTitle}>Institutions List</h3>
-                            <div style={styles.tableContainer}>
-                                <table style={styles.table}>
-                                    <thead>
-                                    <tr>
-                                        <th style={styles.th}>ID</th>
-                                        <th style={styles.th}>Name</th>
-                                        <th style={{ ...styles.th, textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {institutions.map((institution) => (
-                                        <tr key={institution.id}>
-                                            <td style={styles.td}>{institution.id}</td>
-                                            <td style={styles.td}>{institution.institutionName}</td>
-                                            <td style={{ ...styles.td, textAlign: "right" }}>
-                                                <button
-                                                    onClick={() => editInstitution(institution)}
-                                                    style={styles.actionButtonEdit}
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => deleteInstitution(institution.id)}
-                                                    style={styles.actionButtonDelete}
-                                                >
-                                                    Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    <InstitutionPage
+                        styles={styles}
+                        institutions={institutions}
+                        institutionName={institutionName}
+                        setInstitutionName={setInstitutionName}
+                        editingInstitutionId={editingInstitutionId}
+                        saveInstitution={saveInstitution}
+                        editInstitution={editInstitution}
+                        deleteInstitution={deleteInstitution}
+                    />
                 )}
 
                 {/* DEPARTMENTS PAGE */}
                 {activePage === "departments" && (
-                    <div>
-                        <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Departments</h1>
-                            <p style={styles.pageSubtitle}>Manage academic and research departments</p>
-                        </div>
-
-                        <div style={styles.card}>
-                            <h3 style={styles.cardTitle}>
-                                {editingDepartmentId ? "Edit Department" : "Add New Department"}
-                            </h3>
-                            <div style={{ display: "flex", gap: "12px", maxWidth: "500px" }}>
-                                <input
-                                    type="text"
-                                    placeholder="Department Name"
-                                    value={departmentName}
-                                    onChange={(e) => setDepartmentName(e.target.value)}
-                                    style={{ ...styles.input, flex: 1 }}
-                                />
-                                <button onClick={saveDepartment} style={styles.primaryButton}>
-                                    {editingDepartmentId ? "Update" : "Add"}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div style={styles.card}>
-                            <h3 style={styles.cardTitle}>Departments List</h3>
-                            <div style={styles.tableContainer}>
-                                <table style={styles.table}>
-                                    <thead>
-                                    <tr>
-                                        <th style={styles.th}>ID</th>
-                                        <th style={styles.th}>Name</th>
-                                        <th style={{ ...styles.th, textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {departments.map((department) => (
-                                        <tr key={department.id}>
-                                            <td style={styles.td}>{department.id}</td>
-                                            <td style={styles.td}>{department.departmentName}</td>
-                                            <td style={{ ...styles.td, textAlign: "right" }}>
-                                                <button
-                                                    onClick={() => editDepartment(department)}
-                                                    style={styles.actionButtonEdit}
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => deleteDepartment(department.id)}
-                                                    style={styles.actionButtonDelete}
-                                                >
-                                                    Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    <DepartmentPage
+                        styles={styles}
+                        departments={departments}
+                        departmentName={departmentName}
+                        setDepartmentName={setDepartmentName}
+                        editingDepartmentId={editingDepartmentId}
+                        saveDepartment={saveDepartment}
+                        editDepartment={editDepartment}
+                        deleteDepartment={deleteDepartment}
+                    />
                 )}
 
                 {/* LABORATORIES PAGE */}
                 {activePage === "laboratories" && (
-                    <div>
-                        <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Laboratories</h1>
-                            <p style={styles.pageSubtitle}>Manage lab spaces and associate them with departments</p>
-                        </div>
-
-                        <div style={styles.card}>
-                            <h3 style={styles.cardTitle}>
-                                {editingLaboratoryId ? "Edit Laboratory" : "Add New Laboratory"}
-                            </h3>
-                            <div style={{ display: "flex", gap: "12px", maxWidth: "600px", flexWrap: "wrap" }}>
-                                <input
-                                    type="text"
-                                    placeholder="Laboratory Name"
-                                    value={laboratoryName}
-                                    onChange={(e) => setLaboratoryName(e.target.value)}
-                                    style={{ ...styles.input, flex: "1 1 200px" }}
-                                />
-                                <select
-                                    value={selectedDepartmentId}
-                                    onChange={(e) => setSelectedDepartmentId(e.target.value)}
-                                    style={{ ...styles.select, flex: "1 1 200px" }}
-                                >
-                                    <option value="">Select Department</option>
-                                    {departments.map((department) => (
-                                        <option key={department.id} value={department.id}>
-                                            {department.departmentName}
-                                        </option>
-                                    ))}
-                                </select>
-                                <button onClick={saveLaboratory} style={styles.primaryButton}>
-                                    {editingLaboratoryId ? "Update" : "Add"}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div style={styles.card}>
-                            <h3 style={styles.cardTitle}>Laboratories List</h3>
-                            <div style={styles.tableContainer}>
-                                <table style={styles.table}>
-                                    <thead>
-                                    <tr>
-                                        <th style={styles.th}>ID</th>
-                                        <th style={styles.th}>Laboratory</th>
-                                        <th style={styles.th}>Department</th>
-                                        <th style={{ ...styles.th, textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {laboratories.map((lab) => (
-                                        <tr key={lab.id}>
-                                            <td style={styles.td}>{lab.id}</td>
-                                            <td style={styles.td}>{lab.laboratoryName}</td>
-                                            <td style={styles.td}>
-                                                {lab.department ? lab.department.departmentName : ""}
-                                            </td>
-                                            <td style={{ ...styles.td, textAlign: "right" }}>
-                                                <button
-                                                    onClick={() => editLaboratory(lab)}
-                                                    style={styles.actionButtonEdit}
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => deleteLaboratory(lab.id)}
-                                                    style={styles.actionButtonDelete}
-                                                >
-                                                    Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    <LaboratoryPage
+                        styles={styles}
+                        laboratories={laboratories}
+                        laboratoryName={laboratoryName}
+                        setLaboratoryName={setLaboratoryName}
+                        departments={departments}
+                        selectedDepartmentId={selectedDepartmentId}
+                        setSelectedDepartmentId={setSelectedDepartmentId}
+                        editingLaboratoryId={editingLaboratoryId}
+                        saveLaboratory={saveLaboratory}
+                        editLaboratory={editLaboratory}
+                        deleteLaboratory={deleteLaboratory}
+                    />
                 )}
 
                 {/* EQUIPMENT PAGE */}
                 {activePage === "equipment" && (
-                    <div>
-                        <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Equipment</h1>
-                            <p style={styles.pageSubtitle}>Manage lab instruments, availability, and metadata</p>
-                        </div>
-
-                        <div style={styles.card}>
-                            <h3 style={styles.cardTitle}>
-                                {editingEquipmentId ? "Edit Equipment" : "Add New Equipment"}
-                            </h3>
-                            <div style={styles.formGrid}>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Equipment Name</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Equipment Name"
-                                        value={equipmentName}
-                                        onChange={(e) => setEquipmentName(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Equipment Code</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Equipment Code"
-                                        value={equipmentCode}
-                                        onChange={(e) => setEquipmentCode(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Manufacturer</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Manufacturer"
-                                        value={manufacturer}
-                                        onChange={(e) => setManufacturer(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Model Number</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Model Number"
-                                        value={modelNumber}
-                                        onChange={(e) => setModelNumber(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Description</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Description"
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Image URL</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Image URL"
-                                        value={imageUrl}
-                                        onChange={(e) => setImageUrl(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Documentation</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Documentation"
-                                        value={documentation}
-                                        onChange={(e) => setDocumentation(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Purchase Date</label>
-                                    <input
-                                        type="date"
-                                        value={purchaseDate}
-                                        onChange={(e) => setPurchaseDate(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Calibration Date</label>
-                                    <input
-                                        type="date"
-                                        value={calibrationDate}
-                                        onChange={(e) => setCalibrationDate(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Certification Date</label>
-                                    <input
-                                        type="date"
-                                        value={certificationDate}
-                                        onChange={(e) => setCertificationDate(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Status</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Status"
-                                        value={status}
-                                        onChange={(e) => setStatus(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Availability</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Availability"
-                                        value={availability}
-                                        onChange={(e) => setAvailability(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Location</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Location"
-                                        value={location}
-                                        onChange={(e) => setLocation(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Laboratory</label>
-                                    <select
-                                        value={selectedLaboratoryId}
-                                        onChange={(e) => setSelectedLaboratoryId(e.target.value)}
-                                        style={styles.select}
-                                    >
-                                        <option value="">Select Laboratory</option>
-                                        {laboratories.map((lab) => (
-                                            <option key={lab.id} value={lab.id}>
-                                                {lab.laboratoryName}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <button onClick={saveEquipment} style={styles.primaryButton}>
-                                {editingEquipmentId ? "Update Equipment" : "Save Equipment"}
-                            </button>
-                        </div>
-
-                        <div style={styles.card}>
-                            <h3 style={styles.cardTitle}>Equipment Inventory</h3>
-                            <div style={styles.tableContainer}>
-                                <table style={styles.table}>
-                                    <thead>
-                                    <tr>
-                                        <th style={styles.th}>ID</th>
-                                        <th style={styles.th}>Name</th>
-                                        <th style={styles.th}>Code</th>
-                                        <th style={styles.th}>Manufacturer</th>
-                                        <th style={styles.th}>Model</th>
-                                        <th style={styles.th}>Status</th>
-                                        <th style={styles.th}>Availability</th>
-                                        <th style={styles.th}>Location</th>
-                                        <th style={styles.th}>Laboratory</th>
-                                        <th style={{ ...styles.th, textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {equipmentList.map((equipment) => (
-                                        <tr key={equipment.id}>
-                                            <td style={styles.td}>{equipment.id}</td>
-                                            <td style={styles.td}>{equipment.equipmentName}</td>
-                                            <td style={styles.td}>{equipment.equipmentCode}</td>
-                                            <td style={styles.td}>{equipment.manufacturer}</td>
-                                            <td style={styles.td}>{equipment.modelNumber}</td>
-                                            <td style={styles.td}>{equipment.status}</td>
-                                            <td style={styles.td}>{equipment.availability}</td>
-                                            <td style={styles.td}>{equipment.location}</td>
-                                            <td style={styles.td}>
-                                                {equipment.laboratory ? equipment.laboratory.laboratoryName : ""}
-                                            </td>
-                                            <td style={{ ...styles.td, textAlign: "right" }}>
-                                                <button
-                                                    onClick={() => editEquipment(equipment)}
-                                                    style={styles.actionButtonEdit}
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => deleteEquipment(equipment.id)}
-                                                    style={styles.actionButtonDelete}
-                                                >
-                                                    Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    <EquipmentPage
+                        styles={styles}
+                        equipmentList={equipmentList}
+                        equipmentName={equipmentName}
+                        setEquipmentName={setEquipmentName}
+                        equipmentCode={equipmentCode}
+                        setEquipmentCode={setEquipmentCode}
+                        manufacturer={manufacturer}
+                        setManufacturer={setManufacturer}
+                        modelNumber={modelNumber}
+                        setModelNumber={setModelNumber}
+                        description={description}
+                        setDescription={setDescription}
+                        imageUrl={imageUrl}
+                        setImageUrl={setImageUrl}
+                        documentation={documentation}
+                        setDocumentation={setDocumentation}
+                        purchaseDate={purchaseDate}
+                        setPurchaseDate={setPurchaseDate}
+                        calibrationDate={calibrationDate}
+                        setCalibrationDate={setCalibrationDate}
+                        certificationDate={certificationDate}
+                        setCertificationDate={setCertificationDate}
+                        status={status}
+                        setStatus={setStatus}
+                        availability={availability}
+                        setAvailability={setAvailability}
+                        location={location}
+                        setLocation={setLocation}
+                        equipmentCost={equipmentCost}
+                        setEquipmentCost={setEquipmentCost}
+                        laboratories={laboratories}
+                        selectedLaboratoryId={selectedLaboratoryId}
+                        setSelectedLaboratoryId={setSelectedLaboratoryId}
+                        editingEquipmentId={editingEquipmentId}
+                        saveEquipment={saveEquipment}
+                        editEquipment={editEquipment}
+                        deleteEquipment={deleteEquipment}
+                    />
                 )}
 
                 {/* BOOKINGS PAGE */}
                 {activePage === "bookings" && (
-                    <div>
-                        <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Bookings</h1>
-                            <p style={styles.pageSubtitle}>Manage equipment reservations and approvals</p>
-                        </div>
-
-                        <div style={styles.card}>
-                            <h3 style={styles.cardTitle}>
-                                {editingBookingId ? "Edit Booking" : "Create New Booking"}
-                            </h3>
-                            <div style={styles.formGrid}>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Booked By</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Booked By"
-                                        value={bookedBy}
-                                        onChange={(e) => setBookedBy(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Booking Date</label>
-                                    <input
-                                        type="date"
-                                        value={bookingDate}
-                                        onChange={(e) => setBookingDate(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Start Time</label>
-                                    <input
-                                        type="time"
-                                        value={startTime}
-                                        onChange={(e) => setStartTime(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>End Time</label>
-                                    <input
-                                        type="time"
-                                        value={endTime}
-                                        onChange={(e) => setEndTime(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Purpose</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Purpose"
-                                        value={purpose}
-                                        onChange={(e) => setPurpose(e.target.value)}
-                                        style={styles.input}
-                                    />
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Status</label>
-                                    <select
-                                        value={bookingStatus}
-                                        onChange={(e) => setBookingStatus(e.target.value)}
-                                        style={styles.select}
-                                    >
-                                        <option value="Pending">Pending</option>
-                                        <option value="Approved">Approved</option>
-                                        <option value="Rejected">Rejected</option>
-                                    </select>
-                                </div>
-                                <div style={styles.inputGroup}>
-                                    <label style={styles.label}>Select Equipment</label>
-                                    <select
-                                        value={selectedEquipmentId}
-                                        onChange={(e) => setSelectedEquipmentId(e.target.value)}
-                                        style={styles.select}
-                                    >
-                                        <option value="">Select Equipment</option>
-                                        {equipmentList.map((equipment) => (
-                                            <option key={equipment.id} value={equipment.id}>
-                                                {equipment.equipmentName}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <button onClick={saveBooking} style={styles.primaryButton}>
-                                {editingBookingId ? "Update Booking" : "Book Equipment"}
-                            </button>
-                        </div>
-
-                        <div style={styles.card}>
-                            <h3 style={styles.cardTitle}>Bookings Schedule</h3>
-                            <div style={styles.tableContainer}>
-                                <table style={styles.table}>
-                                    <thead>
-                                    <tr>
-                                        <th style={styles.th}>ID</th>
-                                        <th style={styles.th}>Booked By</th>
-                                        <th style={styles.th}>Equipment</th>
-                                        <th style={styles.th}>Date</th>
-                                        <th style={styles.th}>Time</th>
-                                        <th style={styles.th}>Purpose</th>
-                                        <th style={styles.th}>Status</th>
-                                        <th style={{ ...styles.th, textAlign: "right" }}>Actions</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {bookingList.map((booking) => (
-                                        <tr key={booking.id}>
-                                            <td style={styles.td}>{booking.id}</td>
-                                            <td style={styles.td}>{booking.bookedBy}</td>
-                                            <td style={styles.td}>{booking.equipment?.equipmentName}</td>
-                                            <td style={styles.td}>{booking.bookingDate}</td>
-                                            <td style={styles.td}>{booking.startTime} - {booking.endTime}</td>
-                                            <td style={styles.td}>{booking.purpose}</td>
-                                            <td style={styles.td}>{booking.status}</td>
-                                            <td style={{ ...styles.td, textAlign: "right" }}>
-                                                <button
-                                                    onClick={() => editBooking(booking)}
-                                                    style={styles.actionButtonEdit}
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => deleteBooking(booking.id)}
-                                                    style={styles.actionButtonDelete}
-                                                >
-                                                    Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    <BookingPage
+                        styles={styles}
+                        bookingList={bookingList}
+                        bookedBy={bookedBy}
+                        setBookedBy={setBookedBy}
+                        bookingDate={bookingDate}
+                        setBookingDate={setBookingDate}
+                        startTime={startTime}
+                        setStartTime={setStartTime}
+                        endTime={endTime}
+                        setEndTime={setEndTime}
+                        purpose={purpose}
+                        setPurpose={setPurpose}
+                        bookingStatus={bookingStatus}
+                        setBookingStatus={setBookingStatus}
+                        equipmentList={equipmentList}
+                        selectedEquipmentId={selectedEquipmentId}
+                        setSelectedEquipmentId={setSelectedEquipmentId}
+                        editingBookingId={editingBookingId}
+                        saveBooking={saveBooking}
+                        editBooking={editBooking}
+                        deleteBooking={deleteBooking}
+                    />
                 )}
             </div>
         </div>

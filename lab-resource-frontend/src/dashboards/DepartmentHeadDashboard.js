@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../App.css";
+import NotificationBell from "../components/NotificationBell";
 
 const token = localStorage.getItem("token");
 axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -38,6 +39,7 @@ function DepartmentHeadDashboard() {
     const [status, setStatus] = useState("");
     const [availability, setAvailability] = useState("");
     const [location, setLocation] = useState("");
+    const [equipmentCost, setEquipmentCost] = useState("");
     const [selectedLaboratoryId, setSelectedLaboratoryId] = useState("");
     const [editingEquipmentId, setEditingEquipmentId] = useState(null);
 
@@ -79,7 +81,6 @@ function DepartmentHeadDashboard() {
         const res = await axios.get("http://localhost:8080/api/bookings");
         setBookingList(res.data);
     };
-
 
     const saveLaboratory = async () => {
 
@@ -133,6 +134,7 @@ function DepartmentHeadDashboard() {
             status,
             availability,
             location,
+            equipmentCost,
             laboratory: {
                 id: selectedLaboratoryId
             }
@@ -143,6 +145,7 @@ function DepartmentHeadDashboard() {
                 `http://localhost:8080/api/equipment/${editingEquipmentId}`,
                 body
             );
+            setEditingEquipmentId(null);
         } else {
             await axios.post(
                 "http://localhost:8080/api/equipment",
@@ -150,25 +153,42 @@ function DepartmentHeadDashboard() {
             );
         }
 
+        setEquipmentName("");
+        setEquipmentCode("");
+        setManufacturer("");
+        setModelNumber("");
+        setDescription("");
+        setImageUrl("");
+        setDocumentation("");
+        setPurchaseDate("");
+        setCalibrationDate("");
+        setCertificationDate("");
+        setStatus("");
+        setAvailability("");
+        setLocation("");
+        setEquipmentCost("");
+        setSelectedLaboratoryId("");
+
         fetchEquipment();
     };
 
     const editEquipment = (eq) => {
 
         setEditingEquipmentId(eq.id);
-        setEquipmentName(eq.equipmentName);
-        setEquipmentCode(eq.equipmentCode);
-        setManufacturer(eq.manufacturer);
-        setModelNumber(eq.modelNumber);
-        setDescription(eq.description);
-        setImageUrl(eq.imageUrl);
-        setDocumentation(eq.documentation);
-        setPurchaseDate(eq.purchaseDate);
-        setCalibrationDate(eq.calibrationDate);
-        setCertificationDate(eq.certificationDate);
-        setStatus(eq.status);
-        setAvailability(eq.availability);
-        setLocation(eq.location);
+        setEquipmentName(eq.equipmentName || "");
+        setEquipmentCode(eq.equipmentCode || "");
+        setManufacturer(eq.manufacturer || "");
+        setModelNumber(eq.modelNumber || "");
+        setDescription(eq.description || "");
+        setImageUrl(eq.imageUrl || "");
+        setDocumentation(eq.documentation || "");
+        setPurchaseDate(eq.purchaseDate || "");
+        setCalibrationDate(eq.calibrationDate || "");
+        setCertificationDate(eq.certificationDate || "");
+        setStatus(eq.status || "");
+        setAvailability(eq.availability || "");
+        setLocation(eq.location || "");
+        setEquipmentCost(eq.equipmentCost || "");
         setSelectedLaboratoryId(eq.laboratory?.id || "");
     };
 
@@ -538,8 +558,20 @@ function DepartmentHeadDashboard() {
                 {activePage === "dashboard" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Dashboard Overview</h1>
-                            <p style={styles.pageSubtitle}>Department statistics and laboratory resources overview</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Dashboard Overview</h1>
+                                    <p style={styles.pageSubtitle}>Department statistics and laboratory resources overview</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.statsGrid}>
@@ -565,8 +597,20 @@ function DepartmentHeadDashboard() {
                 {activePage === "laboratories" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Laboratories</h1>
-                            <p style={styles.pageSubtitle}>Manage department laboratory facilities</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Laboratories</h1>
+                                    <p style={styles.pageSubtitle}>Manage department laboratory facilities</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.card}>
@@ -644,8 +688,20 @@ function DepartmentHeadDashboard() {
                 {activePage === "equipment" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Equipment</h1>
-                            <p style={styles.pageSubtitle}>Manage laboratory equipment, dates, and availability</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Equipment</h1>
+                                    <p style={styles.pageSubtitle}>Manage laboratory equipment, dates, and availability</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.card}>
@@ -780,6 +836,16 @@ function DepartmentHeadDashboard() {
                                     />
                                 </div>
                                 <div style={styles.inputGroup}>
+                                    <label style={styles.label}>Equipment Cost (₹)</label>
+                                    <input
+                                        type="number"
+                                        placeholder="Equipment Cost"
+                                        value={equipmentCost}
+                                        onChange={(e) => setEquipmentCost(e.target.value)}
+                                        style={styles.input}
+                                    />
+                                </div>
+                                <div style={styles.inputGroup}>
                                     <label style={styles.label}>Laboratory</label>
                                     <select
                                         value={selectedLaboratoryId}
@@ -811,6 +877,7 @@ function DepartmentHeadDashboard() {
                                         <th style={styles.th}>Code</th>
                                         <th style={styles.th}>Status</th>
                                         <th style={styles.th}>Availability</th>
+                                        <th style={styles.th}>Cost</th>
                                         <th style={styles.th}>Laboratory</th>
                                         <th style={{ ...styles.th, textAlign: "right" }}>Actions</th>
                                     </tr>
@@ -823,6 +890,7 @@ function DepartmentHeadDashboard() {
                                             <td style={styles.td}>{eq.equipmentCode}</td>
                                             <td style={styles.td}>{eq.status}</td>
                                             <td style={styles.td}>{eq.availability}</td>
+                                            <td style={styles.td}>₹{eq.equipmentCost}</td>
                                             <td style={styles.td}>{eq.laboratory?.laboratoryName}</td>
                                             <td style={{ ...styles.td, textAlign: "right" }}>
                                                 <button
@@ -851,8 +919,20 @@ function DepartmentHeadDashboard() {
                 {activePage === "bookings" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Bookings</h1>
-                            <p style={styles.pageSubtitle}>Review and manage equipment booking requests</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Bookings</h1>
+                                    <p style={styles.pageSubtitle}>Review and manage equipment booking requests</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.card}>

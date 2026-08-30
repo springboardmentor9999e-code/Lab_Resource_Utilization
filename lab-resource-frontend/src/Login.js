@@ -21,6 +21,7 @@ function Login({ onLogin }) {
 
             localStorage.setItem("token", response.data.token);
             localStorage.setItem("role", response.data.role);
+            localStorage.setItem("email", response.data.email);
 
             alert("Login Successful");
 
@@ -41,8 +42,6 @@ function Login({ onLogin }) {
         <div className="login-page">
 
             <div className="login-container">
-
-                {/* Left Panel */}
 
                 <div className="login-left-panel">
 
@@ -83,8 +82,6 @@ function Login({ onLogin }) {
                     </ul>
 
                 </div>
-
-                {/* Right Panel */}
 
                 <div className="login-right-panel">
 
@@ -145,7 +142,6 @@ function Login({ onLogin }) {
                             </div>
 
                         </div>
-
                         <button
                             className="login-btn"
                             onClick={handleLogin}

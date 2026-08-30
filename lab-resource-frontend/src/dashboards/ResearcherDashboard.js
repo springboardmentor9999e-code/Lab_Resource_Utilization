@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../App.css";
+import NotificationBell from "../components/NotificationBell";
 
 const token = localStorage.getItem("token");
 axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -22,7 +23,7 @@ function ResearcherDashboard() {
 
     // Bookings
     const [bookingList, setBookingList] = useState([]);
-    const [bookedBy, setBookedBy] = useState("");
+    const [bookedBy] = useState(localStorage.getItem("email") || "");
     const [bookingDate, setBookingDate] = useState("");
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
@@ -30,7 +31,7 @@ function ResearcherDashboard() {
     const [selectedEquipmentId, setSelectedEquipmentId] = useState("");
 
     // User Profile
-    const [userProfile, setUserProfile] = useState({
+    const [userProfile] = useState({
         username: "",
         email: "",
         role: ""
@@ -40,7 +41,6 @@ function ResearcherDashboard() {
         fetchDashboard();
         fetchEquipment();
         fetchBookings();
-        fetchUserProfile();
     }, []);
 
     const fetchDashboard = async () => {
@@ -70,15 +70,6 @@ function ResearcherDashboard() {
         }
     };
 
-    const fetchUserProfile = async () => {
-        try {
-            const res = await axios.get("http://localhost:8080/api/users/profile");
-            setUserProfile(res.data);
-        } catch (error) {
-            console.error("Error fetching user profile:", error);
-        }
-    };
-
     const saveBooking = async () => {
         if (!selectedEquipmentId || !bookingDate || !startTime || !endTime) {
             alert("Please fill required fields.");
@@ -102,7 +93,6 @@ function ResearcherDashboard() {
 
             alert("Booking Request Submitted Successfully!");
 
-            setBookedBy("");
             setBookingDate("");
             setStartTime("");
             setEndTime("");
@@ -443,8 +433,20 @@ function ResearcherDashboard() {
                 {activePage === "dashboard" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Dashboard Overview</h1>
-                            <p style={styles.pageSubtitle}>Welcome back to your research portal</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Dashboard Overview</h1>
+                                    <p style={styles.pageSubtitle}>Welcome back to your research portal</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.statsGrid}>
@@ -472,8 +474,20 @@ function ResearcherDashboard() {
                 {activePage === "equipment" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Available Equipment</h1>
-                            <p style={styles.pageSubtitle}>Browse available lab instruments and reserve resources</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Available Equipment</h1>
+                                    <p style={styles.pageSubtitle}>Browse available lab instruments and reserve resources</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         {/* Book Equipment Card */}
@@ -484,10 +498,12 @@ function ResearcherDashboard() {
                                     <label style={styles.label}>Booked By</label>
                                     <input
                                         type="text"
-                                        placeholder="Your Name"
                                         value={bookedBy}
-                                        onChange={(e) => setBookedBy(e.target.value)}
-                                        style={styles.input}
+                                        disabled
+                                        style={{
+                                            ...styles.input,
+                                            backgroundColor: "#f1f5f9"
+                                        }}
                                     />
                                 </div>
 
@@ -596,8 +612,20 @@ function ResearcherDashboard() {
                 {activePage === "bookings" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>My Bookings</h1>
-                            <p style={styles.pageSubtitle}>Track your current and past equipment reservations</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>My Bookings</h1>
+                                    <p style={styles.pageSubtitle}>Track your current and past equipment reservations</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.card}>
@@ -609,6 +637,7 @@ function ResearcherDashboard() {
                                         <th style={styles.th}>ID</th>
                                         <th style={styles.th}>Booked By</th>
                                         <th style={styles.th}>Equipment</th>
+                                        <th style={styles.th}>Equipment Cost</th>
                                         <th style={styles.th}>Date</th>
                                         <th style={styles.th}>Time</th>
                                         <th style={styles.th}>Purpose</th>
@@ -621,6 +650,9 @@ function ResearcherDashboard() {
                                             <td style={styles.td}>{booking.id}</td>
                                             <td style={styles.td}>{booking.bookedBy}</td>
                                             <td style={styles.td}>{booking.equipment?.equipmentName}</td>
+                                            <td style={styles.td}>
+                                                ₹{booking.equipment?.equipmentCost}
+                                            </td>
                                             <td style={styles.td}>{booking.bookingDate}</td>
                                             <td style={styles.td}>{booking.startTime} - {booking.endTime}</td>
                                             <td style={styles.td}>{booking.purpose}</td>
@@ -642,8 +674,20 @@ function ResearcherDashboard() {
                 {activePage === "profile" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Profile</h1>
-                            <p style={styles.pageSubtitle}>Manage your personal account and preferences</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Profile</h1>
+                                    <p style={styles.pageSubtitle}>Manage your personal account and preferences</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={{ ...styles.card, maxWidth: "500px" }}>

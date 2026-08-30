@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../App.css";
+import NotificationBell from "../components/NotificationBell";
 
 const token = localStorage.getItem("token");
 axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -42,6 +43,7 @@ function LabTechnicianDashboard() {
     const [status, setStatus] = useState("");
     const [availability, setAvailability] = useState("");
     const [location, setLocation] = useState("");
+    const [equipmentCost, setEquipmentCost] = useState("");
 
     const [laboratories, setLaboratories] = useState([]);
     const [selectedLaboratoryId, setSelectedLaboratoryId] = useState("");
@@ -235,6 +237,7 @@ function LabTechnicianDashboard() {
                 status,
                 availability,
                 location,
+                equipmentCost,
                 laboratory: {
                     id: selectedLaboratoryId
                 }
@@ -274,6 +277,7 @@ function LabTechnicianDashboard() {
             setStatus("");
             setAvailability("");
             setLocation("");
+            setEquipmentCost("");
             setSelectedLaboratoryId("");
 
             fetchEquipment();
@@ -309,6 +313,7 @@ function LabTechnicianDashboard() {
         setStatus(equipment.status || "");
         setAvailability(equipment.availability || "");
         setLocation(equipment.location || "");
+        setEquipmentCost(equipment.equipmentCost || "");
 
         if (equipment.laboratory) {
             setSelectedLaboratoryId(equipment.laboratory.id);
@@ -908,8 +913,20 @@ function LabTechnicianDashboard() {
                 {activePage === "dashboard" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Dashboard Overview</h1>
-                            <p style={styles.pageSubtitle}>Technician dashboard metrics and resource overview</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Dashboard Overview</h1>
+                                    <p style={styles.pageSubtitle}>Technician dashboard metrics and resource overview</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.statsGrid}>
@@ -935,8 +952,20 @@ function LabTechnicianDashboard() {
                 {activePage === "equipment" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Equipment Management</h1>
-                            <p style={styles.pageSubtitle}>Manage and edit laboratory equipment details</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Equipment Management</h1>
+                                    <p style={styles.pageSubtitle}>Manage and edit laboratory equipment details</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.card}>
@@ -1092,6 +1121,17 @@ function LabTechnicianDashboard() {
                                 </div>
 
                                 <div style={styles.inputGroup}>
+                                    <label style={styles.label}>Equipment Cost (₹)</label>
+                                    <input
+                                        type="number"
+                                        placeholder="Equipment Cost"
+                                        value={equipmentCost}
+                                        onChange={(e) => setEquipmentCost(e.target.value)}
+                                        style={styles.input}
+                                    />
+                                </div>
+
+                                <div style={styles.inputGroup}>
                                     <label style={styles.label}>Laboratory</label>
                                     <select
                                         value={selectedLaboratoryId}
@@ -1129,6 +1169,7 @@ function LabTechnicianDashboard() {
                                         <th style={styles.th}>Calibration</th>
                                         <th style={styles.th}>Certification</th>
                                         <th style={styles.th}>Location</th>
+                                        <th style={styles.th}>Cost</th>
                                         <th style={styles.th}>Laboratory</th>
                                         <th style={{ ...styles.th, textAlign: "right" }}>Actions</th>
                                     </tr>
@@ -1147,6 +1188,7 @@ function LabTechnicianDashboard() {
                                                 <td style={styles.td}>{equipment.calibrationDate}</td>
                                                 <td style={styles.td}>{equipment.certificationDate}</td>
                                                 <td style={styles.td}>{equipment.location}</td>
+                                                <td style={styles.td}>₹{equipment.equipmentCost}</td>
                                                 <td style={styles.td}>
                                                     {equipment.laboratory
                                                         ? (equipment.laboratory.labName || equipment.laboratory.laboratoryName)
@@ -1170,7 +1212,7 @@ function LabTechnicianDashboard() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="12" style={styles.td}>
+                                            <td colSpan="13" style={styles.td}>
                                                 No Equipment Available
                                             </td>
                                         </tr>
@@ -1186,8 +1228,20 @@ function LabTechnicianDashboard() {
                 {activePage === "bookings" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Bookings</h1>
-                            <p style={styles.pageSubtitle}>Review and manage equipment booking requests</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Bookings</h1>
+                                    <p style={styles.pageSubtitle}>Review and manage equipment booking requests</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.card}>
@@ -1245,8 +1299,20 @@ function LabTechnicianDashboard() {
                 {activePage === "maintenance" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Maintenance</h1>
-                            <p style={styles.pageSubtitle}>Update maintenance, calibration, certification, and equipment status</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Maintenance</h1>
+                                    <p style={styles.pageSubtitle}>Update maintenance, calibration, certification, and equipment status</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         {/* Maintenance Status Section */}

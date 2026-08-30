@@ -10,7 +10,6 @@ public class Equipment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Existing fields
     private String equipmentName;
 
     private String imageUrl;
@@ -23,7 +22,6 @@ public class Equipment {
 
     private String certificationDate;
 
-    // New fields
     private String equipmentCode;
 
     private String manufacturer;
@@ -38,6 +36,9 @@ public class Equipment {
     private String availability;
 
     private String location;
+
+    // NEW FIELD
+    private Double equipmentCost;
 
     @ManyToOne
     @JoinColumn(name = "laboratory_id")
@@ -156,6 +157,14 @@ public class Equipment {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public Double getEquipmentCost() {
+        return equipmentCost;
+    }
+
+    public void setEquipmentCost(Double equipmentCost) {
+        this.equipmentCost = equipmentCost;
     }
 
     public Laboratory getLaboratory() {

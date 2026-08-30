@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../App.css";
+import NotificationBell from "../components/NotificationBell";
 
 const token = localStorage.getItem("token");
 axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -23,7 +24,7 @@ function ScientistDashboard() {
 
     // Bookings
     const [bookingList, setBookingList] = useState([]);
-    const [bookedBy, setBookedBy] = useState("");
+    const [bookedBy] = useState(localStorage.getItem("email") || "");
     const [bookingDate, setBookingDate] = useState("");
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
@@ -88,7 +89,7 @@ function ScientistDashboard() {
 
         try {
             const booking = {
-                bookedBy,
+                bookedBy: bookedBy,
                 bookingDate,
                 startTime,
                 endTime,
@@ -103,7 +104,6 @@ function ScientistDashboard() {
 
             alert("Research Booking Request Submitted!");
 
-            setBookedBy("");
             setBookingDate("");
             setStartTime("");
             setEndTime("");
@@ -476,8 +476,20 @@ function ScientistDashboard() {
                 {activePage === "dashboard" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Dashboard Overview</h1>
-                            <p style={styles.pageSubtitle}>Welcome to your scientist research dashboard</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Dashboard Overview</h1>
+                                    <p style={styles.pageSubtitle}>Welcome to your scientist research dashboard</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.statsGrid}>
@@ -516,8 +528,20 @@ function ScientistDashboard() {
                 {activePage === "equipment" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Research Equipment</h1>
-                            <p style={styles.pageSubtitle}>Explore instruments and request laboratory access</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Research Equipment</h1>
+                                    <p style={styles.pageSubtitle}>Explore instruments and request laboratory access</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         {/* Request Booking Section */}
@@ -528,10 +552,12 @@ function ScientistDashboard() {
                                     <label style={styles.label}>Booked By</label>
                                     <input
                                         type="text"
-                                        placeholder="Scientist Name"
                                         value={bookedBy}
-                                        onChange={(e) => setBookedBy(e.target.value)}
-                                        style={styles.input}
+                                        disabled
+                                        style={{
+                                            ...styles.input,
+                                            backgroundColor: "#f1f5f9"
+                                        }}
                                     />
                                 </div>
 
@@ -640,8 +666,20 @@ function ScientistDashboard() {
                 {activePage === "bookings" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Research Bookings</h1>
-                            <p style={styles.pageSubtitle}>Monitor and manage your equipment bookings</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Research Bookings</h1>
+                                    <p style={styles.pageSubtitle}>Monitor and manage your equipment bookings</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.card}>
@@ -653,6 +691,7 @@ function ScientistDashboard() {
                                         <th style={styles.th}>ID</th>
                                         <th style={styles.th}>Booked By</th>
                                         <th style={styles.th}>Equipment</th>
+                                        <th style={styles.th}>Equipment Cost</th>
                                         <th style={styles.th}>Date</th>
                                         <th style={styles.th}>Time</th>
                                         <th style={styles.th}>Purpose</th>
@@ -666,6 +705,7 @@ function ScientistDashboard() {
                                             <td style={styles.td}>{booking.id}</td>
                                             <td style={styles.td}>{booking.bookedBy}</td>
                                             <td style={styles.td}>{booking.equipment?.equipmentName}</td>
+                                            <td style={styles.td}>₹{booking.equipment?.equipmentCost}</td>
                                             <td style={styles.td}>{booking.bookingDate}</td>
                                             <td style={styles.td}>{booking.startTime} - {booking.endTime}</td>
                                             <td style={styles.td}>{booking.purpose}</td>
@@ -699,8 +739,20 @@ function ScientistDashboard() {
                 {activePage === "reports" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Reports</h1>
-                            <p style={styles.pageSubtitle}>Summary and analytics of scientific resource usage</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Reports</h1>
+                                    <p style={styles.pageSubtitle}>Summary and analytics of scientific resource usage</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.statsGrid}>
@@ -762,8 +814,20 @@ function ScientistDashboard() {
                 {activePage === "profile" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Profile</h1>
-                            <p style={styles.pageSubtitle}>View and manage scientist account information</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Profile</h1>
+                                    <p style={styles.pageSubtitle}>View and manage scientist account information</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={{ ...styles.card, maxWidth: "500px" }}>

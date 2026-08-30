@@ -1,3 +1,4 @@
+import MaintenanceNotifications from "./components/MaintenanceNotifications";
 import Users from "./components/Users";
 import React, { useEffect, useState } from "react";
 import axios from "axios";

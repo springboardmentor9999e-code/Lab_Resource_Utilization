@@ -9,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/bookings")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class BookingController {
 
     @Autowired
@@ -26,11 +26,13 @@ public class BookingController {
     }
 
     @PostMapping
-    public Booking saveBooking(@RequestBody Booking booking) {
+    public Booking createBooking(@RequestBody Booking booking) {
         return bookingService.saveBooking(booking);
     }
+
     @PutMapping("/{id}")
-    public Booking updateBooking(@PathVariable Long id, @RequestBody Booking booking) {
+    public Booking updateBooking(@PathVariable Long id,
+                                 @RequestBody Booking booking) {
         return bookingService.updateBooking(id, booking);
     }
 

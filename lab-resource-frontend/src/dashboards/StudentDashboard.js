@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "../App.css";
+import NotificationBell from "../components/NotificationBell";
 
 const token = localStorage.getItem("token");
 axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -642,8 +643,20 @@ function StudentDashboard() {
                 {activePage === "dashboard" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Dashboard Overview</h1>
-                            <p style={styles.pageSubtitle}>Welcome to your student lab resource overview</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Dashboard Overview</h1>
+                                    <p style={styles.pageSubtitle}>Welcome to your student lab resource overview</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.statsGrid}>
@@ -676,8 +689,20 @@ function StudentDashboard() {
                 {activePage === "equipment" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Available Equipment</h1>
-                            <p style={styles.pageSubtitle}>Explore equipment and submit laboratory reservation requests</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Available Equipment</h1>
+                                    <p style={styles.pageSubtitle}>Explore equipment and submit laboratory reservation requests</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         {/* Search Section */}
@@ -846,8 +871,20 @@ function StudentDashboard() {
                 {activePage === "bookings" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>My Bookings</h1>
-                            <p style={styles.pageSubtitle}>Track and manage your equipment reservations</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>My Bookings</h1>
+                                    <p style={styles.pageSubtitle}>Track and manage your equipment reservations</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={styles.card}>
@@ -858,6 +895,7 @@ function StudentDashboard() {
                                     <tr>
                                         <th style={styles.th}>ID</th>
                                         <th style={styles.th}>Equipment</th>
+                                        <th style={styles.th}>Equipment Cost</th>
                                         <th style={styles.th}>Booked By</th>
                                         <th style={styles.th}>Booking Date</th>
                                         <th style={styles.th}>Start Time</th>
@@ -876,6 +914,9 @@ function StudentDashboard() {
                                                     {booking.equipment
                                                         ? booking.equipment.equipmentName
                                                         : ""}
+                                                </td>
+                                                <td style={styles.td}>
+                                                    ₹{booking.equipment?.equipmentCost}
                                                 </td>
                                                 <td style={styles.td}>{booking.bookedBy}</td>
                                                 <td style={styles.td}>{booking.bookingDate}</td>
@@ -903,7 +944,7 @@ function StudentDashboard() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="9" style={{ ...styles.td, textAlign: "center" }}>
+                                            <td colSpan="10" style={{ ...styles.td, textAlign: "center" }}>
                                                 No Booking Records Found
                                             </td>
                                         </tr>
@@ -919,8 +960,20 @@ function StudentDashboard() {
                 {activePage === "profile" && (
                     <div>
                         <div style={styles.headerArea}>
-                            <h1 style={styles.pageTitle}>Profile</h1>
-                            <p style={styles.pageSubtitle}>View your student profile details</p>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "20px"
+                                }}
+                            >
+                                <div>
+                                    <h1 style={styles.pageTitle}>Profile</h1>
+                                    <p style={styles.pageSubtitle}>View your student profile details</p>
+                                </div>
+                                <NotificationBell />
+                            </div>
                         </div>
 
                         <div style={{ ...styles.card, maxWidth: "500px" }}>
